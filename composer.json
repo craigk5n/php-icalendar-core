@@ -1,0 +1,32 @@
+{
+    "name": "phpical/phpicalendar",
+    "description": "RFC 5545 compliant PHP library for iCalendar parsing and writing",
+    "type": "library",
+    "version": "1.0.0",
+    "require": {
+        "php": ">=8.1"
+    },
+    "require-dev": {
+        "phpunit/phpunit": "^10.0",
+        "phpstan/phpstan": "^1.10",
+        "vimeo/psalm": "^5.0"
+    },
+    "autoload": {
+        "psr-4": {
+            "Icalendar\\": "src/"
+        }
+    },
+    "autoload-dev": {
+        "psr-4": {
+            "Icalendar\\Tests\\": "tests/"
+        }
+    },
+    "scripts": {
+        "test": "vendor/bin/phpunit",
+        "phpstan": "vendor/bin/phpstan analyse src --level=9",
+        "psalm": "vendor/bin/psalm src"
+    },
+    "config": {
+        "sort-packages": true
+    }
+}
