@@ -108,57 +108,17 @@ class ContentLine
     /**
      * Parse a content line string into a ContentLine object
      *
+     * This method delegates to PropertyParser which handles:
+     * - Quoted parameter values (for values containing :, ;, ,)
+     * - RFC 6868 parameter value encoding (^n, ^^, ^')
+     * - Multi-valued comma-separated parameters
+     * - Proper X-name validation
+     *
      * @throws ParseException if the line format is invalid
      */
-    public static function parse(string $line): self
+    public static function parse(string $line, int $lineNumber = 0): self
     {
-        // Validate line contains a colon (required by RFC 5545)
-        if (!str_contains($line, ':')) {
-            throw new ParseException(
-                'Invalid content line format: missing colon separator',
-                ParseException::ERR_INVALID_PROPERTY_FORMAT,
-                0,
-                $line
-            );
-        }
-
-        // Find the first colon to separate name/params from value
-        $colonPos = strpos($line, ':');
-        $nameAndParams = substr($line, 0, $colonPos);
-        $value = substr($line, $colonPos + 1);
-
-        // Parse name and parameters
-        $parts = explode(';', $nameAndParams);
-        $name = array_shift($parts);
-
-        // Validate property name (must not be empty)
-        if (empty($name)) {
-            throw new ParseException(
-                'Invalid content line format: empty property name',
-                ParseException::ERR_INVALID_PROPERTY_NAME,
-                0,
-                $line
-            );
-        }
-
-        // Parse parameters
-        $parameters = [];
-        foreach ($parts as $param) {
-            if (empty($param)) {
-                continue; // Skip empty parameters
-            }
-
-            $eqPos = strpos($param, '=');
-            if ($eqPos === false) {
-                // Parameter without value (treat as empty string per RFC)
-                $parameters[$param] = '';
-            } else {
-                $paramName = substr($param, 0, $eqPos);
-                $paramValue = substr($param, $eqPos + 1);
-                $parameters[$paramName] = $paramValue;
-            }
-        }
-
-        return new self($line, $name, $parameters, $value);
+        $parser = new PropertyParser();
+        return $parser->parse($line, $lineNumber);
     }
 }

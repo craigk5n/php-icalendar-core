@@ -66,8 +66,9 @@ class ParameterParser
         if ($eqPos === false) {
             // Parameter without value - per RFC this is allowed but unusual
             // We treat it as parameter with empty value
+            // Normalize to uppercase per RFC 5545 §1.3
             return [
-                'name' => $paramPair,
+                'name' => strtoupper($paramPair),
                 'value' => ''
             ];
         }
@@ -98,8 +99,9 @@ class ParameterParser
         // Parse parameter value (handles quoted strings and multi-values)
         $value = $this->parseParameterValue($value, $lineNumber, $rawLine);
 
+        // Normalize parameter name to uppercase per RFC 5545 §1.3 (parameter names are case-insensitive)
         return [
-            'name' => $name,
+            'name' => strtoupper($name),
             'value' => $value
         ];
     }

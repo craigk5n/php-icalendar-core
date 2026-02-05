@@ -275,9 +275,10 @@ class PropertyParserTest extends TestCase
 
     public function testParseLowercaseXName(): void
     {
+        // Property names are case-insensitive per RFC 5545 §1.3, normalized to uppercase
         $line = $this->parser->parse('x-wr-calname:My Calendar');
 
-        $this->assertEquals('x-wr-calname', $line->getName());
+        $this->assertEquals('X-WR-CALNAME', $line->getName());
     }
 
     public function testParseEmptyValue(): void

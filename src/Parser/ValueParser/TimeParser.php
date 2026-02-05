@@ -70,7 +70,22 @@ class TimeParser implements ValueParserInterface
             );
         }
 
-        $timezone = $isUtc ? new \DateTimeZone('UTC') : new \DateTimeZone('+0000');
+        // Determine timezone: UTC (Z suffix), TZID parameter, or floating (local)
+        if ($isUtc) {
+            $timezone = new \DateTimeZone('UTC');
+        } elseif (isset($parameters['TZID'])) {
+            try {
+                $timezone = new \DateTimeZone($parameters['TZID']);
+            } catch (\Exception $e) {
+                throw new ParseException(
+                    'Invalid TZID: ' . $parameters['TZID'],
+                    self::ERR_INVALID_TIME
+                );
+            }
+        } else {
+            // Floating time - use default timezone (represents local time)
+            $timezone = new \DateTimeZone(date_default_timezone_get());
+        }
 
         return new \DateTimeImmutable(
             sprintf('%02d:%02d:%02d', $hours, $minutes, $seconds),

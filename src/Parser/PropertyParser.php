@@ -107,7 +107,8 @@ class PropertyParser
             );
         }
 
-        return $name;
+        // Normalize to uppercase per RFC 5545 §1.3 (property names are case-insensitive)
+        return strtoupper($name);
     }
 
     /**

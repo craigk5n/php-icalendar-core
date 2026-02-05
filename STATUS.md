@@ -692,23 +692,35 @@ testVEventSupportsAlarms() ✓
 
 ### Task 5.4: VTODO Component
 
-**Status:** ❌ Not Started  
-**Priority:** MEDIUM  
+**Status:** ❌ Not Started
+**Priority:** MEDIUM
 **Effort:** 4 hours
+
+**File:** `src/Component/VTodo.php`
+**Test:** `tests/Component/VTodoTest.php`
 
 **Description:** Implement VTODO component for task/to-do items.
 
 **Why Important:** Supports task management functionality.
 
 **Acceptance Criteria:**
-- [ ] Require DTSTAMP and UID properties
-- [ ] Support COMPLETED property
-- [ ] Support DUE property
-- [ ] Support PERCENT-COMPLETE property
-- [ ] Validate STATUS values (NEEDS-ACTION, COMPLETED, IN-PROCESS, CANCELLED)
+- [ ] Require DTSTAMP property (error ICAL-VTODO-001)
+- [ ] Require UID property (error ICAL-VTODO-002)
+- [ ] Support COMPLETED property (DATE-TIME in UTC)
+- [ ] Support DUE property (DATE or DATE-TIME)
+- [ ] Support PERCENT-COMPLETE property (0-100 integer)
+- [ ] Support DTSTART property
+- [ ] Support DURATION property (mutually exclusive with DUE, error ICAL-VTODO-VAL-001)
+- [ ] Support PRIORITY property (0-9, 0=undefined, 1=highest)
+- [ ] Support SUMMARY, DESCRIPTION, LOCATION, URL
+- [ ] Support CATEGORIES (comma-separated list)
+- [ ] Validate STATUS values: NEEDS-ACTION, COMPLETED, IN-PROCESS, CANCELLED (error ICAL-VTODO-VAL-002)
 - [ ] Support VALARM sub-components
+- [ ] Fluent interface for all setters
 
-**Dependencies:** Task 5.3
+**Dependencies:** Task 5.1 (AbstractComponent)
+
+**Can Parallelize With:** Tasks 5.5, 5.6
 
 **Test Requirements:**
 ```php
@@ -717,28 +729,44 @@ testVTodoRequiresDtStamp()
 testVTodoRequiresUid()
 testVTodoSupportsCompleted()
 testVTodoSupportsDue()
+testVTodoDueAndDurationMutuallyExclusive()
 testVTodoSupportsPercentComplete()
+testVTodoPercentCompleteRange()  // 0-100 only
 testVTodoValidatesStatus()
+testVTodoSupportsAlarms()
+testVTodoFluentInterface()
 ```
 
 ---
 
 ### Task 5.5: VJOURNAL Component
 
-**Status:** ❌ Not Started  
-**Priority:** LOW  
+**Status:** ❌ Not Started
+**Priority:** LOW
 **Effort:** 2 hours
+
+**File:** `src/Component/VJournal.php`
+**Test:** `tests/Component/VJournalTest.php`
 
 **Description:** Implement VJOURNAL component for journal entries.
 
 **Why Important:** Supports journal functionality for calendar applications.
 
 **Acceptance Criteria:**
-- [ ] Require DTSTAMP and UID properties
-- [ ] Validate STATUS values (DRAFT, FINAL, CANCELLED)
-- [ ] Support all standard VJOURNAL properties
+- [ ] Require DTSTAMP property (error ICAL-VJOURNAL-001)
+- [ ] Require UID property (error ICAL-VJOURNAL-002)
+- [ ] Support DTSTART property (DATE or DATE-TIME)
+- [ ] Support SUMMARY property
+- [ ] Support DESCRIPTION property (can be multiple)
+- [ ] Support CATEGORIES property
+- [ ] Support CLASS property (PUBLIC, PRIVATE, CONFIDENTIAL)
+- [ ] Validate STATUS values: DRAFT, FINAL, CANCELLED (error ICAL-VJOURNAL-VAL-001)
+- [ ] Support RRULE for recurring journal entries
+- [ ] Fluent interface for all setters
 
-**Dependencies:** Task 5.4
+**Dependencies:** Task 5.1 (AbstractComponent)
+
+**Can Parallelize With:** Tasks 5.4, 5.6
 
 **Test Requirements:**
 ```php
@@ -746,104 +774,299 @@ testVTodoValidatesStatus()
 testVJournalRequiresDtStamp()
 testVJournalRequiresUid()
 testVJournalValidatesStatus()
+testVJournalSupportsMultipleDescriptions()
+testVJournalSupportsClass()
+testVJournalFluentInterface()
 ```
 
 ---
 
 ### Task 5.6: VFREEBUSY Component
 
-**Status:** ❌ Not Started  
-**Priority:** LOW  
+**Status:** ❌ Not Started
+**Priority:** LOW
 **Effort:** 3 hours
+
+**File:** `src/Component/VFreeBusy.php`
+**Test:** `tests/Component/VFreeBusyTest.php`
 
 **Description:** Implement VFREEBUSY component for availability information.
 
 **Why Important:** Supports free/busy time exchange between calendar systems.
 
 **Acceptance Criteria:**
-- [ ] Require DTSTAMP and UID properties
-- [ ] Support CONTACT and ORGANIZER for published freebusy
-- [ ] Support FREEBUSY property with FBTYPE parameter
-- [ ] Validate period values in FREEBUSY
+- [ ] Require DTSTAMP property (error ICAL-VFB-001)
+- [ ] Require UID property (error ICAL-VFB-002)
+- [ ] Support DTSTART property (start of freebusy time range)
+- [ ] Support DTEND property (end of freebusy time range)
+- [ ] Support CONTACT property
+- [ ] Support ORGANIZER property (for published freebusy)
+- [ ] Support ATTENDEE property
+- [ ] Support FREEBUSY property with FBTYPE parameter:
+  - FBTYPE=FREE (default)
+  - FBTYPE=BUSY
+  - FBTYPE=BUSY-UNAVAILABLE
+  - FBTYPE=BUSY-TENTATIVE
+- [ ] FREEBUSY value is comma-separated list of PERIOD values
+- [ ] Validate PERIOD values in FREEBUSY (error ICAL-VFB-VAL-001)
+- [ ] Support multiple FREEBUSY properties
+- [ ] Fluent interface for all setters
 
-**Dependencies:** Task 5.5
+**Dependencies:** Task 5.1 (AbstractComponent), Task 4.4 (PeriodParser)
+
+**Can Parallelize With:** Tasks 5.4, 5.5
 
 **Test Requirements:**
 ```php
 // Tests must pass:
 testVFreeBusyRequiresDtStamp()
 testVFreeBusyRequiresUid()
-testVFreeBusySupportsFreeBusy()
+testVFreeBusSupportsFreebusy()
+testVFreeBusyFbtypeFree()
+testVFreeBusyFbtypeBusy()
+testVFreeBusyFbtypeBusyTentative()
+testVFreeBusyMultiplePeriods()
 testVFreeBusyValidatesPeriods()
+testVFreeBusyFluentInterface()
 ```
 
 ---
 
 ### Task 5.7: VTIMEZONE Component
 
-**Status:** ❌ Not Started  
-**Priority:** HIGH  
+**Status:** ❌ Not Started
+**Priority:** HIGH
 **Effort:** 10 hours
 
-**Description:** Implement VTIMEZONE component with timezone observance rules.
+**File:** `src/Component/VTimezone.php`
+**Test:** `tests/Component/VTimezoneTest.php`
 
-**Why Important:** Critical for handling timezone-aware events correctly.
+**Description:** Implement VTIMEZONE component with timezone observance rules. This is one of the most complex components.
+
+**Why Important:** Critical for handling timezone-aware events correctly. Without proper timezone handling, recurring events and cross-timezone scheduling will be incorrect.
 
 **Acceptance Criteria:**
 - [ ] Require TZID property (error ICAL-TZ-001)
 - [ ] Require at least one STANDARD or DAYLIGHT sub-component (error ICAL-TZ-002)
-- [ ] Support optional LAST-MODIFIED and TZURL
-- [ ] Parse observance properties: DTSTART, TZOFFSETTO, TZOFFSETFROM
-- [ ] Support optional RRULE, RDATE, TZNAME in observances
-- [ ] Store timezone rules as transition table
-- [ ] Resolve timezone-aware datetime values
+- [ ] Support optional LAST-MODIFIED property
+- [ ] Support optional TZURL property (URL to updated timezone definition)
+- [ ] Accept STANDARD sub-components (Task 5.9)
+- [ ] Accept DAYLIGHT sub-components (Task 5.9)
+- [ ] Build transition table from observances:
+  ```php
+  // Example transition table for America/New_York
+  [
+    ['time' => '2026-03-08T02:00:00', 'offset' => -14400, 'name' => 'EDT'],  // Spring forward
+    ['time' => '2026-11-01T02:00:00', 'offset' => -18000, 'name' => 'EST'],  // Fall back
+  ]
+  ```
+- [ ] `getOffsetAt(DateTimeInterface $dt): int` - returns offset in seconds
+- [ ] `getAbbreviationAt(DateTimeInterface $dt): string` - returns TZNAME
+- [ ] Handle infinite recurring observances (RRULE in STANDARD/DAYLIGHT)
+- [ ] Map TZID to PHP DateTimeZone when possible (e.g., "America/New_York")
+- [ ] Fluent interface for setters
 
-**Dependencies:** Task 5.6
+**Dependencies:** Task 5.9 (Standard/Daylight observances)
+
+**Blocked By:** Task 5.9
 
 **Test Requirements:**
 ```php
 // Tests must pass:
 testVTimezoneRequiresTzid()
 testVTimezoneRequiresObservance()
-testVTimezoneSupportsObservanceProperties()
-testVTimezoneStoresTransitions()
-testVTimezoneResolvesDateTime()
-testVTimezoneHandlesDst()
+testVTimezoneAcceptsStandard()
+testVTimezoneAcceptsDaylight()
+testVTimezoneBuildTransitionTable()
+testVTimezoneGetOffsetAt()
+testVTimezoneGetAbbreviationAt()
+testVTimezoneHandlesDstSpringForward()
+testVTimezoneHandlesDstFallBack()
+testVTimezoneRecurringObservance()
+testVTimezoneMapsToPhpTimezone()
+testVTimezoneFluentInterface()
+```
+
+**Implementation Hint:**
+```php
+// Example structure
+class VTimezone extends AbstractComponent
+{
+    private array $transitions = [];
+
+    public function addStandard(Standard $standard): self { ... }
+    public function addDaylight(Daylight $daylight): self { ... }
+
+    public function buildTransitions(?DateTimeInterface $start = null, ?DateTimeInterface $end = null): void
+    {
+        // Generate transitions from STANDARD/DAYLIGHT RRULE/RDATE
+        // Sort by time ascending
+    }
+
+    public function getOffsetAt(DateTimeInterface $dt): int
+    {
+        // Binary search transitions for $dt
+        // Return offset of matching transition
+    }
+}
 ```
 
 ---
 
 ### Task 5.8: VALARM Component
 
-**Status:** ❌ Not Started  
-**Priority:** MEDIUM  
-**Effort:** 6 hours
+**Status:** ✅ Completed (Basic) / 🔄 Needs Enhancement
+**Priority:** MEDIUM
+**Effort:** 6 hours (2 hours remaining for validation enhancement)
+
+**File:** `src/Component/VAlarm.php`
 
 **Description:** Implement VALARM component for event reminders.
 
 **Why Important:** Supports alarm/reminder functionality.
 
-**Acceptance Criteria:**
-- [ ] Require ACTION property (error ICAL-ALARM-001)
-- [ ] Require TRIGGER property (error ICAL-ALARM-002)
-- [ ] Support AUDIO, DISPLAY, EMAIL actions
+**Current Implementation:**
+- [x] Basic VAlarm class with ACTION, TRIGGER, DURATION, REPEAT, DESCRIPTION, SUMMARY, ATTENDEE properties
+- [x] Basic validation for ACTION and TRIGGER presence
+- [x] Fluent interface setters/getters
+
+**Remaining Acceptance Criteria:**
+- [x] Require ACTION property (error ICAL-ALARM-001) ✅
+- [x] Require TRIGGER property (error ICAL-ALARM-002) ✅
+- [ ] Validate ACTION is one of: AUDIO, DISPLAY, EMAIL (error ICAL-ALARM-VAL-002)
 - [ ] Validate action-specific requirements:
   - DISPLAY: requires DESCRIPTION (error ICAL-ALARM-003)
   - EMAIL: requires SUMMARY, DESCRIPTION, ATTENDEE (error ICAL-ALARM-004)
   - AUDIO: optional ATTACH
-- [ ] Support REPEAT and DURATION for repeated alarms
+- [ ] Validate REPEAT and DURATION must both be present or both absent (error ICAL-ALARM-VAL-001)
+- [ ] Support ATTACH property for AUDIO action
 
-**Dependencies:** Task 5.7
+**Dependencies:** Task 5.1
 
 **Test Requirements:**
 ```php
 // Tests must pass:
-testVAlarmRequiresAction()
-testVAlarmRequiresTrigger()
+testVAlarmRequiresAction() ✓
+testVAlarmRequiresTrigger() ✓
+testVAlarmValidatesActionType()
 testVAlarmDisplayRequiresDescription()
 testVAlarmEmailRequiresProperties()
 testVAlarmAudioSupportsAttach()
 testVAlarmSupportsRepeat()
+testVAlarmRepeatDurationMutualRequirement()
+```
+
+---
+
+### Task 5.9: Timezone Observance Components (Standard/Daylight)
+
+**Status:** ✅ Completed (Basic) / 🔄 Needs Enhancement
+**Priority:** HIGH
+**Effort:** 4 hours (2 hours remaining)
+
+**Files:** `src/Component/Standard.php`, `src/Component/Daylight.php`
+
+**Description:** Implement STANDARD and DAYLIGHT observance sub-components for VTIMEZONE.
+
+**Why Important:** Required for VTIMEZONE to define timezone transitions.
+
+**Current Implementation:**
+- [x] Basic Standard class extending AbstractComponent
+- [x] Basic Daylight class extending AbstractComponent
+
+**Remaining Acceptance Criteria:**
+- [ ] Require DTSTART property (error ICAL-TZ-OBS-001)
+- [ ] Require TZOFFSETTO property (error ICAL-TZ-OBS-002)
+- [ ] Require TZOFFSETFROM property (error ICAL-TZ-OBS-003)
+- [ ] Support optional RRULE for recurring transitions
+- [ ] Support optional RDATE for one-time transitions
+- [ ] Support optional TZNAME (e.g., "EST", "EDT")
+- [ ] Support optional COMMENT
+
+**Dependencies:** Task 5.1
+
+**Test Requirements:**
+```php
+testStandardRequiresDtstart()
+testStandardRequiresTzoffsetto()
+testStandardRequiresTzoffsetfrom()
+testDaylightRequiresDtstart()
+testDaylightSupportsRrule()
+testDaylightSupportsTzname()
+```
+
+---
+
+### Task 5.10: Lexer Implementation
+
+**Status:** ❌ Not Started
+**Priority:** HIGH
+**Effort:** 6 hours
+
+**File:** `src/Parser/Lexer.php`
+
+**Description:** Implement Lexer that tokenizes raw iCalendar data into ContentLine objects using generator pattern.
+
+**Why Important:** Foundation for streaming parser. Enables constant-memory parsing of large files.
+
+**Acceptance Criteria:**
+- [ ] `tokenize(string $data): \Generator<ContentLine>` - tokenize string data
+- [ ] `tokenizeFile(string $filepath): \Generator<ContentLine>` - stream from file
+- [ ] Normalize line endings (LF, CR, CRLF → CRLF)
+- [ ] Unfold continuation lines (CRLF + space/tab)
+- [ ] Track line numbers for error reporting
+- [ ] Handle files larger than available memory (streaming)
+- [ ] Detect and report malformed lines (missing colon)
+
+**Dependencies:** Task 2.1 (ContentLine), Task 2.2 (LineFolder)
+
+**Test Requirements:**
+```php
+testTokenizeSimpleCalendar()
+testTokenizeWithFoldedLines()
+testTokenizeNormalizesLineEndings()
+testTokenizeTracksLineNumbers()
+testTokenizeFileStreaming()
+testTokenizeLargeFile()
+testTokenizeDetectsMalformedLine()
+```
+
+---
+
+### Task 5.11: Security Hardening
+
+**Status:** ❌ Not Started
+**Priority:** HIGH
+**Effort:** 8 hours
+
+**Files:** `src/Validation/SecurityValidator.php`, `src/Parser/Parser.php` (add depth tracking)
+
+**Description:** Implement security requirements NFR-010 through NFR-013.
+
+**Why Important:** Prevents XXE, SSRF, and DoS attacks.
+
+**Acceptance Criteria:**
+- [ ] Create SecurityValidator class with all security checks
+- [ ] NFR-010: Validate ATTACH URI schemes (block file://, restrict data:)
+- [ ] NFR-011: Track and limit recursion depth (default 100, configurable)
+- [ ] NFR-012: Validate URIs to prevent SSRF (block private IPs, restrict schemes)
+- [ ] NFR-013: Sanitize text output (strip null bytes, escape control chars)
+- [ ] Add `Parser::setMaxDepth(int $depth)` configuration
+- [ ] Throw ICAL-SEC-001 for depth exceeded
+- [ ] Throw ICAL-SEC-002 for XXE attempt
+- [ ] Throw ICAL-SEC-003 for SSRF attempt
+
+**Dependencies:** Task 5.10 (Lexer)
+
+**Test Requirements:**
+```php
+testSecurityDepthLimit()
+testSecurityDepthExceeded()
+testSecurityXxeBlocked()
+testSecuritySsrfPrivateIpBlocked()
+testSecuritySsrfFileSchemeBlocked()
+testSecurityTextSanitization()
+testSecurityNullByteStripped()
 ```
 
 ---
@@ -858,24 +1081,46 @@ testVAlarmSupportsRepeat()
 
 ### Task 6.1: RRULE Parser
 
-**Status:** ❌ Not Started  
-**Priority:** HIGH  
+**Status:** ❌ Not Started
+**Priority:** HIGH
 **Effort:** 12 hours
 
-**Description:** Create RRuleParser that parses RRULE strings into structured objects.
+**File:** `src/Recurrence/RRuleParser.php`, `src/Recurrence/RRule.php`
+
+**Description:** Create RRuleParser that parses RRULE strings into structured RRule objects.
 
 **Why Important:** RRULE strings define complex recurring patterns. Accurate parsing is critical.
 
 **Acceptance Criteria:**
-- [ ] Parse FREQ component (SECONDLY to YEARLY)
-- [ ] Parse INTERVAL modifier
-- [ ] Parse UNTIL and COUNT termination conditions
-- [ ] Parse all BY* modifiers (BYSECOND, BYMINUTE, BYHOUR, BYDAY, etc.)
-- [ ] Parse WKST week start parameter
-- [ ] Validate RRULE syntax (error ICAL-RRULE-001 to ICAL-RRULE-005)
-- [ ] Handle complex combinations correctly
+- [ ] Parse FREQ component (SECONDLY, MINUTELY, HOURLY, DAILY, WEEKLY, MONTHLY, YEARLY)
+- [ ] Parse INTERVAL modifier (default 1)
+- [ ] Parse UNTIL (DATE-TIME value) - mutually exclusive with COUNT
+- [ ] Parse COUNT (positive integer) - mutually exclusive with UNTIL
+- [ ] Parse WKST (SU, MO, TU, WE, TH, FR, SA - default MO)
+- [ ] Parse BYSECOND (0-60, comma-separated)
+- [ ] Parse BYMINUTE (0-59, comma-separated)
+- [ ] Parse BYHOUR (0-23, comma-separated)
+- [ ] Parse BYDAY (SU-SA with optional +/-n prefix, e.g., "2TU" for 2nd Tuesday)
+- [ ] Parse BYMONTHDAY (1-31 or -31 to -1, comma-separated)
+- [ ] Parse BYYEARDAY (1-366 or -366 to -1, comma-separated)
+- [ ] Parse BYWEEKNO (1-53 or -53 to -1, comma-separated)
+- [ ] Parse BYMONTH (1-12, comma-separated)
+- [ ] Parse BYSETPOS (1-366 or -366 to -1, filters BY* results)
+- [ ] Validate UNTIL and COUNT mutual exclusivity (error ICAL-RRULE-003)
+- [ ] Validate FREQ is required (error ICAL-RRULE-001)
+- [ ] Return immutable RRule value object with all parsed components
 
-**Dependencies:** Task 5.8
+**Dependencies:** Task 4.1 (DateTimeParser for UNTIL), Task 4.4 (RecurParser stub to enhance)
+
+**Test Vectors:**
+```
+# Input → Expected parsed values
+"FREQ=DAILY;COUNT=10" → freq=DAILY, count=10
+"FREQ=WEEKLY;BYDAY=MO,WE,FR;UNTIL=20261231T235959Z" → freq=WEEKLY, byday=[MO,WE,FR], until=DateTimeImmutable
+"FREQ=MONTHLY;BYDAY=2TU" → freq=MONTHLY, byday=[{ordinal:2,day:TU}]
+"FREQ=YEARLY;BYMONTH=2;BYMONTHDAY=-1" → freq=YEARLY, bymonth=[2], bymonthday=[-1]
+"FREQ=WEEKLY;INTERVAL=2;WKST=SU" → freq=WEEKLY, interval=2, wkst=SU
+```
 
 **Test Requirements:**
 ```php
@@ -884,55 +1129,122 @@ testParseFreqDaily()
 testParseFreqWeekly()
 testParseFreqMonthly()
 testParseFreqYearly()
+testParseFreqSecondly()
 testParseInterval()
 testParseUntil()
 testParseCount()
+testParseUntilAndCountMutuallyExclusive()
+testParseBySecond()
+testParseByMinute()
+testParseByHour()
 testParseByDay()
-testParseByMonth()
+testParseBydayWithOrdinal()  // "2TU", "-1FR"
 testParseByMonthDay()
+testParseByMonthDayNegative()  // -1 = last day
+testParseByYearDay()
+testParseByWeekNo()
+testParseByMonth()
+testParseBySetPos()
 testParseWkst()
 testParseComplexRrule()
-testParseInvalidRrule()
+testParseInvalidRruleMissingFreq()
+testParseInvalidRruleUnknownComponent()
+testRRuleIsImmutable()
 ```
 
 ---
 
 ### Task 6.2: Recurrence Generator
 
-**Status:** ❌ Not Started  
-**Priority:** HIGH  
-**Effort**: 16 hours
+**Status:** ❌ Not Started
+**Priority:** HIGH
+**Effort:** 16 hours
 
-**Description:** Create RecurrenceGenerator that generates occurrence instances from RRULE patterns.
+**File:** `src/Recurrence/RecurrenceGenerator.php`
 
-**Why Important:** Transforms RRULE patterns into actual event dates/times.
+**Description:** Create RecurrenceGenerator that generates occurrence instances from RRULE patterns using generator/iterator pattern for memory efficiency.
+
+**Why Important:** Transforms RRULE patterns into actual event dates/times. This is one of the most complex parts of iCalendar.
 
 **Acceptance Criteria:**
-- [ ] Generate instances for all FREQ types
-- [ ] Handle timezone-aware generation (error ICAL-RRULE-007)
-- [ ] Support EXDATE exceptions
-- [ ] Support RDATE additions
-- [ ] Implement iterator pattern for memory efficiency
-- [ ] Handle edge cases (leap years, DST transitions)
-- [ ] Validate against test vectors
+- [ ] `generate(RRule $rule, DateTimeInterface $dtstart, ?DateTimeInterface $rangeEnd = null): \Generator<DateTimeImmutable>`
+- [ ] Generate instances for all FREQ types (SECONDLY through YEARLY)
+- [ ] Apply INTERVAL correctly (every N periods)
+- [ ] Stop at COUNT limit
+- [ ] Stop at UNTIL datetime
+- [ ] Apply BYDAY filter (including ordinal like "2TU")
+- [ ] Apply BYMONTHDAY filter (including negative values)
+- [ ] Apply BYMONTH filter
+- [ ] Apply BYSETPOS to filter BY* results
+- [ ] Handle timezone-aware generation - preserve DTSTART timezone
+- [ ] Support EXDATE exceptions (exclude specific dates)
+- [ ] Support RDATE additions (add specific dates)
+- [ ] Implement `\Generator` pattern (yield one instance at a time)
+- [ ] Handle leap years correctly (Feb 29)
+- [ ] Handle DST transitions (clocks spring forward/fall back)
+- [ ] Handle month length variations (Jan 31 → Feb 28)
 
-**Dependencies:** Task 6.1
+**Dependencies:** Task 6.1, Task 5.7 (VTIMEZONE for timezone resolution)
+
+**Test Vectors (RFC 5545 Examples):**
+```php
+// Daily for 10 occurrences
+$rule = RRule::parse('FREQ=DAILY;COUNT=10');
+$dtstart = new DateTimeImmutable('2026-01-01T09:00:00');
+// → 2026-01-01, 01-02, 01-03, ..., 01-10 (exactly 10)
+
+// Weekly on Tuesday and Thursday for 5 weeks
+$rule = RRule::parse('FREQ=WEEKLY;COUNT=10;BYDAY=TU,TH');
+$dtstart = new DateTimeImmutable('2026-01-01T09:00:00');  // Wednesday
+// → Jan 2 (Thu), Jan 6 (Tue), Jan 8 (Thu), Jan 13 (Tue), ...
+
+// Monthly on 2nd Tuesday
+$rule = RRule::parse('FREQ=MONTHLY;BYDAY=2TU;COUNT=6');
+$dtstart = new DateTimeImmutable('2026-01-01T09:00:00');
+// → Jan 13, Feb 10, Mar 10, Apr 14, May 12, Jun 9
+
+// Yearly on last day of February (leap year handling)
+$rule = RRule::parse('FREQ=YEARLY;BYMONTH=2;BYMONTHDAY=-1;COUNT=4');
+$dtstart = new DateTimeImmutable('2026-01-01T09:00:00');
+// → Feb 28 2026, Feb 28 2027, Feb 29 2028, Feb 28 2029
+
+// Every other week on Monday, Wednesday, Friday
+$rule = RRule::parse('FREQ=WEEKLY;INTERVAL=2;BYDAY=MO,WE,FR;COUNT=10');
+$dtstart = new DateTimeImmutable('2026-01-05T09:00:00');  // Monday
+// → Jan 5 (Mon), Jan 7 (Wed), Jan 9 (Fri), Jan 19 (Mon), Jan 21 (Wed), ...
+
+// With EXDATE exclusion
+$rule = RRule::parse('FREQ=DAILY;COUNT=5');
+$dtstart = new DateTimeImmutable('2026-01-01');
+$exdates = [new DateTimeImmutable('2026-01-03')];
+// → Jan 1, Jan 2, Jan 4, Jan 5, Jan 6 (Jan 3 excluded, so 6th fills COUNT)
+```
 
 **Test Requirements:**
 ```php
 // Tests must pass:
 testGenerateDailyInstances()
+testGenerateDailyWithCount()
+testGenerateDailyWithUntil()
 testGenerateWeeklyInstances()
+testGenerateWeeklyWithByday()
+testGenerateWeeklyWithInterval()
 testGenerateMonthlyInstances()
+testGenerateMonthlyWithBydayOrdinal()  // "2TU"
+testGenerateMonthlyWithBymonthday()
+testGenerateMonthlyWithNegativeBymonthday()  // -1 = last
 testGenerateYearlyInstances()
-testGenerateWithUntil()
-testGenerateWithCount()
-testGenerateWithByDay()
+testGenerateYearlyBymonthBymonthday()
+testGenerateWithBysetpos()
 testGenerateWithExdate()
 testGenerateWithRdate()
-testGenerateTimezoneAware()
-testGenerateLeapYear()
-testGenerateDSTTransition()
+testGenerateTimezonePreserved()
+testGenerateLeapYearFeb29()
+testGenerateDSTSpringForward()
+testGenerateDSTFallBack()
+testGenerateMonthOverflow()  // Jan 31 monthly → Feb 28
+testGeneratorYieldsOneAtATime()
+testGeneratorStopsAtRangeEnd()
 ```
 
 ---
@@ -1265,28 +1577,67 @@ testValidatorErrorMessages()
 
 ### Task 10.2: RFC 5545 Conformance Tests
 
-**Status:** ❌ Not Started  
-**Priority:** HIGH  
-**Effort**: 20 hours
+**Status:** ❌ Not Started
+**Priority:** HIGH
+**Effort:** 20 hours
+
+**Files:**
+- `tests/Conformance/Rfc5545ExamplesTest.php`
+- `tests/fixtures/rfc5545/*.ics` (test data files)
 
 **Description:** Create tests for all RFC 5545 examples and conformance requirements.
 
-**Why Important:** Verifies RFC compliance.
+**Why Important:** Verifies RFC compliance. These are the canonical test cases.
 
 **Acceptance Criteria:**
-- [ ] Test all 14 RFC 5545 examples
+- [ ] Test all 14 RFC 5545 examples (see list below)
 - [ ] Parse and round-trip each example
-- [ ] Verify output matches specification
+- [ ] Verify output matches specification (ignoring whitespace/ordering)
 - [ ] Test all data types with examples
+- [ ] Create fixture files for each example
 
-**Dependencies:** Task 10.1
+**RFC 5545 Example Files to Create:**
+1. `simple-event.ics` - Basic VEVENT with required properties
+2. `daily-recurring.ics` - RRULE:FREQ=DAILY
+3. `weekly-with-exceptions.ics` - RRULE with EXDATE
+4. `monthly-byday.ics` - Monthly on 2nd Tuesday
+5. `yearly-recurring.ics` - Yearly birthday
+6. `all-day-event.ics` - VALUE=DATE (no time)
+7. `todo-with-due.ics` - VTODO with DUE
+8. `journal-entry.ics` - VJOURNAL
+9. `freebusy.ics` - VFREEBUSY
+10. `timezone-dst.ics` - VTIMEZONE with STANDARD/DAYLIGHT
+11. `alarm-display.ics` - VALARM ACTION=DISPLAY
+12. `alarm-email.ics` - VALARM ACTION=EMAIL
+13. `alarm-audio.ics` - VALARM ACTION=AUDIO
+14. `complex-meeting.ics` - Multiple ATTENDEEs, ORGANIZER, RRULE
+
+**Round-Trip Test Strategy:**
+```php
+public function testRoundTrip(string $fixture): void
+{
+    $original = file_get_contents($fixture);
+    $calendar = $this->parser->parse($original);
+    $output = $this->writer->write($calendar);
+    $reparsed = $this->parser->parse($output);
+
+    // Compare calendars semantically (not string comparison)
+    $this->assertCalendarsEquivalent($calendar, $reparsed);
+}
+```
+
+**Dependencies:** Task 10.1, Task 8.2 (Main Writer)
 
 **Test Requirements:**
 ```php
 // Tests must pass:
-testRfcExample1() // through testRfcExample14()
-testAllDataTypes()
-testRoundTripAllExamples()
+testRfcExample1SimpleEvent()
+testRfcExample2DailyRecurring()
+// ... through testRfcExample14()
+testAllDataTypesRoundTrip()
+testRoundTripPreservesProperties()
+testRoundTripPreservesComponents()
+testRoundTripPreservesParameters()
 ```
 
 ---
@@ -1419,14 +1770,14 @@ testRoundTripAllExamples()
 
 ## Progress Summary
 
-### Overall Progress: 21% (16/78 tasks complete)
+### Overall Progress: 20% (17/84 tasks complete)
 
 #### Epic Progress:
 - Epic 1: Foundation - 100% (3/3 tasks) ✅
 - Epic 2: Content Line Processing - 100% (3/3 tasks) ✅
 - Epic 3: Property Parsing - 100% (3/3 tasks) ✅
 - Epic 4: Data Type Parsers - 100% (4/4 tasks) ✅
-- Epic 5: Component System - 38% (3/8 tasks) 🔄
+- Epic 5: Component System - 45% (5/11 tasks) 🔄
 - Epic 6: Recurrence Rules - 0% (0/2 tasks)
 - Epic 7: Writer System - 0% (0/4 tasks)
 - Epic 8: Main Parser/Writer - 0% (0/2 tasks)
@@ -1434,12 +1785,33 @@ testRoundTripAllExamples()
 - Epic 10: Test Suite - 0% (0/4 tasks)
 - Epic 11: Documentation - 0% (0/3 tasks)
 
+### Parallel Work Opportunities
+
+The following task groups can be worked on **in parallel** by multiple agents:
+
+**Group A (Components - can all run in parallel):**
+- Task 5.4: VTODO
+- Task 5.5: VJOURNAL
+- Task 5.6: VFREEBUSY
+- Task 5.8: VALARM enhancement
+
+**Group B (Infrastructure - after Group A):**
+- Task 5.7: VTIMEZONE (needs 5.9 first)
+- Task 5.9: Standard/Daylight
+- Task 5.10: Lexer
+- Task 5.11: Security
+
+**Group C (Recurrence + Writer - after Epic 5):**
+- Task 6.1: RRULE Parser
+- Task 7.1: Value Writers (can start in parallel with 6.1)
+
 ### Next Steps:
-1. Proceed to Epic 5: Task 5.4 (VTODO Component)
-2. Continue with VJOURNAL and other components
+1. **Parallel:** Start Tasks 5.4, 5.5, 5.6 simultaneously
+2. **Sequential:** Complete 5.9 before 5.7 (VTIMEZONE depends on observances)
+3. **Parallel:** Tasks 5.10 (Lexer) and 5.11 (Security) after basic components
 
 ### Blocked Tasks:
-None currently - all tasks are ready to start.
+- Task 5.7 (VTIMEZONE): Blocked by Task 5.9 (Standard/Daylight)
 
 ### Epic 5 Summary:
 Component system in progress:
@@ -1449,8 +1821,11 @@ Component system in progress:
 - ⏳ Task 5.4: VTODO Component
 - ⏳ Task 5.5: VJOURNAL Component
 - ⏳ Task 5.6: VFREEBUSY Component
-- ⏳ Task 5.7: VTIMEZONE Component
-- ⏳ Task 5.8: VALARM Component
+- ⏳ Task 5.7: VTIMEZONE Component (blocked by 5.9)
+- ✅ Task 5.8: VALARM Component (basic, needs enhancement)
+- ✅ Task 5.9: Standard/Daylight (basic, needs enhancement)
+- ⏳ Task 5.10: Lexer Implementation (NEW)
+- ⏳ Task 5.11: Security Hardening (NEW)
 
 ### Epic 4 Summary:
 All data type parsing tasks completed:
@@ -1482,17 +1857,32 @@ All foundation tasks completed:
 ## Notes for AI Agents
 
 ### Implementation Order:
-Follow the epic order as listed. Each epic builds on the previous ones. Do not skip ahead unless explicitly noted.
+Follow the epic order as listed. Each epic builds on the previous ones. However, **tasks within an epic can often be parallelized** - see "Parallel Work Opportunities" section above.
+
+### File Naming Convention:
+- Source: `src/{Namespace}/{ClassName}.php`
+- Tests: `tests/{Namespace}/{ClassName}Test.php`
+- Example: `src/Component/VTodo.php` → `tests/Component/VTodoTest.php`
 
 ### Test-Driven Development:
 - Write tests before implementation for each task
 - Ensure all acceptance criteria tests pass
 - Maintain 100% test coverage
+- Use PHPUnit data providers for repetitive test cases
 
 ### Error Handling:
 - All error codes from PRD §6 must be implemented
+- Use constants for error codes (e.g., `public const ERR_MISSING_UID = 'ICAL-VEVENT-002'`)
 - Use proper exception types with context
 - Include line numbers in parse errors
+- **IMPORTANT:** Check PRD §6 for correct error codes - some implementations may have wrong codes
+
+### Code Style:
+- PSR-12 coding standards
+- Fluent interface for setters (return `$this`)
+- Use `DateTimeImmutable` not `DateTime`
+- Use `\Generator` for streaming operations
+- Prefer composition over inheritance where possible
 
 ### Performance:
 - Keep memory usage low (streaming for large files)
@@ -1506,5 +1896,79 @@ Follow the epic order as listed. Each epic builds on the previous ones. Do not s
 
 ---
 
+## Known Issues / Technical Debt
+
+### Code Issues to Fix:
+
+| File | Issue | Resolution |
+|------|-------|------------|
+| `src/Parser/ValueParser/DurationParser.php:31` | Uses `ICAL-TYPE-020` | Change to `ICAL-TYPE-006` per PRD |
+| `src/Exception/ParseException.php:32` | Has correct `ICAL-TYPE-006` | Keep as-is, update DurationParser to use it |
+
+### Missing Tests:
+
+| Component | Gap | Priority |
+|-----------|-----|----------|
+| VAlarm | Action-specific validation tests | HIGH |
+| Standard/Daylight | Observance validation tests | HIGH |
+| All parsers | Round-trip tests (parse → write → parse) | MEDIUM |
+
+### Architecture Decisions Pending:
+
+1. **Property type classes**: Currently only `GenericProperty` exists. Should we create specific property classes (e.g., `DtstartProperty`, `SummaryProperty`) or keep using generics?
+
+2. **Value type classes**: Currently only `TextValue` exists. Should we create typed value classes (e.g., `DateTimeValue`, `DurationValue`) that wrap the parsed results?
+
+3. **Streaming threshold**: At what file size should we automatically switch to streaming mode? Suggested: 1MB.
+
+---
+
+## Milestone Checkpoints
+
+### Milestone 1: Parse-Only MVP (Epic 5 + 6 + 8.1)
+- All components can be parsed
+- RRULE can be parsed and instances generated
+- Main Parser ties everything together
+- **Deliverable:** Can parse any RFC 5545 compliant file
+
+### Milestone 2: Round-Trip MVP (Milestone 1 + Epic 7 + 8.2)
+- All components can be written
+- Parse → Write produces valid output
+- **Deliverable:** Can parse and re-serialize iCalendar files
+
+### Milestone 3: Production Ready (All Epics)
+- Full validation
+- Complete test coverage
+- Documentation
+- **Deliverable:** Production-ready library
+
+---
+
+---
+
+## Quick Start Checklist for AI Agents
+
+Before starting any task:
+
+1. [ ] Read this STATUS.md to understand current state
+2. [ ] Check PRD.md §6 for error codes (use exact codes!)
+3. [ ] Verify dependencies are completed
+4. [ ] Check "Can Parallelize With" to optimize work
+5. [ ] Create test file first (TDD)
+6. [ ] Run `composer test` before and after changes
+7. [ ] Run `composer phpstan` to check types
+8. [ ] Update task status when starting/completing
+
+When implementing a component:
+
+1. [ ] Extend `AbstractComponent`
+2. [ ] Implement `getName(): string`
+3. [ ] Add error code constants (`public const ERR_* = 'ICAL-*'`)
+4. [ ] Add property setters/getters with fluent interface
+5. [ ] Implement `validate(): void` throwing `ValidationException`
+6. [ ] Create test class with all acceptance criteria tests
+
+---
+
 **Last Updated:** 2026-02-05
-**Next Review:** After Epic 3 completion
+**Next Review:** After Epic 5 completion

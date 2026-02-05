@@ -185,4 +185,179 @@ class RecurParserTest extends TestCase
     {
         $this->assertFalse($this->parser->canParse('FREQ=DAILY;INVALID=value'));
     }
+
+    // ========== New validation tests ==========
+
+    public function testParseUntilAndCountMutuallyExclusive(): void
+    {
+        $this->expectException(ParseException::class);
+        $this->expectExceptionMessage('RECUR cannot have both UNTIL and COUNT');
+
+        $this->parser->parse('FREQ=DAILY;UNTIL=20261231T235959Z;COUNT=10');
+    }
+
+    public function testParseBySecond(): void
+    {
+        $result = $this->parser->parse('FREQ=MINUTELY;BYSECOND=0,30');
+
+        $this->assertEquals('0,30', $result['BYSECOND']);
+    }
+
+    public function testParseBySecondInvalid(): void
+    {
+        $this->expectException(ParseException::class);
+        $this->expectExceptionMessage('Invalid RECUR BYSECOND value');
+
+        $this->parser->parse('FREQ=MINUTELY;BYSECOND=61');
+    }
+
+    public function testParseByMinute(): void
+    {
+        $result = $this->parser->parse('FREQ=HOURLY;BYMINUTE=0,15,30,45');
+
+        $this->assertEquals('0,15,30,45', $result['BYMINUTE']);
+    }
+
+    public function testParseByMinuteInvalid(): void
+    {
+        $this->expectException(ParseException::class);
+        $this->expectExceptionMessage('Invalid RECUR BYMINUTE value');
+
+        $this->parser->parse('FREQ=HOURLY;BYMINUTE=60');
+    }
+
+    public function testParseByHour(): void
+    {
+        $result = $this->parser->parse('FREQ=DAILY;BYHOUR=9,17');
+
+        $this->assertEquals('9,17', $result['BYHOUR']);
+    }
+
+    public function testParseByHourInvalid(): void
+    {
+        $this->expectException(ParseException::class);
+        $this->expectExceptionMessage('Invalid RECUR BYHOUR value');
+
+        $this->parser->parse('FREQ=DAILY;BYHOUR=24');
+    }
+
+    public function testParseByMonthDayNegative(): void
+    {
+        // Negative values are valid - last day of month
+        $result = $this->parser->parse('FREQ=MONTHLY;BYMONTHDAY=-1');
+
+        $this->assertEquals('-1', $result['BYMONTHDAY']);
+    }
+
+    public function testParseByMonthDayNegativeMultiple(): void
+    {
+        $result = $this->parser->parse('FREQ=MONTHLY;BYMONTHDAY=1,-1');
+
+        $this->assertEquals('1,-1', $result['BYMONTHDAY']);
+    }
+
+    public function testParseByMonthDayInvalidZero(): void
+    {
+        $this->expectException(ParseException::class);
+        $this->expectExceptionMessage('Invalid RECUR BYMONTHDAY value');
+
+        $this->parser->parse('FREQ=MONTHLY;BYMONTHDAY=0');
+    }
+
+    public function testParseByMonthDayInvalidRange(): void
+    {
+        $this->expectException(ParseException::class);
+        $this->expectExceptionMessage('Invalid RECUR BYMONTHDAY value');
+
+        $this->parser->parse('FREQ=MONTHLY;BYMONTHDAY=32');
+    }
+
+    public function testParseByYearDay(): void
+    {
+        $result = $this->parser->parse('FREQ=YEARLY;BYYEARDAY=1,100,200');
+
+        $this->assertEquals('1,100,200', $result['BYYEARDAY']);
+    }
+
+    public function testParseByYearDayNegative(): void
+    {
+        $result = $this->parser->parse('FREQ=YEARLY;BYYEARDAY=-1,-100');
+
+        $this->assertEquals('-1,-100', $result['BYYEARDAY']);
+    }
+
+    public function testParseByYearDayInvalid(): void
+    {
+        $this->expectException(ParseException::class);
+        $this->expectExceptionMessage('Invalid RECUR BYYEARDAY value');
+
+        $this->parser->parse('FREQ=YEARLY;BYYEARDAY=367');
+    }
+
+    public function testParseByWeekNo(): void
+    {
+        $result = $this->parser->parse('FREQ=YEARLY;BYWEEKNO=1,26,52');
+
+        $this->assertEquals('1,26,52', $result['BYWEEKNO']);
+    }
+
+    public function testParseByWeekNoNegative(): void
+    {
+        $result = $this->parser->parse('FREQ=YEARLY;BYWEEKNO=-1');
+
+        $this->assertEquals('-1', $result['BYWEEKNO']);
+    }
+
+    public function testParseByWeekNoInvalid(): void
+    {
+        $this->expectException(ParseException::class);
+        $this->expectExceptionMessage('Invalid RECUR BYWEEKNO value');
+
+        $this->parser->parse('FREQ=YEARLY;BYWEEKNO=54');
+    }
+
+    public function testParseBySetPos(): void
+    {
+        $result = $this->parser->parse('FREQ=MONTHLY;BYDAY=MO;BYSETPOS=-1');
+
+        $this->assertEquals('-1', $result['BYSETPOS']);
+    }
+
+    public function testParseBySetPosMultiple(): void
+    {
+        $result = $this->parser->parse('FREQ=MONTHLY;BYDAY=MO,TU,WE,TH,FR;BYSETPOS=1,-1');
+
+        $this->assertEquals('1,-1', $result['BYSETPOS']);
+    }
+
+    public function testParseBySetPosInvalid(): void
+    {
+        $this->expectException(ParseException::class);
+        $this->expectExceptionMessage('Invalid RECUR BYSETPOS value');
+
+        $this->parser->parse('FREQ=MONTHLY;BYSETPOS=367');
+    }
+
+    public function testParseByDayOrdinalInvalidZero(): void
+    {
+        $this->expectException(ParseException::class);
+        $this->expectExceptionMessage('Invalid RECUR BYDAY ordinal');
+
+        $this->parser->parse('FREQ=MONTHLY;BYDAY=0MO');
+    }
+
+    public function testParseByDayOrdinalInvalidRange(): void
+    {
+        $this->expectException(ParseException::class);
+        $this->expectExceptionMessage('Invalid RECUR BYDAY ordinal');
+
+        $this->parser->parse('FREQ=MONTHLY;BYDAY=54MO');
+    }
+
+    public function testParseByDayPositiveOrdinal(): void
+    {
+        $result = $this->parser->parse('FREQ=MONTHLY;BYDAY=+2TU');
+
+        $this->assertEquals('+2TU', $result['BYDAY']);
+    }
 }

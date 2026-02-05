@@ -26,7 +26,9 @@ class FloatParser implements ValueParserInterface
             );
         }
 
-        if (!preg_match('/^-?\d+\.?\d*$/', $value)) {
+        // RFC 5545 §3.3.7: float = (["+"] / "-") 1*DIGIT ["." 1*DIGIT]
+        // At least one digit required before decimal; if decimal present, at least one digit after
+        if (!preg_match('/^[+-]?\d+(\.\d+)?$/', $value)) {
             throw new ParseException(
                 'Invalid FLOAT format: ' . $value,
                 self::ERR_INVALID_FLOAT
@@ -49,6 +51,7 @@ class FloatParser implements ValueParserInterface
             return false;
         }
 
-        return (bool) preg_match('/^-?\d+\.?\d*$/', $value);
+        // RFC 5545 §3.3.7: float = (["+"] / "-") 1*DIGIT ["." 1*DIGIT]
+        return (bool) preg_match('/^[+-]?\d+(\.\d+)?$/', $value);
     }
 }

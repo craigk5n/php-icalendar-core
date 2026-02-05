@@ -23,6 +23,9 @@ class RecurParser implements ValueParserInterface
         'COUNT',
         'UNTIL',
         'INTERVAL',
+        'BYSECOND',
+        'BYMINUTE',
+        'BYHOUR',
         'BYDAY',
         'BYMONTHDAY',
         'BYYEARDAY',
@@ -101,6 +104,14 @@ class RecurParser implements ValueParserInterface
             );
         }
 
+        // UNTIL and COUNT are mutually exclusive per RFC 5545 §3.3.10
+        if (isset($rules['UNTIL']) && isset($rules['COUNT'])) {
+            throw new ParseException(
+                'RECUR cannot have both UNTIL and COUNT',
+                self::ERR_INVALID_RECUR
+            );
+        }
+
         if (isset($rules['COUNT'])) {
             if (!ctype_digit($rules['COUNT']) || (int) $rules['COUNT'] <= 0) {
                 throw new ParseException(
@@ -119,6 +130,18 @@ class RecurParser implements ValueParserInterface
             }
         }
 
+        if (isset($rules['BYSECOND'])) {
+            $this->validateBySecond($rules['BYSECOND']);
+        }
+
+        if (isset($rules['BYMINUTE'])) {
+            $this->validateByMinute($rules['BYMINUTE']);
+        }
+
+        if (isset($rules['BYHOUR'])) {
+            $this->validateByHour($rules['BYHOUR']);
+        }
+
         if (isset($rules['BYDAY'])) {
             $this->validateByDay($rules['BYDAY'], $rules['FREQ']);
         }
@@ -127,8 +150,20 @@ class RecurParser implements ValueParserInterface
             $this->validateByMonthDay($rules['BYMONTHDAY']);
         }
 
+        if (isset($rules['BYYEARDAY'])) {
+            $this->validateByYearDay($rules['BYYEARDAY']);
+        }
+
+        if (isset($rules['BYWEEKNO'])) {
+            $this->validateByWeekNo($rules['BYWEEKNO']);
+        }
+
         if (isset($rules['BYMONTH'])) {
             $this->validateByMonth($rules['BYMONTH']);
+        }
+
+        if (isset($rules['BYSETPOS'])) {
+            $this->validateBySetPos($rules['BYSETPOS']);
         }
 
         if (isset($rules['WKST'])) {
@@ -140,16 +175,71 @@ class RecurParser implements ValueParserInterface
         }
     }
 
+    private function validateBySecond(string $value): void
+    {
+        $seconds = explode(',', $value);
+
+        foreach ($seconds as $second) {
+            if (!ctype_digit($second) || (int) $second < 0 || (int) $second > 60) {
+                throw new ParseException(
+                    'Invalid RECUR BYSECOND value: ' . $second . ' (must be 0-60)',
+                    self::ERR_INVALID_RECUR
+                );
+            }
+        }
+    }
+
+    private function validateByMinute(string $value): void
+    {
+        $minutes = explode(',', $value);
+
+        foreach ($minutes as $minute) {
+            if (!ctype_digit($minute) || (int) $minute < 0 || (int) $minute > 59) {
+                throw new ParseException(
+                    'Invalid RECUR BYMINUTE value: ' . $minute . ' (must be 0-59)',
+                    self::ERR_INVALID_RECUR
+                );
+            }
+        }
+    }
+
+    private function validateByHour(string $value): void
+    {
+        $hours = explode(',', $value);
+
+        foreach ($hours as $hour) {
+            if (!ctype_digit($hour) || (int) $hour < 0 || (int) $hour > 23) {
+                throw new ParseException(
+                    'Invalid RECUR BYHOUR value: ' . $hour . ' (must be 0-23)',
+                    self::ERR_INVALID_RECUR
+                );
+            }
+        }
+    }
+
     private function validateByDay(string $value, string $freq): void
     {
         $days = explode(',', $value);
 
         foreach ($days as $day) {
-            if (!preg_match('/^-?\d*(MO|TU|WE|TH|FR|SA|SU)$/', $day)) {
+            // Pattern: optional +/- number (ordinal) followed by day abbreviation
+            if (!preg_match('/^([+-]?\d*)?(MO|TU|WE|TH|FR|SA|SU)$/', $day, $matches)) {
                 throw new ParseException(
                     'Invalid RECUR BYDAY value: ' . $day,
                     self::ERR_INVALID_RECUR
                 );
+            }
+
+            // Validate ordinal range if present (must be ±1 to ±53)
+            // Note: isset and !== '' because empty('0') is true in PHP
+            if (isset($matches[1]) && $matches[1] !== '') {
+                $ordinal = (int) $matches[1];
+                if ($ordinal === 0 || $ordinal < -53 || $ordinal > 53) {
+                    throw new ParseException(
+                        'Invalid RECUR BYDAY ordinal: ' . $matches[1] . ' (must be ±1 to ±53)',
+                        self::ERR_INVALID_RECUR
+                    );
+                }
             }
         }
     }
@@ -159,9 +249,62 @@ class RecurParser implements ValueParserInterface
         $days = explode(',', $value);
 
         foreach ($days as $day) {
-            if (!ctype_digit($day) || (int) $day < -31 || (int) $day > 31 || (int) $day === 0) {
+            // Handle negative numbers correctly
+            if (!preg_match('/^-?\d+$/', $day)) {
                 throw new ParseException(
                     'Invalid RECUR BYMONTHDAY value: ' . $day . ' (must be 1-31 or -31 to -1)',
+                    self::ERR_INVALID_RECUR
+                );
+            }
+
+            $dayInt = (int) $day;
+            if ($dayInt < -31 || $dayInt > 31 || $dayInt === 0) {
+                throw new ParseException(
+                    'Invalid RECUR BYMONTHDAY value: ' . $day . ' (must be 1-31 or -31 to -1)',
+                    self::ERR_INVALID_RECUR
+                );
+            }
+        }
+    }
+
+    private function validateByYearDay(string $value): void
+    {
+        $days = explode(',', $value);
+
+        foreach ($days as $day) {
+            if (!preg_match('/^-?\d+$/', $day)) {
+                throw new ParseException(
+                    'Invalid RECUR BYYEARDAY value: ' . $day . ' (must be 1-366 or -366 to -1)',
+                    self::ERR_INVALID_RECUR
+                );
+            }
+
+            $dayInt = (int) $day;
+            if ($dayInt < -366 || $dayInt > 366 || $dayInt === 0) {
+                throw new ParseException(
+                    'Invalid RECUR BYYEARDAY value: ' . $day . ' (must be 1-366 or -366 to -1)',
+                    self::ERR_INVALID_RECUR
+                );
+            }
+        }
+    }
+
+    private function validateByWeekNo(string $value): void
+    {
+        $weeks = explode(',', $value);
+
+        foreach ($weeks as $week) {
+            if (!preg_match('/^-?\d+$/', $week)) {
+                throw new ParseException(
+                    'Invalid RECUR BYWEEKNO value: ' . $week . ' (must be 1-53 or -53 to -1)',
+                    self::ERR_INVALID_RECUR
+                );
+            }
+
+            $weekInt = (int) $week;
+            if ($weekInt < -53 || $weekInt > 53 || $weekInt === 0) {
+                throw new ParseException(
+                    'Invalid RECUR BYWEEKNO value: ' . $week . ' (must be 1-53 or -53 to -1)',
                     self::ERR_INVALID_RECUR
                 );
             }
@@ -176,6 +319,28 @@ class RecurParser implements ValueParserInterface
             if (!ctype_digit($month) || (int) $month < 1 || (int) $month > 12) {
                 throw new ParseException(
                     'Invalid RECUR BYMONTH value: ' . $month . ' (must be 1-12)',
+                    self::ERR_INVALID_RECUR
+                );
+            }
+        }
+    }
+
+    private function validateBySetPos(string $value): void
+    {
+        $positions = explode(',', $value);
+
+        foreach ($positions as $pos) {
+            if (!preg_match('/^-?\d+$/', $pos)) {
+                throw new ParseException(
+                    'Invalid RECUR BYSETPOS value: ' . $pos . ' (must be 1-366 or -366 to -1)',
+                    self::ERR_INVALID_RECUR
+                );
+            }
+
+            $posInt = (int) $pos;
+            if ($posInt < -366 || $posInt > 366 || $posInt === 0) {
+                throw new ParseException(
+                    'Invalid RECUR BYSETPOS value: ' . $pos . ' (must be 1-366 or -366 to -1)',
                     self::ERR_INVALID_RECUR
                 );
             }

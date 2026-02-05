@@ -49,6 +49,18 @@ class CalAddressParser implements ValueParserInterface
             );
         }
 
+        // Validate email format - extract email from "Name <email>" format if present
+        $email = $parsed['path'];
+        if (preg_match('/<([^>]+)>/', $email, $matches)) {
+            $email = $matches[1];
+        }
+        if (filter_var($email, FILTER_VALIDATE_EMAIL) === false) {
+            throw new ParseException(
+                'Invalid CAL-ADDRESS: invalid email format: ' . $parsed['path'],
+                self::ERR_INVALID_CAL_ADDRESS
+            );
+        }
+
         return $value;
     }
 
@@ -72,6 +84,15 @@ class CalAddressParser implements ValueParserInterface
         }
 
         if (!isset($parsed['path']) || empty($parsed['path'])) {
+            return false;
+        }
+
+        // Validate email format - extract email from "Name <email>" format if present
+        $email = $parsed['path'];
+        if (preg_match('/<([^>]+)>/', $email, $matches)) {
+            $email = $matches[1];
+        }
+        if (filter_var($email, FILTER_VALIDATE_EMAIL) === false) {
             return false;
         }
 

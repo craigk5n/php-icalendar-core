@@ -62,18 +62,12 @@ class UtcOffsetParser implements ValueParserInterface
             );
         }
 
-        $totalSeconds = ($hours * 3600) + ($minutes * 60) + $seconds;
-
-        if ($sign === '-') {
-            $totalSeconds = -$totalSeconds;
-        }
-
+        // Create interval directly from parsed values
         $interval = new \DateInterval('PT0S');
-        $interval->invert = $totalSeconds < 0 ? 1 : 0;
-        $interval->days = 0;
-        $interval->h = abs((int) ($totalSeconds / 3600));
-        $interval->i = abs((int) (($totalSeconds % 3600) / 60));
-        $interval->s = abs($totalSeconds % 60);
+        $interval->h = $hours;
+        $interval->i = $minutes;
+        $interval->s = $seconds;
+        $interval->invert = ($sign === '-') ? 1 : 0;
 
         return $interval;
     }

@@ -75,7 +75,7 @@ class ContentLineTest extends TestCase
     public function testContentLineValidationMissingColon(): void
     {
         $this->expectException(ParseException::class);
-        $this->expectExceptionMessage('Invalid content line format: missing colon separator');
+        $this->expectExceptionMessage('Invalid property format: missing colon separator');
 
         ContentLine::parse('SUMMARY Team Meeting');
     }
@@ -83,7 +83,7 @@ class ContentLineTest extends TestCase
     public function testContentLineValidationEmptyName(): void
     {
         $this->expectException(ParseException::class);
-        $this->expectExceptionMessage('Invalid content line format: empty property name');
+        $this->expectExceptionMessage('Invalid property format: empty property name');
 
         ContentLine::parse(':Team Meeting');
     }
@@ -188,5 +188,34 @@ class ContentLineTest extends TestCase
         $this->assertEquals('20260210T100000', $line->getValue());
         $this->assertEquals(['TZID' => 'UTC'], $line->getParameters());
         $this->assertEquals('DTSTART;TZID=UTC:20260210T100000', $line->getRawLine());
+    }
+
+    public function testContentLineWithQuotedParameterContainingColon(): void
+    {
+        // Quoted parameter values can contain colons - this was a bug in the old implementation
+        $line = ContentLine::parse('ATTENDEE;CN="John: The Manager":mailto:john@example.com');
+
+        $this->assertEquals('ATTENDEE', $line->getName());
+        $this->assertEquals('mailto:john@example.com', $line->getValue());
+        $this->assertEquals('John: The Manager', $line->getParameter('CN'));
+    }
+
+    public function testContentLineWithQuotedParameterContainingSemicolon(): void
+    {
+        // Quoted parameter values can contain semicolons
+        $line = ContentLine::parse('ATTENDEE;CN="Doe; John":mailto:john@example.com');
+
+        $this->assertEquals('ATTENDEE', $line->getName());
+        $this->assertEquals('mailto:john@example.com', $line->getValue());
+        $this->assertEquals('Doe; John', $line->getParameter('CN'));
+    }
+
+    public function testContentLineWithRfc6868Encoding(): void
+    {
+        // RFC 6868 encoding: ^n for newline, ^^ for caret, ^' for double quote
+        $line = ContentLine::parse('SUMMARY;X-DESC="Line 1^nLine 2":Meeting');
+
+        $this->assertEquals('SUMMARY', $line->getName());
+        $this->assertEquals("Line 1\nLine 2", $line->getParameter('X-DESC'));
     }
 }

@@ -28,7 +28,7 @@ use Icalendar\Exception\ParseException;
  */
 class DurationParser implements ValueParserInterface
 {
-    public const ERR_INVALID_DURATION = 'ICAL-TYPE-020';
+    public const ERR_INVALID_DURATION = 'ICAL-TYPE-006';  // Per PRD §6 - DURATION error code
 
     /**
      * Parse a DURATION value into a DateInterval
