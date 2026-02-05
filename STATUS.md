@@ -915,45 +915,42 @@ class VTimezone extends AbstractComponent
 
 ### Task 5.8: VALARM Component
 
-**Status:** ✅ Completed (Basic) / 🔄 Needs Enhancement
+**Status:** ✅ Completed
 **Priority:** MEDIUM
-**Effort:** 6 hours (2 hours remaining for validation enhancement)
+**Effort:** 6 hours
 
 **File:** `src/Component/VAlarm.php`
+**Test:** `tests/Component/VAlarmTest.php`
 
 **Description:** Implement VALARM component for event reminders.
 
 **Why Important:** Supports alarm/reminder functionality.
 
-**Current Implementation:**
-- [x] Basic VAlarm class with ACTION, TRIGGER, DURATION, REPEAT, DESCRIPTION, SUMMARY, ATTENDEE properties
-- [x] Basic validation for ACTION and TRIGGER presence
-- [x] Fluent interface setters/getters
-
-**Remaining Acceptance Criteria:**
-- [x] Require ACTION property (error ICAL-ALARM-001) ✅
-- [x] Require TRIGGER property (error ICAL-ALARM-002) ✅
-- [ ] Validate ACTION is one of: AUDIO, DISPLAY, EMAIL (error ICAL-ALARM-VAL-002)
-- [ ] Validate action-specific requirements:
+**Acceptance Criteria:**
+- [x] Require ACTION property (error ICAL-ALARM-001)
+- [x] Require TRIGGER property (error ICAL-ALARM-002)
+- [x] Validate ACTION is one of: AUDIO, DISPLAY, EMAIL (error ICAL-ALARM-VAL-002)
+- [x] Validate action-specific requirements:
   - DISPLAY: requires DESCRIPTION (error ICAL-ALARM-003)
   - EMAIL: requires SUMMARY, DESCRIPTION, ATTENDEE (error ICAL-ALARM-004)
   - AUDIO: optional ATTACH
-- [ ] Validate REPEAT and DURATION must both be present or both absent (error ICAL-ALARM-VAL-001)
-- [ ] Support ATTACH property for AUDIO action
+- [x] Validate REPEAT and DURATION must both be present or both absent (error ICAL-ALARM-VAL-001)
+- [x] Support ATTACH property for AUDIO action
+- [x] Fluent interface setters/getters
 
 **Dependencies:** Task 5.1
 
 **Test Requirements:**
 ```php
-// Tests must pass:
+// All 40 tests pass:
 testVAlarmRequiresAction() ✓
 testVAlarmRequiresTrigger() ✓
-testVAlarmValidatesActionType()
-testVAlarmDisplayRequiresDescription()
-testVAlarmEmailRequiresProperties()
-testVAlarmAudioSupportsAttach()
-testVAlarmSupportsRepeat()
-testVAlarmRepeatDurationMutualRequirement()
+testVAlarmValidatesActionType() ✓
+testVAlarmDisplayRequiresDescription() ✓
+testVAlarmEmailRequiresProperties() ✓
+testVAlarmAudioSupportsAttach() ✓
+testVAlarmSupportsRepeat() ✓
+testVAlarmRepeatDurationMutualRequirement() ✓
 ```
 
 ---
@@ -1793,7 +1790,7 @@ The following task groups can be worked on **in parallel** by multiple agents:
 - Task 5.4: VTODO ✅
 - Task 5.5: VJOURNAL ✅
 - Task 5.6: VFREEBUSY ✅
-- Task 5.8: VALARM enhancement
+- Task 5.8: VALARM ✅
 
 **Group B (Infrastructure - after Group A):**
 - Task 5.7: VTIMEZONE (needs 5.9 first)
@@ -1806,7 +1803,7 @@ The following task groups can be worked on **in parallel** by multiple agents:
 - Task 7.1: Value Writers (can start in parallel with 6.1)
 
 ### Next Steps:
-1. **Next:** Task 5.8 VALARM enhancement or Task 5.9 Standard/Daylight enhancement
+1. **Next:** Task 5.9 Standard/Daylight enhancement (needed for VTIMEZONE)
 2. **Sequential:** Complete 5.9 before 5.7 (VTIMEZONE depends on observances)
 3. **Parallel:** Tasks 5.10 (Lexer) and 5.11 (Security) after basic components
 
@@ -1822,10 +1819,10 @@ Component system in progress:
 - ✅ Task 5.5: VJOURNAL Component (with multiple DESCRIPTION support, CLASS, recurring entries)
 - ✅ Task 5.6: VFREEBUSY Component (with FBTYPE support, PERIOD validation, multiple entries)
 - ⏳ Task 5.7: VTIMEZONE Component (blocked by 5.9)
-- ✅ Task 5.8: VALARM Component (basic, needs enhancement)
-- ✅ Task 5.9: Standard/Daylight (basic, needs enhancement)
-- ⏳ Task 5.10: Lexer Implementation (NEW)
-- ⏳ Task 5.11: Security Hardening (NEW)
+- ✅ Task 5.8: VALARM Component (full validation for ACTION types, action-specific requirements, REPEAT/DURATION)
+- 🔄 Task 5.9: Standard/Daylight (basic, needs enhancement)
+- ⏳ Task 5.10: Lexer Implementation
+- ⏳ Task 5.11: Security Hardening
 
 ### Epic 4 Summary:
 All data type parsing tasks completed:
@@ -1909,7 +1906,6 @@ Follow the epic order as listed. Each epic builds on the previous ones. However,
 
 | Component | Gap | Priority |
 |-----------|-----|----------|
-| VAlarm | Action-specific validation tests | HIGH |
 | Standard/Daylight | Observance validation tests | HIGH |
 | All parsers | Round-trip tests (parse → write → parse) | MEDIUM |
 
