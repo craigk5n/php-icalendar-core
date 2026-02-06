@@ -21,12 +21,14 @@ class ContentLine
      * @param string $name The property name (e.g., SUMMARY, DTSTART)
      * @param array<string, string> $parameters Associative array of parameter name => value
      * @param string $value The property value
+     * @param int $lineNumber The line number in the source file
      */
     public function __construct(
         private readonly string $rawLine,
         private readonly string $name,
         private readonly array $parameters,
-        private readonly string $value
+        private readonly string $value,
+        private readonly int $lineNumber = 0
     ) {
     }
 
@@ -86,6 +88,14 @@ class ContentLine
     public function hasParameters(): bool
     {
         return count($this->parameters) > 0;
+    }
+
+    /**
+     * Get the line number
+     */
+    public function getContentLineNumber(): int
+    {
+        return $this->lineNumber;
     }
 
     /**

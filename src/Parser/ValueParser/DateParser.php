@@ -26,6 +26,13 @@ class DateParser implements ValueParserInterface
     public function parse(string $value, array $parameters = []): DateTimeImmutable
     {
         if (!$this->canParse($value)) {
+            // Distinguish format errors from value errors
+            if (preg_match('/^\d{8}$/', $value)) {
+                throw new ParseException(
+                    "Invalid DATE value: '{$value}'",
+                    ParseException::ERR_INVALID_DATE
+                );
+            }
             throw new ParseException(
                 "Invalid DATE format: '{$value}'. Expected YYYYMMDD.",
                 ParseException::ERR_INVALID_DATE
@@ -80,38 +87,6 @@ class DateParser implements ValueParserInterface
         $month = (int) substr($value, 4, 2);
         $day = (int) substr($value, 6, 2);
 
-        return $this->isValidDate($year, $month, $day);
-    }
-
-    /**
-     * Check if date components form a valid date
-     */
-    private function isValidDate(int $year, int $month, int $day): bool
-    {
-        // Check month range
-        if ($month < 1 || $month > 12) {
-            return false;
-        }
-
-        // Get days in month
-        $daysInMonth = [31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31];
-
-        // February in leap year
-        if ($month === 2 && $this->isLeapYear($year)) {
-            $daysInMonth[1] = 29;
-        }
-
-        // Check day range
-        return $day >= 1 && $day <= $daysInMonth[$month - 1];
-    }
-
-    /**
-     * Check if year is a leap year
-     */
-    private function isLeapYear(int $year): bool
-    {
-        // Leap year rules:
-        // - Divisible by 4, but not by 100, unless also divisible by 400
-        return ($year % 4 === 0 && $year % 100 !== 0) || ($year % 400 === 0);
+        return DateValidator::isValidDate($year, $month, $day);
     }
 }

@@ -24,11 +24,6 @@ class VFreeBusy extends AbstractComponent
     public const FBTYPE_BUSY_UNAVAILABLE = 'BUSY-UNAVAILABLE';
     public const FBTYPE_BUSY_TENTATIVE = 'BUSY-TENTATIVE';
 
-    /**
-     * @var array<array{periods: string, fbtype: string}> Multiple FREEBUSY entries
-     */
-    private array $freebusyEntries = [];
-
     public function getName(): string
     {
         return 'VFREEBUSY';
@@ -182,10 +177,11 @@ class VFreeBusy extends AbstractComponent
             }
         }
 
-        $this->freebusyEntries[] = [
-            'periods' => $periods,
-            'fbtype' => $fbtype,
-        ];
+        $params = [];
+        if ($fbtype !== self::FBTYPE_BUSY) {
+            $params['FBTYPE'] = $fbtype;
+        }
+        $this->addProperty(new GenericProperty('FREEBUSY', new \Icalendar\Value\TextValue($periods), $params));
 
         return $this;
     }
@@ -197,7 +193,15 @@ class VFreeBusy extends AbstractComponent
      */
     public function getFreeBusyEntries(): array
     {
-        return $this->freebusyEntries;
+        $entries = [];
+        foreach ($this->getAllProperties('FREEBUSY') as $prop) {
+            $params = $prop->getParameters();
+            $entries[] = [
+                'periods' => $prop->getValue()->getRawValue(),
+                'fbtype' => $params['FBTYPE'] ?? self::FBTYPE_BUSY,
+            ];
+        }
+        return $entries;
     }
 
     /**
@@ -208,10 +212,10 @@ class VFreeBusy extends AbstractComponent
      */
     public function getFreeBusyByType(string $fbtype): array
     {
-        return array_filter(
-            $this->freebusyEntries,
+        return array_values(array_filter(
+            $this->getFreeBusyEntries(),
             fn($entry) => $entry['fbtype'] === $fbtype
-        );
+        ));
     }
 
     /**
@@ -219,7 +223,7 @@ class VFreeBusy extends AbstractComponent
      */
     public function clearFreeBusy(): self
     {
-        $this->freebusyEntries = [];
+        $this->removeProperty('FREEBUSY');
         return $this;
     }
 

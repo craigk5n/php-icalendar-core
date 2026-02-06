@@ -15,6 +15,7 @@ use Icalendar\Exception\ParseException;
 class RecurParser implements ValueParserInterface
 {
     public const ERR_INVALID_RECUR = 'ICAL-TYPE-010';
+    public const ERR_INVALID_BY_MODIFIER = 'ICAL-RRULE-004';
 
     private const FREQ_VALUES = ['SECONDLY', 'MINUTELY', 'HOURLY', 'DAILY', 'WEEKLY', 'MONTHLY', 'YEARLY'];
 
@@ -93,7 +94,7 @@ class RecurParser implements ValueParserInterface
         if (!isset($rules['FREQ'])) {
             throw new ParseException(
                 'RECUR must have FREQ component',
-                self::ERR_INVALID_RECUR
+                ParseException::ERR_RRULE_FREQ_REQUIRED
             );
         }
 
@@ -108,7 +109,7 @@ class RecurParser implements ValueParserInterface
         if (isset($rules['UNTIL']) && isset($rules['COUNT'])) {
             throw new ParseException(
                 'RECUR cannot have both UNTIL and COUNT',
-                self::ERR_INVALID_RECUR
+                ParseException::ERR_RRULE_UNTIL_COUNT_EXCLUSIVE
             );
         }
 
@@ -125,7 +126,7 @@ class RecurParser implements ValueParserInterface
             if (!ctype_digit($rules['INTERVAL']) || (int) $rules['INTERVAL'] <= 0) {
                 throw new ParseException(
                     'Invalid RECUR INTERVAL value: ' . $rules['INTERVAL'] . ' (must be positive integer)',
-                    self::ERR_INVALID_RECUR
+                    ParseException::ERR_RRULE_INVALID_INTERVAL
                 );
             }
         }
@@ -172,6 +173,50 @@ class RecurParser implements ValueParserInterface
 
         if (isset($rules['UNTIL'])) {
             $this->validateUntil($rules['UNTIL']);
+        }
+
+        $this->validateByModifierFrequency($rules);
+    }
+
+    /**
+     * Validate that BY* modifiers are used with compatible frequencies
+     *
+     * Per RFC 5545 §3.3.10:
+     * - BYWEEKNO is only valid for YEARLY
+     * - BYYEARDAY is only valid for DAILY, WEEKLY, or YEARLY
+     * - BYDAY ordinals (e.g. 2MO) are only valid for MONTHLY or YEARLY
+     */
+    private function validateByModifierFrequency(array $rules): void
+    {
+        $freq = $rules['FREQ'];
+
+        if (isset($rules['BYWEEKNO']) && $freq !== 'YEARLY') {
+            throw new ParseException(
+                'BYWEEKNO is only valid with YEARLY frequency',
+                self::ERR_INVALID_BY_MODIFIER
+            );
+        }
+
+        if (isset($rules['BYYEARDAY']) && !in_array($freq, ['DAILY', 'WEEKLY', 'YEARLY'], true)) {
+            throw new ParseException(
+                'BYYEARDAY is not valid with ' . $freq . ' frequency',
+                self::ERR_INVALID_BY_MODIFIER
+            );
+        }
+
+        if (isset($rules['BYDAY'])) {
+            $days = explode(',', $rules['BYDAY']);
+            foreach ($days as $day) {
+                if (preg_match('/^([+-]?\d+)(MO|TU|WE|TH|FR|SA|SU)$/', $day)) {
+                    // Has ordinal prefix — only valid for MONTHLY/YEARLY
+                    if (!in_array($freq, ['MONTHLY', 'YEARLY'], true)) {
+                        throw new ParseException(
+                            'BYDAY ordinals (e.g. ' . $day . ') are only valid with MONTHLY or YEARLY frequency',
+                            self::ERR_INVALID_BY_MODIFIER
+                        );
+                    }
+                }
+            }
         }
     }
 
@@ -360,8 +405,10 @@ class RecurParser implements ValueParserInterface
     private function validateUntil(string $value): void
     {
         $dateTimeParser = new DateTimeParser();
+        $dateParser = new DateParser();
 
-        if (!$dateTimeParser->canParse($value)) {
+        // UNTIL can be either DATE (YYYYMMDD) or DATE-TIME (YYYYMMDDTHHMMSS[Z])
+        if (!$dateTimeParser->canParse($value) && !$dateParser->canParse($value)) {
             throw new ParseException(
                 'Invalid RECUR UNTIL value: ' . $value,
                 self::ERR_INVALID_RECUR

@@ -23,6 +23,13 @@ class VCalendar extends AbstractComponent
         return 'VCALENDAR';
     }
 
+    /**
+     * Set the product identifier for this calendar
+     *
+     * @param string $prodId The product identifier that uniquely identifies the software
+     *                      that created the iCalendar object (e.g., "-//My Company//My App//EN")
+     * @return self For method chaining
+     */
     public function setProductId(string $prodId): self
     {
         $this->removeProperty('PRODID');
@@ -30,6 +37,11 @@ class VCalendar extends AbstractComponent
         return $this;
     }
 
+    /**
+     * Get the product identifier for this calendar
+     *
+     * @return string|null The product identifier or null if not set
+     */
     public function getProductId(): ?string
     {
         $prop = $this->getProperty('PRODID');
@@ -39,6 +51,12 @@ class VCalendar extends AbstractComponent
         return $prop->getValue()->getRawValue();
     }
 
+    /**
+     * Set the iCalendar specification version
+     *
+     * @param string $version The iCalendar version (e.g., "2.0" for RFC 5545)
+     * @return self For method chaining
+     */
     public function setVersion(string $version): self
     {
         $this->removeProperty('VERSION');
@@ -46,6 +64,11 @@ class VCalendar extends AbstractComponent
         return $this;
     }
 
+    /**
+     * Get the iCalendar specification version
+     *
+     * @return string|null The version string or null if not set
+     */
     public function getVersion(): ?string
     {
         $prop = $this->getProperty('VERSION');
@@ -55,6 +78,12 @@ class VCalendar extends AbstractComponent
         return $prop->getValue()->getRawValue();
     }
 
+    /**
+     * Set the calendar scale used by this calendar
+     *
+     * @param string $calscale The calendar scale (e.g., "GREGORIAN")
+     * @return self For method chaining
+     */
     public function setCalscale(string $calscale): self
     {
         $this->removeProperty('CALSCALE');
@@ -62,6 +91,11 @@ class VCalendar extends AbstractComponent
         return $this;
     }
 
+    /**
+     * Get the calendar scale used by this calendar
+     *
+     * @return string|null The calendar scale or null if not set
+     */
     public function getCalscale(): ?string
     {
         $prop = $this->getProperty('CALSCALE');
@@ -71,6 +105,12 @@ class VCalendar extends AbstractComponent
         return $prop->getValue()->getRawValue();
     }
 
+    /**
+     * Set the method type for this calendar (used for iTIP messages)
+     *
+     * @param string $method The method type (e.g., "PUBLISH", "REQUEST", "REPLY", "ADD", "CANCEL", "REFRESH", "COUNTER", "DECLINECOUNTER")
+     * @return self For method chaining
+     */
     public function setMethod(string $method): self
     {
         $this->removeProperty('METHOD');
@@ -78,6 +118,11 @@ class VCalendar extends AbstractComponent
         return $this;
     }
 
+    /**
+     * Get the method type for this calendar
+     *
+     * @return string|null The method type or null if not set
+     */
     public function getMethod(): ?string
     {
         $prop = $this->getProperty('METHOD');
@@ -87,6 +132,16 @@ class VCalendar extends AbstractComponent
         return $prop->getValue()->getRawValue();
     }
 
+    /**
+     * Validate this VCALENDAR component against RFC 5545 requirements
+     *
+     * Ensures that all required properties (PRODID and VERSION) are present.
+     * Throws ValidationException if the calendar is not valid.
+     *
+     * @throws ValidationException If PRODID property is missing (code: ICAL-COMP-001)
+     * @throws ValidationException If VERSION property is missing (code: ICAL-COMP-002)
+     * @return void
+     */
     public function validate(): void
     {
         if ($this->getProperty('PRODID') === null) {

@@ -27,9 +27,6 @@ class VJournal extends AbstractComponent
     public const CLASS_PRIVATE = 'PRIVATE';
     public const CLASS_CONFIDENTIAL = 'CONFIDENTIAL';
 
-    /** @var string[] Multiple descriptions (VJOURNAL supports multiple DESCRIPTION properties) */
-    private array $descriptions = [];
-
     public function getName(): string
     {
         return 'VJOURNAL';
@@ -106,7 +103,7 @@ class VJournal extends AbstractComponent
      */
     public function addDescription(string $description): self
     {
-        $this->descriptions[] = $description;
+        $this->addProperty(GenericProperty::create('DESCRIPTION', $description));
         return $this;
     }
 
@@ -115,7 +112,8 @@ class VJournal extends AbstractComponent
      */
     public function setDescription(string $description): self
     {
-        $this->descriptions = [$description];
+        $this->removeProperty('DESCRIPTION');
+        $this->addProperty(GenericProperty::create('DESCRIPTION', $description));
         return $this;
     }
 
@@ -126,7 +124,10 @@ class VJournal extends AbstractComponent
      */
     public function getDescriptions(): array
     {
-        return $this->descriptions;
+        return array_map(
+            fn($prop) => $prop->getValue()->getRawValue(),
+            $this->getAllProperties('DESCRIPTION')
+        );
     }
 
     /**
@@ -134,7 +135,11 @@ class VJournal extends AbstractComponent
      */
     public function getDescription(): ?string
     {
-        return $this->descriptions[0] ?? null;
+        $descriptions = $this->getAllProperties('DESCRIPTION');
+        if (empty($descriptions)) {
+            return null;
+        }
+        return $descriptions[0]->getValue()->getRawValue();
     }
 
     public function setCategories(string ...$categories): self

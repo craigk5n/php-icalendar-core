@@ -27,6 +27,11 @@ class ValidationException extends \Exception
     public const ERR_TIMEZONE_MISSING_TZID = 'ICAL-TZ-001';
     public const ERR_TIMEZONE_MISSING_OBSERVANCE = 'ICAL-TZ-002';
 
+    /** Timezone observance error codes */
+    public const ERR_TZ_OBSERVANCE_MISSING_DTSTART = 'ICAL-TZ-OBS-001';
+    public const ERR_TZ_OBSERVANCE_MISSING_TZOFFSETTO = 'ICAL-TZ-OBS-002';
+    public const ERR_TZ_OBSERVANCE_MISSING_TZOFFSETFROM = 'ICAL-TZ-OBS-003';
+
     /** VALARM error codes */
     public const ERR_ALARM_MISSING_ACTION = 'ICAL-ALARM-001';
     public const ERR_ALARM_MISSING_TRIGGER = 'ICAL-ALARM-002';
@@ -48,11 +53,17 @@ class ValidationException extends \Exception
         private readonly string $errorCode,
         ?\Throwable $previous = null
     ) {
-        parent::__construct($message, 0, $previous);
+        parent::__construct($message, $this->errorCodeToCode($errorCode), $previous);
     }
 
     public function getErrorCode(): string
     {
         return $this->errorCode;
+    }
+
+    private function errorCodeToCode(string $errorCode): int
+    {
+        // Convert string error codes to unique integers for PHPUnit
+        return crc32($errorCode) & 0x7fffffff; // Ensure positive
     }
 }

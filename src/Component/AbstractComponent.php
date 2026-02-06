@@ -23,12 +23,18 @@ abstract class AbstractComponent implements ComponentInterface
 
     public function addProperty(PropertyInterface $property): void
     {
-        $this->properties[$property->getName()] = $property;
+        $this->properties[] = $property;
     }
 
     public function getProperty(string $name): ?PropertyInterface
     {
-        return $this->properties[$name] ?? null;
+        // Iterate backwards to return the most recently added match (last-write-wins)
+        for ($i = count($this->properties) - 1; $i >= 0; $i--) {
+            if ($this->properties[$i]->getName() === $name) {
+                return $this->properties[$i];
+            }
+        }
+        return null;
     }
 
     public function getProperties(): array
@@ -38,7 +44,26 @@ abstract class AbstractComponent implements ComponentInterface
 
     public function removeProperty(string $name): void
     {
-        unset($this->properties[$name]);
+        $this->properties = array_values(array_filter(
+            $this->properties,
+            fn(PropertyInterface $p) => $p->getName() !== $name
+        ));
+    }
+
+    /**
+     * Get all properties with a given name, or all properties if no name specified
+     *
+     * @return PropertyInterface[]
+     */
+    public function getAllProperties(?string $name = null): array
+    {
+        if ($name === null) {
+            return $this->properties;
+        }
+        return array_values(array_filter(
+            $this->properties,
+            fn(PropertyInterface $p) => $p->getName() === $name
+        ));
     }
 
     public function addComponent(ComponentInterface $component): void

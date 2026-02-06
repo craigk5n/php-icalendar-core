@@ -29,6 +29,15 @@ class VEvent extends AbstractComponent
         return 'VEVENT';
     }
 
+    /**
+     * Set the date-time stamp for this event
+     *
+     * The DTSTAMP property indicates the date/time that the instance of the iCalendar
+     * object was created. This is a required property for VEVENT components.
+     *
+     * @param string $dtStamp The date-time stamp in iCalendar format (e.g., "20231231T235959Z")
+     * @return self For method chaining
+     */
     public function setDtStamp(string $dtStamp): self
     {
         $this->removeProperty('DTSTAMP');
@@ -36,6 +45,11 @@ class VEvent extends AbstractComponent
         return $this;
     }
 
+    /**
+     * Get the date-time stamp for this event
+     *
+     * @return string|null The date-time stamp or null if not set
+     */
     public function getDtStamp(): ?string
     {
         $prop = $this->getProperty('DTSTAMP');
@@ -45,6 +59,15 @@ class VEvent extends AbstractComponent
         return $prop->getValue()->getRawValue();
     }
 
+    /**
+     * Set the unique identifier for this event
+     *
+     * The UID property provides a globally unique identifier for the event.
+     * This is a required property for VEVENT components.
+     *
+     * @param string $uid The unique identifier (e.g., "123456789@example.com")
+     * @return self For method chaining
+     */
     public function setUid(string $uid): self
     {
         $this->removeProperty('UID');
@@ -52,6 +75,11 @@ class VEvent extends AbstractComponent
         return $this;
     }
 
+    /**
+     * Get the unique identifier for this event
+     *
+     * @return string|null The unique identifier or null if not set
+     */
     public function getUid(): ?string
     {
         $prop = $this->getProperty('UID');
@@ -61,6 +89,12 @@ class VEvent extends AbstractComponent
         return $prop->getValue()->getRawValue();
     }
 
+    /**
+     * Set the start date and time for this event
+     *
+     * @param string $dtStart The start date-time in iCalendar format (e.g., "20231231T100000")
+     * @return self For method chaining
+     */
     public function setDtStart(string $dtStart): self
     {
         $this->removeProperty('DTSTART');
@@ -68,6 +102,11 @@ class VEvent extends AbstractComponent
         return $this;
     }
 
+    /**
+     * Get the start date and time for this event
+     *
+     * @return string|null The start date-time or null if not set
+     */
     public function getDtStart(): ?string
     {
         $prop = $this->getProperty('DTSTART');
@@ -77,6 +116,14 @@ class VEvent extends AbstractComponent
         return $prop->getValue()->getRawValue();
     }
 
+    /**
+     * Set the end date and time for this event
+     *
+     * Note: Cannot be used together with setDuration() - either DTEND or DURATION should be set, not both.
+     *
+     * @param string $dtEnd The end date-time in iCalendar format (e.g., "20231231T110000")
+     * @return self For method chaining
+     */
     public function setDtEnd(string $dtEnd): self
     {
         $this->removeProperty('DTEND');
@@ -84,6 +131,11 @@ class VEvent extends AbstractComponent
         return $this;
     }
 
+    /**
+     * Get the end date and time for this event
+     *
+     * @return string|null The end date-time or null if not set
+     */
     public function getDtEnd(): ?string
     {
         $prop = $this->getProperty('DTEND');
@@ -93,6 +145,14 @@ class VEvent extends AbstractComponent
         return $prop->getValue()->getRawValue();
     }
 
+    /**
+     * Set the duration for this event
+     *
+     * Note: Cannot be used together with setDtEnd() - either DURATION or DTEND should be set, not both.
+     *
+     * @param string $duration The duration in ISO 8601 format (e.g., "PT1H" for 1 hour)
+     * @return self For method chaining
+     */
     public function setDuration(string $duration): self
     {
         $this->removeProperty('DURATION');
@@ -100,6 +160,11 @@ class VEvent extends AbstractComponent
         return $this;
     }
 
+    /**
+     * Get the duration for this event
+     *
+     * @return string|null The duration string or null if not set
+     */
     public function getDuration(): ?string
     {
         $prop = $this->getProperty('DURATION');
@@ -109,6 +174,12 @@ class VEvent extends AbstractComponent
         return $prop->getValue()->getRawValue();
     }
 
+    /**
+     * Set the recurrence rule for this event
+     *
+     * @param string $rrule The recurrence rule in RFC 5545 format (e.g., "FREQ=WEEKLY;BYDAY=MO")
+     * @return self For method chaining
+     */
     public function setRrule(string $rrule): self
     {
         $this->removeProperty('RRULE');
@@ -116,6 +187,11 @@ class VEvent extends AbstractComponent
         return $this;
     }
 
+    /**
+     * Get the recurrence rule for this event
+     *
+     * @return string|null The recurrence rule or null if not set
+     */
     public function getRrule(): ?string
     {
         $prop = $this->getProperty('RRULE');
@@ -125,6 +201,12 @@ class VEvent extends AbstractComponent
         return $prop->getValue()->getRawValue();
     }
 
+    /**
+     * Set the summary/title for this event
+     *
+     * @param string $summary The event title or short description
+     * @return self For method chaining
+     */
     public function setSummary(string $summary): self
     {
         $this->removeProperty('SUMMARY');
@@ -132,6 +214,11 @@ class VEvent extends AbstractComponent
         return $this;
     }
 
+    /**
+     * Get the summary/title for this event
+     *
+     * @return string|null The event summary or null if not set
+     */
     public function getSummary(): ?string
     {
         $prop = $this->getProperty('SUMMARY');
@@ -141,6 +228,12 @@ class VEvent extends AbstractComponent
         return $prop->getValue()->getRawValue();
     }
 
+    /**
+     * Set the detailed description for this event
+     *
+     * @param string $description The full description of the event
+     * @return self For method chaining
+     */
     public function setDescription(string $description): self
     {
         $this->removeProperty('DESCRIPTION');
@@ -148,6 +241,11 @@ class VEvent extends AbstractComponent
         return $this;
     }
 
+    /**
+     * Get the detailed description for this event
+     *
+     * @return string|null The event description or null if not set
+     */
     public function getDescription(): ?string
     {
         $prop = $this->getProperty('DESCRIPTION');
@@ -157,6 +255,12 @@ class VEvent extends AbstractComponent
         return $prop->getValue()->getRawValue();
     }
 
+    /**
+     * Set the location for this event
+     *
+     * @param string $location The venue or location where the event takes place
+     * @return self For method chaining
+     */
     public function setLocation(string $location): self
     {
         $this->removeProperty('LOCATION');
@@ -164,6 +268,11 @@ class VEvent extends AbstractComponent
         return $this;
     }
 
+    /**
+     * Get the location for this event
+     *
+     * @return string|null The event location or null if not set
+     */
     public function getLocation(): ?string
     {
         $prop = $this->getProperty('LOCATION');
@@ -173,6 +282,13 @@ class VEvent extends AbstractComponent
         return $prop->getValue()->getRawValue();
     }
 
+    /**
+     * Set the status for this event
+     *
+     * @param string $status The event status (must be TENTATIVE, CONFIRMED, or CANCELLED)
+     * @return self For method chaining
+     * @throws ValidationException If the status is not one of the allowed values (code: ICAL-VEVENT-VAL-003)
+     */
     public function setStatus(string $status): self
     {
         $validStatuses = [self::STATUS_TENTATIVE, self::STATUS_CONFIRMED, self::STATUS_CANCELLED];
@@ -187,6 +303,11 @@ class VEvent extends AbstractComponent
         return $this;
     }
 
+    /**
+     * Get the status for this event
+     *
+     * @return string|null The event status or null if not set
+     */
     public function getStatus(): ?string
     {
         $prop = $this->getProperty('STATUS');
@@ -196,6 +317,12 @@ class VEvent extends AbstractComponent
         return $prop->getValue()->getRawValue();
     }
 
+    /**
+     * Set the categories for this event
+     *
+     * @param string ...$categories One or more category names to classify the event
+     * @return self For method chaining
+     */
     public function setCategories(string ...$categories): self
     {
         $this->removeProperty('CATEGORIES');
@@ -204,6 +331,11 @@ class VEvent extends AbstractComponent
         return $this;
     }
 
+    /**
+     * Get the categories for this event
+     *
+     * @return array Array of category names, empty if not set
+     */
     public function getCategories(): array
     {
         $prop = $this->getProperty('CATEGORIES');
@@ -217,6 +349,12 @@ class VEvent extends AbstractComponent
         return explode(',', $value);
     }
 
+    /**
+     * Set the URL associated with this event
+     *
+     * @param string $url The URL that provides more information about the event
+     * @return self For method chaining
+     */
     public function setUrl(string $url): self
     {
         $this->removeProperty('URL');
@@ -224,6 +362,11 @@ class VEvent extends AbstractComponent
         return $this;
     }
 
+    /**
+     * Get the URL associated with this event
+     *
+     * @return string|null The event URL or null if not set
+     */
     public function getUrl(): ?string
     {
         $prop = $this->getProperty('URL');
@@ -233,6 +376,13 @@ class VEvent extends AbstractComponent
         return $prop->getValue()->getRawValue();
     }
 
+    /**
+     * Set the geographic coordinates for this event
+     *
+     * @param float $latitude The latitude coordinate
+     * @param float $longitude The longitude coordinate
+     * @return self For method chaining
+     */
     public function setGeo(float $latitude, float $longitude): self
     {
         $geoString = sprintf('%F;%F', $latitude, $longitude);
@@ -241,6 +391,11 @@ class VEvent extends AbstractComponent
         return $this;
     }
 
+    /**
+     * Get the geographic coordinates for this event
+     *
+     * @return array|null Array with 'latitude' and 'longitude' keys, or null if not set
+     */
     public function getGeo(): ?array
     {
         $prop = $this->getProperty('GEO');
@@ -255,17 +410,39 @@ class VEvent extends AbstractComponent
         return null;
     }
 
+    /**
+     * Add an alarm to this event
+     *
+     * @param object $alarm The VALARM component to add
+     * @return self For method chaining
+     */
     public function addAlarm(object $alarm): self
     {
         $this->addComponent($alarm);
         return $this;
     }
 
+    /**
+     * Get all alarms associated with this event
+     *
+     * @return array Array of VALARM components
+     */
     public function getAlarms(): array
     {
         return $this->getComponents('VALARM');
     }
 
+    /**
+     * Validate this VEVENT component against RFC 5545 requirements
+     *
+     * Ensures that required properties (DTSTAMP and UID) are present and that
+     * DTEND and DURATION are not both set (they are mutually exclusive).
+     *
+     * @throws ValidationException If DTSTAMP property is missing (code: ICAL-VEVENT-001)
+     * @throws ValidationException If UID property is missing (code: ICAL-VEVENT-002)
+     * @throws ValidationException If both DTEND and DURATION properties are present (code: ICAL-VEVENT-VAL-001)
+     * @return void
+     */
     public function validate(): void
     {
         if ($this->getProperty('DTSTAMP') === null) {

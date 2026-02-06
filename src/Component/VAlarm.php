@@ -30,6 +30,15 @@ class VAlarm extends AbstractComponent
         return 'VALARM';
     }
 
+    /**
+     * Set the action type for this alarm
+     *
+     * The ACTION property specifies the type of alarm action to perform.
+     * This is a required property for VALARM components.
+     *
+     * @param string $action The alarm action (must be AUDIO, DISPLAY, or EMAIL)
+     * @return self For method chaining
+     */
     public function setAction(string $action): self
     {
         $this->removeProperty('ACTION');
@@ -37,6 +46,11 @@ class VAlarm extends AbstractComponent
         return $this;
     }
 
+    /**
+     * Get the action type for this alarm
+     *
+     * @return string|null The alarm action or null if not set
+     */
     public function getAction(): ?string
     {
         $prop = $this->getProperty('ACTION');
@@ -46,6 +60,15 @@ class VAlarm extends AbstractComponent
         return $prop->getValue()->getRawValue();
     }
 
+    /**
+     * Set the trigger for this alarm
+     *
+     * The TRIGGER property specifies when the alarm should be triggered.
+     * This is a required property for VALARM components.
+     *
+     * @param string $trigger The trigger specification (e.g., "-PT15M" for 15 minutes before)
+     * @return self For method chaining
+     */
     public function setTrigger(string $trigger): self
     {
         $this->removeProperty('TRIGGER');
@@ -53,6 +76,11 @@ class VAlarm extends AbstractComponent
         return $this;
     }
 
+    /**
+     * Get the trigger for this alarm
+     *
+     * @return string|null The trigger specification or null if not set
+     */
     public function getTrigger(): ?string
     {
         $prop = $this->getProperty('TRIGGER');
@@ -62,6 +90,15 @@ class VAlarm extends AbstractComponent
         return $prop->getValue()->getRawValue();
     }
 
+    /**
+     * Set the duration for repeating alarms
+     *
+     * When used with REPEAT, specifies the duration between subsequent alarm triggers.
+     * Must be used together with REPEAT or not at all.
+     *
+     * @param string $duration The duration in ISO 8601 format (e.g., "PT5M" for 5 minutes)
+     * @return self For method chaining
+     */
     public function setDuration(string $duration): self
     {
         $this->removeProperty('DURATION');
@@ -69,6 +106,11 @@ class VAlarm extends AbstractComponent
         return $this;
     }
 
+    /**
+     * Get the duration for repeating alarms
+     *
+     * @return string|null The duration string or null if not set
+     */
     public function getDuration(): ?string
     {
         $prop = $this->getProperty('DURATION');
@@ -78,6 +120,15 @@ class VAlarm extends AbstractComponent
         return $prop->getValue()->getRawValue();
     }
 
+    /**
+     * Set the repeat count for repeating alarms
+     *
+     * Specifies how many times the alarm should repeat after the initial trigger.
+     * Must be used together with DURATION or not at all.
+     *
+     * @param int $repeat The number of times to repeat the alarm
+     * @return self For method chaining
+     */
     public function setRepeat(int $repeat): self
     {
         $this->removeProperty('REPEAT');
@@ -85,6 +136,11 @@ class VAlarm extends AbstractComponent
         return $this;
     }
 
+    /**
+     * Get the repeat count for repeating alarms
+     *
+     * @return int|null The repeat count or null if not set
+     */
     public function getRepeat(): ?int
     {
         $prop = $this->getProperty('REPEAT');
@@ -95,6 +151,14 @@ class VAlarm extends AbstractComponent
         return is_numeric($value) ? (int) $value : null;
     }
 
+    /**
+     * Set the description for this alarm
+     *
+     * Required for DISPLAY action alarms, optional for EMAIL action alarms.
+     *
+     * @param string $description The alarm description text
+     * @return self For method chaining
+     */
     public function setDescription(string $description): self
     {
         $this->removeProperty('DESCRIPTION');
@@ -102,6 +166,11 @@ class VAlarm extends AbstractComponent
         return $this;
     }
 
+    /**
+     * Get the description for this alarm
+     *
+     * @return string|null The alarm description or null if not set
+     */
     public function getDescription(): ?string
     {
         $prop = $this->getProperty('DESCRIPTION');
@@ -111,6 +180,14 @@ class VAlarm extends AbstractComponent
         return $prop->getValue()->getRawValue();
     }
 
+    /**
+     * Set the summary for this alarm
+     *
+     * Required for EMAIL action alarms.
+     *
+     * @param string $summary The alarm summary text
+     * @return self For method chaining
+     */
     public function setSummary(string $summary): self
     {
         $this->removeProperty('SUMMARY');
@@ -118,6 +195,11 @@ class VAlarm extends AbstractComponent
         return $this;
     }
 
+    /**
+     * Get the summary for this alarm
+     *
+     * @return string|null The alarm summary or null if not set
+     */
     public function getSummary(): ?string
     {
         $prop = $this->getProperty('SUMMARY');
@@ -127,6 +209,14 @@ class VAlarm extends AbstractComponent
         return $prop->getValue()->getRawValue();
     }
 
+    /**
+     * Set an attendee for this alarm
+     *
+     * Required for EMAIL action alarms. Can be called multiple times for multiple attendees.
+     *
+     * @param string $attendee The attendee email address (e.g., "mailto:user@example.com")
+     * @return self For method chaining
+     */
     public function setAttendee(string $attendee): self
     {
         $this->removeProperty('ATTENDEE');
@@ -134,6 +224,11 @@ class VAlarm extends AbstractComponent
         return $this;
     }
 
+    /**
+     * Get the attendee for this alarm
+     *
+     * @return string|null The attendee address or null if not set
+     */
     public function getAttendee(): ?string
     {
         $prop = $this->getProperty('ATTENDEE');
@@ -143,6 +238,14 @@ class VAlarm extends AbstractComponent
         return $prop->getValue()->getRawValue();
     }
 
+    /**
+     * Set an attachment for this alarm
+     *
+     * Used for AUDIO action alarms to specify sound file URL.
+     *
+     * @param string $attach The attachment URL or data
+     * @return self For method chaining
+     */
     public function setAttach(string $attach): self
     {
         $this->removeProperty('ATTACH');
@@ -150,6 +253,11 @@ class VAlarm extends AbstractComponent
         return $this;
     }
 
+    /**
+     * Get the attachment for this alarm
+     *
+     * @return string|null The attachment URL or data or null if not set
+     */
     public function getAttach(): ?string
     {
         $prop = $this->getProperty('ATTACH');
@@ -159,6 +267,21 @@ class VAlarm extends AbstractComponent
         return $prop->getValue()->getRawValue();
     }
 
+    /**
+     * Validate this VALARM component against RFC 5545 requirements
+     *
+     * Ensures that required properties (ACTION and TRIGGER) are present and that
+     * action-specific requirements are met. Also validates that REPEAT and DURATION
+     * are either both present or both absent.
+     *
+     * @throws ValidationException If ACTION property is missing (code: ICAL-ALARM-001)
+     * @throws ValidationException If TRIGGER property is missing (code: ICAL-ALARM-002)
+     * @throws ValidationException If ACTION value is invalid (code: ICAL-ALARM-VAL-002)
+     * @throws ValidationException If DISPLAY action lacks DESCRIPTION (code: ICAL-ALARM-003)
+     * @throws ValidationException If EMAIL action lacks required properties (code: ICAL-ALARM-004)
+     * @throws ValidationException If REPEAT and DURATION don't match (code: ICAL-ALARM-VAL-001)
+     * @return void
+     */
     public function validate(): void
     {
         // Check required ACTION property

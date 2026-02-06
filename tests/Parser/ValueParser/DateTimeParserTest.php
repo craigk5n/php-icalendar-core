@@ -221,7 +221,8 @@ class DateTimeParserTest extends TestCase
         $this->expectException(ParseException::class);
         $this->expectExceptionMessage("Invalid DATE-TIME format");
 
-        $this->dateTimeParser->parse('20260205T100060');
+        // Second=61 is invalid (60 is allowed for leap seconds)
+        $this->dateTimeParser->parse('20260205T100061');
     }
 
     public function testParseInvalidDateTimeInvalidDate(): void

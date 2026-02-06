@@ -24,6 +24,9 @@ class InvalidDataException extends \Exception
     public const ERR_WRITE_MISSING_VERSION = 'ICAL-WRITE-012';
     public const ERR_WRITE_MISSING_REQUIRED = 'ICAL-WRITE-013';
 
+    /** Data type error codes */
+    public const ERR_UNSUPPORTED_TYPE = 'ICAL-TYPE-015';
+
     /** Security error codes */
     public const ERR_MAX_DEPTH_EXCEEDED = 'ICAL-SEC-001';
     public const ERR_XXE_DETECTED = 'ICAL-SEC-002';

@@ -67,7 +67,7 @@ class PropertyParser
         $name = $this->parsePropertyName($nameAndParams, $line, $lineNumber);
         $parameters = $this->parseParameters($nameAndParams, $line, $lineNumber);
 
-        return new ContentLine($line, $name, $parameters, $value);
+        return new ContentLine($line, $name, $parameters, $value, $lineNumber);
     }
 
     /**

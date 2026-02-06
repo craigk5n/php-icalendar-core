@@ -44,6 +44,18 @@ class ParseException extends \Exception
     public const ERR_FILE_WRITE = 'ICAL-IO-002';
     public const ERR_PERMISSION_DENIED = 'ICAL-IO-003';
 
+    /** Security error codes */
+    public const ERR_SECURITY_DEPTH_EXCEEDED = 'ICAL-SEC-001';
+    public const ERR_SECURITY_INVALID_SCHEME = 'ICAL-SEC-002';
+    public const ERR_SECURITY_DATA_URI_TOO_LARGE = 'ICAL-SEC-003';
+    public const ERR_SECURITY_PRIVATE_IP = 'ICAL-SEC-004';
+    public const ERR_SECURITY_XXE_ATTEMPT = 'ICAL-SEC-005';
+
+    /** Recurrence Rule error codes */
+    public const ERR_RRULE_FREQ_REQUIRED = 'ICAL-RRULE-001';
+    public const ERR_RRULE_INVALID_INTERVAL = 'ICAL-RRULE-002';
+    public const ERR_RRULE_UNTIL_COUNT_EXCLUSIVE = 'ICAL-RRULE-003';
+
     public function __construct(
         string $message,
         private readonly string $errorCode,

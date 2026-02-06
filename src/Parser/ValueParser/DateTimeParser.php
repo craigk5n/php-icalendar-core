@@ -234,7 +234,8 @@ class DateTimeParser implements ValueParserInterface
             return false;
         }
 
-        if ($second < 0 || $second > 59) {
+        // Allow leap second (60) per RFC 5545 consistency with TimeParser
+        if ($second < 0 || $second > 60) {
             return false;
         }
 
