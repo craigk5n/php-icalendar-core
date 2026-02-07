@@ -1,6 +1,6 @@
-# PHP iCalendar Library - Usage Guide
+# PHP iCalendar Core - Usage Guide
 
-A comprehensive guide for developers using the PHP iCalendar Parser and Writer Library.
+A comprehensive guide for developers using PHP iCalendar Core.
 
 ## Table of Contents
 
@@ -580,7 +580,7 @@ foreach ($calendar->getComponents('VMEETING') as $meeting) {
 // $calendar = new Calendar();
 // $event = $calendar->event();
 
-// New PHP iCalendar Library code
+// New PHP iCalendar Core code
 use Icalendar\Component\VCalendar;
 use Icalendar\Component\VEvent;
 
@@ -607,7 +607,7 @@ $calendar->addComponent($event);
 // $calendar = new SimpleCalendar();
 // $calendar->addEvent('Event', '2026-02-10', 'Description');
 
-// New PHP iCalendar Library code
+// New PHP iCalendar Core code
 use Icalendar\Component\VCalendar;
 use Icalendar\Component\VEvent;
 
@@ -634,7 +634,7 @@ $calendar->addComponent($event);
 // $event->setSummary('Event');
 // $calendar = new \Eluceo\iCal\Component\Calendar([$event]);
 
-// New PHP iCalendar Library code
+// New PHP iCalendar Core code
 use Icalendar\Component\VCalendar;
 use Icalendar\Component\VEvent;
 

@@ -1,10 +1,10 @@
-# Product Requirements Document (PRD) - PHP iCalendar Library
+# Product Requirements Document (PRD) - PHP iCalendar Core
 
 ## 1. Introduction
 
 ### 1.1 Goal
 
-The PHP iCalendar Library aims to provide developers with a reliable, efficient, and flexible tool for parsing and writing iCalendar (RFC 5545) data. It should handle complex iCalendar features like recurrence rules and timezones accurately, while also offering adaptability for real-world data that may not be perfectly compliant, and support standardized extensions for richer data representation.
+PHP iCalendar Core aims to provide developers with a reliable, efficient, and flexible tool for parsing and writing iCalendar (RFC 5545) data. It should handle complex iCalendar features like recurrence rules and timezones accurately, while also offering adaptability for real-world data that may not be perfectly compliant, and support standardized extensions for richer data representation.
 
 ### 1.2 Scope
 

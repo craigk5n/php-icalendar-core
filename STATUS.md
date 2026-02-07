@@ -1,6 +1,6 @@
 # Status
 
-This document outlines the current development status of the PHP iCalendar library.
+This document outlines the current development status of PHP iCalendar Core.
 
 ## Core Functionality
 
