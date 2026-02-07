@@ -4,6 +4,12 @@
     "license": "MIT",
     "type": "library",
     "version": "1.0.0",
+    "homepage": "https://github.com/craigk5n/php-icalendar-core",
+    "keywords": ["icalendar", "ics", "rfc5545", "calendar", "parser", "writer"],
+    "support": {
+        "issues": "https://github.com/craigk5n/php-icalendar-core/issues",
+        "source": "https://github.com/craigk5n/php-icalendar-core"
+    },
     "require": {
         "php": ">=8.1"
     },

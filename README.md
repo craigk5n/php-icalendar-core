@@ -55,7 +55,7 @@ Requires PHP 8.1+ and no external production dependencies.
 
 ```bash
 # Assuming you have Composer installed
-composer require phpical/php-icalendar-core
+composer require craigk5n/php-icalendar-core
 ```
 
 ## Usage
