@@ -9,13 +9,15 @@ use Icalendar\Parser\Parser;
 use Icalendar\Writer\Writer;
 use Icalendar\Component\VCalendar;
 use Icalendar\Component\VEvent;
+use PHPUnit\Framework\Attributes\Group;
 
 /**
  * Performance Tests
- * 
+ *
  * Tests performance characteristics and benchmarks of the iCalendar library.
  * Verifies that performance requirements from PRD NFR-001 through NFR-004 are met.
  */
+#[Group('performance')]
 class PerformanceTest extends TestCase
 {
     private Parser $parser;
