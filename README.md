@@ -1,5 +1,10 @@
 # PHP iCalendar Core
 
+[![CI](https://github.com/craigk5n/php-icalendar-core/actions/workflows/ci.yml/badge.svg)](https://github.com/craigk5n/php-icalendar-core/actions/workflows/ci.yml)
+[![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
+[![PHP Version](https://img.shields.io/badge/php-%3E%3D8.2-8892BF.svg)](https://www.php.net/)
+[![PHPStan Level 9](https://img.shields.io/badge/PHPStan-level%209-brightgreen.svg)](https://phpstan.org/)
+
 This library provides robust parsing and writing capabilities for the iCalendar (RFC 5545) format. It aims for high compatibility with RFC specifications while offering flexible parsing modes and supporting standardized extensions for richer data.
 
 ## Features
