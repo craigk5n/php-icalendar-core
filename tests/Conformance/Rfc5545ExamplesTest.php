@@ -37,6 +37,7 @@ class Rfc5545ExamplesTest extends TestCase
         $this->parser->setStrict(false); 
         $calendar = $this->parser->parse($original);
         $output = $this->writer->write($calendar);
+
         // Reparse in strict mode to catch any writing issues
         $this->parser->setStrict(true); 
         $reparsed = $this->parser->parse($output);

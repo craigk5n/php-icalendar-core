@@ -306,4 +306,106 @@ class ComponentWriterTest extends TestCase
         $this->assertStringContainsString('ATTENDEE:mailto:a@example.com', $result);
         $this->assertStringContainsString('ATTENDEE:mailto:b@example.com', $result);
     }
+
+    // --- New tests for STYLED-DESCRIPTION writing ---
+
+    /**
+     * Test writing STYLED-DESCRIPTION with HTML content.
+     */
+    public function testWriteStyledDescriptionHtml(): void
+    {
+        $event = new VEvent();
+        $event->setUid('styled-desc-html-write@example.com');
+        $event->setDtStamp('20260215T100000Z');
+        $event->setSummary('Event with Styled Description');
+
+        // Create STYLED-DESCRIPTION property with HTML content
+        $styledDescProp = GenericProperty::create('STYLED-DESCRIPTION', '<html><body><h1>Important</h1><p>Details here.</p></body></html>');
+        $styledDescProp->setParameter('VALUE', 'TEXT'); // Explicitly set VALUE type
+        $event->addProperty($styledDescProp);
+
+        $result = $this->writer->write($event);
+
+        // Assert that the STYLED-DESCRIPTION property is written correctly.
+        // It should contain the raw HTML, with special characters escaped if necessary by TextWriter.
+        $this->assertStringContainsString('STYLED-DESCRIPTION;VALUE=TEXT:<html><body><h1>Important</h1><p>Details here.</p></body></html>', $result);
+    }
+
+    /**
+     * Test writing STYLED-DESCRIPTION with a URI reference.
+     */
+    public function testWriteStyledDescriptionUri(): void
+    {
+        $event = new VEvent();
+        $event->setUid('styled-desc-uri-write@example.com');
+        $event->setDtStamp('20260215T100000Z');
+        $event->setSummary('Event with Styled Description URI');
+
+        // Create STYLED-DESCRIPTION property with a URI
+        $styledDescProp = GenericProperty::create('STYLED-DESCRIPTION', 'http://example.com/event/details');
+        $styledDescProp->setParameter('VALUE', 'URI'); // Explicitly set VALUE type
+        $event->addProperty($styledDescProp);
+
+        $result = $this->writer->write($event);
+
+        // Assert that the STYLED-DESCRIPTION property is written correctly with the URI.
+        $this->assertStringContainsString('STYLED-DESCRIPTION;VALUE=URI:http://example.com/event/details', $result);
+    }
+
+    /**
+     * Test writing STYLED-DESCRIPTION with a plain DESCRIPTION.
+     * Plain DESCRIPTION should be omitted due to conflict resolution logic in ComponentWriter.
+     */
+    public function testWriteStyledDescriptionWithPlainDescription(): void
+    {
+        $event = new VEvent();
+        $event->setUid('styled-desc-conflict-write@example.com');
+        $event->setDtStamp('20260215T100000Z');
+        $event->setSummary('Conflict Test');
+
+        // Add plain DESCRIPTION first
+        $plainDescProp = GenericProperty::create('DESCRIPTION', 'This is a plain description.');
+        $event->addProperty($plainDescProp);
+
+        // Add STYLED-DESCRIPTION second
+        $styledDescProp = GenericProperty::create('STYLED-DESCRIPTION', '<html>Styled text.</html>');
+        $styledDescProp->setParameter('VALUE', 'TEXT');
+        $event->addProperty($styledDescProp);
+
+        $result = $this->writer->write($event);
+
+        // Assert STYLED-DESCRIPTION is present
+        $this->assertStringContainsString('STYLED-DESCRIPTION;VALUE=TEXT:<html>Styled text.</html>', $result);
+        // Assert that the plain DESCRIPTION is omitted due to the conflict resolution in ComponentWriter::write
+        $this->assertStringNotContainsString('DESCRIPTION:This is a plain description.', $result);
+    }
+
+    /**
+     * Test writing STYLED-DESCRIPTION with DESCRIPTION;DERIVED=TRUE.
+     * Both should be preserved.
+     */
+    public function testWriteStyledDescriptionWithDerivedDescription(): void
+    {
+        $event = new VEvent();
+        $event->setUid('styled-desc-derived-write@example.com');
+        $event->setDtStamp('20260215T100000Z');
+        $event->setSummary('Derived Description Test');
+
+        // Add DESCRIPTION with DERIVED=TRUE
+        $derivedDescProp = GenericProperty::create('DESCRIPTION', 'This is a derived plain text description.');
+        $derivedDescProp->setParameter('DERIVED', 'TRUE');
+        $event->addProperty($derivedDescProp);
+
+        // Add STYLED-DESCRIPTION
+        $styledDescProp = GenericProperty::create('STYLED-DESCRIPTION', '<html>Styled text.</html>');
+        $styledDescProp->setParameter('VALUE', 'TEXT');
+        $event->addProperty($styledDescProp);
+
+        $result = $this->writer->write($event);
+
+        // Assert STYLED-DESCRIPTION is present
+        $this->assertStringContainsString('STYLED-DESCRIPTION;VALUE=TEXT:<html>Styled text.</html>', $result);
+        // Assert DESCRIPTION with DERIVED=TRUE is also present
+        $this->assertStringContainsString('DESCRIPTION;DERIVED=TRUE:This is a derived plain text description.', $result);
+    }
 }

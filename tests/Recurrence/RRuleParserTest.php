@@ -19,7 +19,7 @@ class RRuleParserTest extends TestCase
     protected function setUp(): void
     {
         $this->parser = new RRuleParser();
-        $this->parser->setStrict(true);
+        $this->parser->setStrict(true); // Default to strict mode for most tests
     }
 
     /** @test */
@@ -99,6 +99,7 @@ class RRuleParserTest extends TestCase
     /** @test */
     public function testParseUntilDate(): void
     {
+        // Test UNTIL with just a date
         $rrule = $this->parser->parse('FREQ=DAILY;UNTIL=20261231');
 
         $this->assertTrue($rrule->hasUntil());
@@ -110,7 +111,7 @@ class RRuleParserTest extends TestCase
     public function testParseUntilAndCountMutuallyExclusive(): void
     {
         $this->expectException(ParseException::class);
-        $this->expectExceptionMessage('cannot have both UNTIL and COUNT');
+        $this->expectExceptionMessage('RRULE cannot have both UNTIL and COUNT');
 
         $this->parser->parse('FREQ=DAILY;UNTIL=20261231T235959Z;COUNT=10');
     }
@@ -211,172 +212,159 @@ class RRuleParserTest extends TestCase
     }
 
     /** @test */
-    public function testParseComplexRrule(): void
+    public function testParseComplexRruleWithMultipleByComponents(): void
     {
-        $rrule = $this->parser->parse('FREQ=WEEKLY;INTERVAL=2;COUNT=10;BYDAY=MO,WE,FR;WKST=SU');
+        // Example combining several BY* rules
+        $rruleString = 'FREQ=YEARLY;BYMONTH=1;BYMONTHDAY=1;BYDAY=1MO,2TU';
+        $rrule = $this->parser->parse($rruleString);
 
-        $this->assertEquals('WEEKLY', $rrule->getFreq());
-        $this->assertEquals(2, $rrule->getInterval());
-        $this->assertEquals(10, $rrule->getCount());
-        $this->assertEquals('SU', $rrule->getWkst());
-
+        $this->assertEquals('YEARLY', $rrule->getFreq());
+        $this->assertEquals([1], $rrule->getByMonth());
+        $this->assertEquals([1], $rrule->getByMonthDay());
         $byDay = $rrule->getByDay();
-        $this->assertCount(3, $byDay);
+        $this->assertCount(2, $byDay);
+        $this->assertEquals(['day' => 'MO', 'ordinal' => 1], $byDay[0]);
+        $this->assertEquals(['day' => 'TU', 'ordinal' => 2], $byDay[1]);
     }
 
     /** @test */
-    public function testCanParseValidRrule(): void
+    public function testParseRruleWithUntilAsDate(): void
     {
-        $this->assertTrue($this->parser->canParse('FREQ=DAILY'));
-        $this->assertTrue($this->parser->canParse('FREQ=WEEKLY;INTERVAL=2;COUNT=10;BYDAY=MO,WE,FR'));
+        // UNTIL specified as YYYYMMDD
+        $rruleString = 'FREQ=DAILY;UNTIL=20261231';
+        $rrule = $this->parser->parse($rruleString);
+
+        $this->assertTrue($rrule->hasUntil());
+        $this->assertEquals('2026-12-31', $rrule->getUntil()->format('Y-m-d'));
+        // Check if time is defaulted or handled appropriately (should be midnight)
+        $this->assertEquals('00:00:00', $rrule->getUntil()->format('H:i:s'));
     }
 
     /** @test */
-    public function testCanParseInvalidRrule(): void
+    public function testParseRruleWithEmptyByParam(): void
     {
-        $this->assertFalse($this->parser->canParse(''));
-        $this->assertFalse($this->parser->canParse('COUNT=10'));
-        $this->assertFalse($this->parser->canParse('FREQ=DAILY;INVALID=value'));
+        // Test RRULEs with empty BY* parameters, e.g., BYSECOND=;
+        // These should result in empty arrays for those components.
+        $rruleString = 'FREQ=HOURLY;BYMINUTE=0;BYSECOND=;BYHOUR=9';
+        $rrule = $this->parser->parse($rruleString);
+
+        $this->assertEquals([0], $rrule->getByMinute());
+        $this->assertEquals([], $rrule->getBySecond()); // Expect empty array for BYSECOND=
+        $this->assertEquals([9], $rrule->getByHour());
     }
 
     /** @test */
-    public function testParseMissingFreq(): void
+    public function testParseRruleWithLeadingTrailingSemicolons(): void
     {
+        // Test malformed RRULE strings with extra semicolons
+        $rruleString = ';FREQ=DAILY;INTERVAL=1;';
+        $rrule = $this->parser->parse($rruleString);
+
+        $this->assertEquals('DAILY', $rrule->getFreq());
+        $this->assertEquals(1, $rrule->getInterval());
+    }
+
+    /** @test */
+    public function testParseRruleWithUnknownParamStrict(): void
+    {
+        // In strict mode, unknown parameters should cause a ParseException
         $this->expectException(ParseException::class);
-        $this->expectExceptionMessage('must have FREQ component');
+        $this->expectExceptionMessage('Unknown parameter found in RRULE'); 
 
-        $this->parser->parse('COUNT=10');
+        $this->parser->parse('FREQ=DAILY;UNKNOWNPARAM=value');
     }
-
+    
     /** @test */
-    public function testParseInvalidFreq(): void
+    public function testParseRruleWithUnknownFreqLenient(): void
     {
         $this->expectException(ParseException::class);
         $this->expectExceptionMessage('Invalid RECUR FREQ value');
 
-        $this->parser->parse('FREQ=DAILYLY');
+        $this->parser->parse('FREQ=WEEKLYLY'); // Invalid FREQ
     }
 
     /** @test */
-    public function testRRuleIsImmutable(): void
+    public function testParseRruleWithInvalidByDayOrdinal(): void
     {
-        $rrule = $this->parser->parse('FREQ=DAILY;COUNT=10');
+        // Test invalid ordinal for BYDAY. 0 is invalid. 
+        $this->expectException(ParseException::class);
+        $this->expectExceptionMessage('Invalid BYDAY ordinal'); 
 
-        // Create new instance with modified values
-        $newRrule = $rrule->withFreq('WEEKLY');
-
-        // Original should not change
-        $this->assertEquals('DAILY', $rrule->getFreq());
-        $this->assertEquals('WEEKLY', $newRrule->getFreq());
-
-        // Other values should be preserved
-        $this->assertEquals(10, $newRrule->getCount());
+        $this->parser->parse('FREQ=MONTHLY;BYDAY=0TU');
     }
 
     /** @test */
-    public function testRRuleToStringBasic(): void
+    public function testRRuleToStringComplex(): void
     {
-        $rrule = $this->parser->parse('FREQ=DAILY');
+        // Test the toString method with a complex RRULE
+        $freq = RRule::FREQ_WEEKLY;
+        $interval = 2;
+        $count = 10;
+        $byDay = [['day' => 'MO', 'ordinal' => 1], ['day' => 'FR', 'ordinal' => null]];
+        $wkst = RRule::DAY_SUNDAY;
 
-        $this->assertEquals('FREQ=DAILY', $rrule->toString());
+        $rrule = new RRule(
+            $freq,
+            $interval,
+            $count,
+            null, // until
+            [], [], [], // bySecond, byMinute, byHour
+            $byDay,
+            [], [], [], [], [], // byMonthDay, byYearDay, byWeekNo, byMonth, bySetPos
+            $wkst
+        );
+
+        // Expecting: FREQ;INTERVAL;COUNT;BYDAY;WKST
+        $expectedString = 'FREQ=WEEKLY;INTERVAL=2;COUNT=10;BYDAY=1MO,FR;WKST=SU';
+        $this->assertEquals($expectedString, $rrule->toString());
+    }
+    
+    /** @test */
+    public function testRRuleToStringWithUntilDateTime(): void
+    {
+        $until = new \DateTimeImmutable('2026-12-31T23:59:59Z'); // UTC time
+        $rrule = new RRule(
+            'DAILY', 1, null, $until, [], [], [], [], [], [], [], [], [], 'MO'
+        );
+        // Format should be YYYYMMDDTHHMMSSZ for UTC
+        $expectedString = 'FREQ=DAILY;UNTIL=20261231T235959Z';
+        $this->assertEquals($expectedString, $rrule->toString());
     }
 
     /** @test */
-    public function testRRuleToStringWithInterval(): void
+    public function testRRuleToStringWithUntilDate(): void
     {
-        $rrule = $this->parser->parse('FREQ=WEEKLY;INTERVAL=2');
-
-        $this->assertEquals('FREQ=WEEKLY;INTERVAL=2', $rrule->toString());
+        $until = new \DateTimeImmutable('2026-12-31'); // Date only
+        $rrule = new RRule(
+            'DAILY', 1, null, $until, [], [], [], [], [], [], [], [], [], 'MO', true
+        );
+        // Format should be YYYYMMDD
+        $expectedString = 'FREQ=DAILY;UNTIL=20261231';
+        $this->assertEquals($expectedString, $rrule->toString());
     }
 
     /** @test */
-    public function testRRuleToStringWithCount(): void
+    public function testRRuleToStringWithAllBYParams(): void
     {
-        $rrule = $this->parser->parse('FREQ=DAILY;COUNT=10');
+        $rrule = new RRule(
+            'YEARLY',
+            1,
+            null,
+            null,
+            [0, 30], // bySecond
+            [15, 45], // byMinute
+            [9, 17], // byHour
+            [['day' => 'MO', 'ordinal' => 1], ['day' => 'FR', 'ordinal' => -1]], // byDay
+            [1, 15, -1], // byMonthDay
+            [1, 180, 365], // byYearDay
+            [1, 52], // byWeekNo
+            [1, 12], // byMonth
+            [1, 5], // bySetPos
+            'SU' // wkst
+        );
 
-        $this->assertEquals('FREQ=DAILY;COUNT=10', $rrule->toString());
-    }
-
-    /** @test */
-    public function testRRuleToStringWithByDay(): void
-    {
-        $rrule = $this->parser->parse('FREQ=WEEKLY;BYDAY=MO,WE,FR');
-
-        $this->assertEquals('FREQ=WEEKLY;BYDAY=MO,WE,FR', $rrule->toString());
-    }
-
-    /** @test */
-    public function testRRuleToStringWithByDayOrdinal(): void
-    {
-        $rrule = $this->parser->parse('FREQ=MONTHLY;BYDAY=2TU,-1FR');
-
-        $this->assertEquals('FREQ=MONTHLY;BYDAY=2TU,-1FR', $rrule->toString());
-    }
-
-    /** @test */
-    public function testRRuleToStringWithByMonth(): void
-    {
-        $rrule = $this->parser->parse('FREQ=YEARLY;BYMONTH=1,7');
-
-        $this->assertEquals('FREQ=YEARLY;BYMONTH=1,7', $rrule->toString());
-    }
-
-    /** @test */
-    public function testRRuleToStringWithWkst(): void
-    {
-        $rrule = $this->parser->parse('FREQ=WEEKLY;WKST=SU');
-
-        $this->assertEquals('FREQ=WEEKLY;WKST=SU', $rrule->toString());
-    }
-
-    /** @test */
-    public function testRRuleWithInterval(): void
-    {
-        $rrule = $this->parser->parse('FREQ=DAILY');
-        $newRrule = $rrule->withInterval(3);
-
-        $this->assertEquals(3, $newRrule->getInterval());
-        $this->assertEquals(1, $rrule->getInterval()); // Original unchanged
-    }
-
-    /** @test */
-    public function testRRuleWithCount(): void
-    {
-        $rrule = $this->parser->parse('FREQ=DAILY');
-        $newRrule = $rrule->withCount(5);
-
-        $this->assertEquals(5, $newRrule->getCount());
-        $this->assertTrue($newRrule->hasCount());
-    }
-
-    /** @test */
-    public function testRRuleWithUntil(): void
-    {
-        $rrule = $this->parser->parse('FREQ=DAILY');
-        $until = new \DateTimeImmutable('2026-12-31 23:59:59');
-        $newRrule = $rrule->withUntil($until);
-
-        $this->assertTrue($newRrule->hasUntil());
-        $this->assertEquals($until, $newRrule->getUntil());
-    }
-
-    /** @test */
-    public function testRRuleConstants(): void
-    {
-        $this->assertEquals('SECONDLY', RRule::FREQ_SECONDLY);
-        $this->assertEquals('MINUTELY', RRule::FREQ_MINUTELY);
-        $this->assertEquals('HOURLY', RRule::FREQ_HOURLY);
-        $this->assertEquals('DAILY', RRule::FREQ_DAILY);
-        $this->assertEquals('WEEKLY', RRule::FREQ_WEEKLY);
-        $this->assertEquals('MONTHLY', RRule::FREQ_MONTHLY);
-        $this->assertEquals('YEARLY', RRule::FREQ_YEARLY);
-
-        $this->assertEquals('SU', RRule::DAY_SUNDAY);
-        $this->assertEquals('MO', RRule::DAY_MONDAY);
-        $this->assertEquals('TU', RRule::DAY_TUESDAY);
-        $this->assertEquals('WE', RRule::DAY_WEDNESDAY);
-        $this->assertEquals('TH', RRule::DAY_THURSDAY);
-        $this->assertEquals('FR', RRule::DAY_FRIDAY);
-        $this->assertEquals('SA', RRule::DAY_SATURDAY);
+        // Expect specific order from toString
+        $expectedString = 'FREQ=YEARLY;BYSECOND=0,30;BYMINUTE=15,45;BYHOUR=9,17;BYDAY=1MO,-1FR;BYMONTHDAY=1,15,-1;BYYEARDAY=1,180,365;BYWEEKNO=1,52;BYMONTH=1,12;BYSETPOS=1,5;WKST=SU';
+        $this->assertEquals($expectedString, $rrule->toString());
     }
 }

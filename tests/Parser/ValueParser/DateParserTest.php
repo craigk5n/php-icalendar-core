@@ -93,7 +93,7 @@ class DateParserTest extends TestCase
     public function testParseInvalidMonth(): void
     {
         $this->expectException(ParseException::class);
-        $thisthis->expectExceptionMessage('Invalid DATE value: \'20261306\'');
+        $this->expectExceptionMessage('Invalid DATE value: \'20261306\'');
         
         $this->parser->parse('20261306');
     }

@@ -88,6 +88,19 @@ class UtcOffsetWriterTest extends TestCase
         $this->assertEquals('-010101', $result);
     }
 
+    public function testWriteDateInterval(): void
+    {
+        $interval = new \DateInterval('PT1H30M');
+        $this->assertEquals('+0130', $this->writer->write($interval));
+
+        $intervalNeg = new \DateInterval('PT2H');
+        $intervalNeg->invert = 1;
+        $this->assertEquals('-0200', $this->writer->write($intervalNeg));
+
+        $intervalWithSeconds = new \DateInterval('PT1H1M1S');
+        $this->assertEquals('+010101', $this->writer->write($intervalWithSeconds));
+    }
+
     public function testWriteLargePositiveOffset(): void
     {
         $result = $this->writer->write(25200); // +7 hours
@@ -154,15 +167,15 @@ class UtcOffsetWriterTest extends TestCase
     public function testWriteInvalidType(): void
     {
         $this->expectException(\InvalidArgumentException::class);
-        $this->expectExceptionMessage('UtcOffsetWriter expects int (seconds), got string');
+        $this->expectExceptionMessage('UtcOffsetWriter expects int (seconds), DateInterval or string, got array');
         
-        $this->writer->write('+0100');
+        $this->writer->write([3600]);
     }
 
     public function testWriteNull(): void
     {
         $this->expectException(\InvalidArgumentException::class);
-        $this->expectExceptionMessage('UtcOffsetWriter expects int (seconds), got NULL');
+        $this->expectExceptionMessage('UtcOffsetWriter expects int (seconds), DateInterval or string, got NULL');
         
         $this->writer->write(null);
     }
@@ -170,7 +183,7 @@ class UtcOffsetWriterTest extends TestCase
     public function testWriteArray(): void
     {
         $this->expectException(\InvalidArgumentException::class);
-        $this->expectExceptionMessage('UtcOffsetWriter expects int (seconds), got array');
+        $this->expectExceptionMessage('UtcOffsetWriter expects int (seconds), DateInterval or string, got array');
         
         $this->writer->write([1, 0, 0]);
     }
@@ -178,7 +191,7 @@ class UtcOffsetWriterTest extends TestCase
     public function testWriteFloat(): void
     {
         $this->expectException(\InvalidArgumentException::class);
-        $this->expectExceptionMessage('UtcOffsetWriter expects int (seconds), got double');
+        $this->expectExceptionMessage('UtcOffsetWriter expects int (seconds), DateInterval or string, got double');
         
         $this->writer->write(3600.5);
     }
@@ -186,7 +199,7 @@ class UtcOffsetWriterTest extends TestCase
     public function testWriteBoolean(): void
     {
         $this->expectException(\InvalidArgumentException::class);
-        $this->expectExceptionMessage('UtcOffsetWriter expects int (seconds), got boolean');
+        $this->expectExceptionMessage('UtcOffsetWriter expects int (seconds), DateInterval or string, got boolean');
         
         $this->writer->write(true);
     }
@@ -207,8 +220,9 @@ class UtcOffsetWriterTest extends TestCase
         $this->assertTrue($this->writer->canWrite(-1800));
         $this->assertTrue($this->writer->canWrite(123456789));
         $this->assertTrue($this->writer->canWrite(-123456789));
+        $this->assertTrue($this->writer->canWrite(new \DateInterval('PT1H')));
+        $this->assertTrue($this->writer->canWrite('+0100'));
         
-        $this->assertFalse($this->writer->canWrite('+0100'));
         $this->assertFalse($this->writer->canWrite(null));
         $this->assertFalse($this->writer->canWrite([]));
         $this->assertFalse($this->writer->canWrite(new \stdClass()));

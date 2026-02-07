@@ -95,15 +95,15 @@ class DateWriterTest extends TestCase
     public function testWriteInvalidType(): void
     {
         $this->expectException(\InvalidArgumentException::class);
-        $this->expectExceptionMessage('DateWriter expects DateTimeInterface, got string');
+        $this->expectExceptionMessage('DateWriter expects DateTimeInterface or string, got array');
         
-        $this->writer->write('20260206');
+        $this->writer->write(['20260206']);
     }
 
     public function testWriteNull(): void
     {
         $this->expectException(\InvalidArgumentException::class);
-        $this->expectExceptionMessage('DateWriter expects DateTimeInterface, got NULL');
+        $this->expectExceptionMessage('DateWriter expects DateTimeInterface or string, got NULL');
         
         $this->writer->write(null);
     }
@@ -111,7 +111,7 @@ class DateWriterTest extends TestCase
     public function testWriteArray(): void
     {
         $this->expectException(\InvalidArgumentException::class);
-        $this->expectExceptionMessage('DateWriter expects DateTimeInterface, got array');
+        $this->expectExceptionMessage('DateWriter expects DateTimeInterface or string, got array');
         
         $this->writer->write(['2026', '02', '06']);
     }
@@ -119,7 +119,7 @@ class DateWriterTest extends TestCase
     public function testWriteInteger(): void
     {
         $this->expectException(\InvalidArgumentException::class);
-        $this->expectExceptionMessage('DateWriter expects DateTimeInterface, got integer');
+        $this->expectExceptionMessage('DateWriter expects DateTimeInterface or string, got integer');
         
         $this->writer->write(20260206);
     }
@@ -139,8 +139,8 @@ class DateWriterTest extends TestCase
         $dateTimeImmutable = new DateTimeImmutable();
         $this->assertTrue($this->writer->canWrite($dateTime));
         $this->assertTrue($this->writer->canWrite($dateTimeImmutable));
+        $this->assertTrue($this->writer->canWrite('20260206'));
         
-        $this->assertFalse($this->writer->canWrite('20260206'));
         $this->assertFalse($this->writer->canWrite(null));
         $this->assertFalse($this->writer->canWrite([]));
         $this->assertFalse($this->writer->canWrite(20260206));

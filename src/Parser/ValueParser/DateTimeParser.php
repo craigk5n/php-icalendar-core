@@ -22,15 +22,19 @@ class DateTimeParser implements ValueParserInterface
 
     public function parse(string $value, array $parameters = []): DateTimeImmutable
     {
-        $isStandardFormat = $this->isStandardFormat($value);
+        $formatCheck = $this->checkFormat($value);
 
-        if (!$isStandardFormat) {
+        if ($formatCheck === 'invalid_format') {
             if (!$this->strict) {
                 try {
                     return new DateTimeImmutable($value);
                 } catch (\Exception $e) {}
             }
             throw new ParseException("Invalid DATE-TIME format: '{$value}'. Expected YYYYMMDDTHHMMSS[Z].", ParseException::ERR_INVALID_DATE_TIME);
+        }
+
+        if ($formatCheck === 'invalid_value') {
+            throw new ParseException("Invalid DATE-TIME value: '{$value}'.", ParseException::ERR_INVALID_DATE_TIME);
         }
 
         $isUtc = str_ends_with($value, 'Z');
@@ -48,7 +52,7 @@ class DateTimeParser implements ValueParserInterface
 
     public function canParse(string $value): bool
     {
-        if ($this->isStandardFormat($value)) return true;
+        if ($this->checkFormat($value) === 'valid') return true;
         if (!$this->strict) {
             try {
                 new DateTimeImmutable($value);
@@ -58,13 +62,17 @@ class DateTimeParser implements ValueParserInterface
         return false;
     }
 
-    private function isStandardFormat(string $value): bool
+    /**
+     * Check if value has valid DATE-TIME format and values.
+     * Returns 'valid', 'invalid_format', or 'invalid_value'.
+     */
+    private function checkFormat(string $value): string
     {
         $isUtc = str_ends_with($value, 'Z');
         $dateTimePart = $isUtc ? substr($value, 0, -1) : $value;
-        
+
         if (strlen($dateTimePart) !== 15 || !preg_match('/^\d{8}T\d{6}$/', $dateTimePart)) {
-            return false;
+            return 'invalid_format';
         }
 
         $year = (int) substr($dateTimePart, 0, 4);
@@ -74,10 +82,12 @@ class DateTimeParser implements ValueParserInterface
         $minute = (int) substr($dateTimePart, 11, 2);
         $second = (int) substr($dateTimePart, 13, 2);
 
-        return DateValidator::isValidDate($year, $month, $day) &&
-               $hour >= 0 && $hour <= 23 &&
-               $minute >= 0 && $minute <= 59 &&
-               $second >= 0 && $second <= 60;
+        if (!DateValidator::isValidDate($year, $month, $day) ||
+            $hour > 23 || $minute > 59 || $second > 60) {
+            return 'invalid_value';
+        }
+
+        return 'valid';
     }
 
     private function parseUtc(string $value): DateTimeImmutable

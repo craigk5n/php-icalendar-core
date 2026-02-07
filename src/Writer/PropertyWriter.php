@@ -83,7 +83,7 @@ class PropertyWriter
     private function writeArray(array $property): string
     {
         $name = $property['name'];
-        $parameters = $property['parameters'] ?? [];
+        $parameters = $property['parameters'];
         $value = $property['value'];
         $type = $property['type'] ?? null;
 

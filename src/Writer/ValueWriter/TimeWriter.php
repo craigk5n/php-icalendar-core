@@ -13,13 +13,17 @@ class TimeWriter implements ValueWriterInterface
 {
     public function write(mixed $value): string
     {
+        if (is_string($value)) {
+            return $value;
+        }
+
         if (!$value instanceof DateTimeInterface) {
-            throw new \InvalidArgumentException('TimeWriter expects DateTimeInterface, got ' . gettype($value));
+            throw new \InvalidArgumentException('TimeWriter expects DateTimeInterface or string, got ' . gettype($value));
         }
 
         // Check if UTC
         $timezone = $value->getTimezone();
-        if ($timezone->getName() === 'UTC' || $timezone->getName() === '+00:00') {
+        if ($timezone->getName() === 'UTC' || $timezone->getName() === '+00:00' || $timezone->getName() === 'Z') {
             return $value->format('His') . 'Z';
         }
 
@@ -34,6 +38,6 @@ class TimeWriter implements ValueWriterInterface
 
     public function canWrite(mixed $value): bool
     {
-        return $value instanceof DateTimeInterface;
+        return $value instanceof DateTimeInterface || is_string($value);
     }
 }

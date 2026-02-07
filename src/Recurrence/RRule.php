@@ -51,6 +51,7 @@ readonly class RRule
      * @param array<int> $byMonth List of months (1-12)
      * @param array<int> $bySetPos Position filters for BY* results (1-366 or -366 to -1)
      * @param string $wkst Week start day (default: MO)
+     * @param bool $untilIsDate Whether UNTIL value was originally a DATE (vs DATE-TIME)
      */
     public function __construct(
         private string $freq,
@@ -66,7 +67,8 @@ readonly class RRule
         private array $byWeekNo = [],
         private array $byMonth = [],
         private array $bySetPos = [],
-        private string $wkst = 'MO'
+        private string $wkst = 'MO',
+        private bool $untilIsDate = false
     ) {
     }
 
@@ -208,6 +210,14 @@ readonly class RRule
     }
 
     /**
+     * Check if UNTIL was a DATE
+     */
+    public function isUntilDate(): bool
+    {
+        return $this->untilIsDate;
+    }
+
+    /**
      * Parse an RRULE string into an immutable RRule object
      *
      * @param string $rrule The RRULE string (e.g., "FREQ=DAILY;COUNT=10")
@@ -227,6 +237,9 @@ readonly class RRule
     {
         $parts = ['FREQ=' . $this->freq];
 
+        // Order: FREQ, INTERVAL, COUNT, BY*, UNTIL, WKST
+        // BY* parts come before UNTIL per RFC 5545 convention
+
         if ($this->interval !== 1) {
             $parts[] = 'INTERVAL=' . $this->interval;
         }
@@ -235,12 +248,16 @@ readonly class RRule
             $parts[] = 'COUNT=' . $this->count;
         }
 
-        if (!empty($this->byMonth)) {
-            $parts[] = 'BYMONTH=' . implode(',', $this->byMonth);
+        if (!empty($this->bySecond)) {
+            $parts[] = 'BYSECOND=' . implode(',', $this->bySecond);
         }
 
-        if (!empty($this->byMonthDay)) {
-            $parts[] = 'BYMONTHDAY=' . implode(',', $this->byMonthDay);
+        if (!empty($this->byMinute)) {
+            $parts[] = 'BYMINUTE=' . implode(',', $this->byMinute);
+        }
+
+        if (!empty($this->byHour)) {
+            $parts[] = 'BYHOUR=' . implode(',', $this->byHour);
         }
 
         if (!empty($this->byDay)) {
@@ -256,6 +273,10 @@ readonly class RRule
             $parts[] = 'BYDAY=' . implode(',', $dayParts);
         }
 
+        if (!empty($this->byMonthDay)) {
+            $parts[] = 'BYMONTHDAY=' . implode(',', $this->byMonthDay);
+        }
+
         if (!empty($this->byYearDay)) {
             $parts[] = 'BYYEARDAY=' . implode(',', $this->byYearDay);
         }
@@ -264,16 +285,8 @@ readonly class RRule
             $parts[] = 'BYWEEKNO=' . implode(',', $this->byWeekNo);
         }
 
-        if (!empty($this->byHour)) {
-            $parts[] = 'BYHOUR=' . implode(',', $this->byHour);
-        }
-
-        if (!empty($this->byMinute)) {
-            $parts[] = 'BYMINUTE=' . implode(',', $this->byMinute);
-        }
-
-        if (!empty($this->bySecond)) {
-            $parts[] = 'BYSECOND=' . implode(',', $this->bySecond);
+        if (!empty($this->byMonth)) {
+            $parts[] = 'BYMONTH=' . implode(',', $this->byMonth);
         }
 
         if (!empty($this->bySetPos)) {
@@ -281,11 +294,15 @@ readonly class RRule
         }
 
         if ($this->until !== null) {
-            $untilStr = 'UNTIL=' . $this->until->format('Ymd\THis');
-            if ($this->until->getTimezone()->getName() === 'UTC' || $this->until->getTimezone()->getName() === 'Z') {
-                $untilStr .= 'Z';
+            if ($this->untilIsDate) {
+                $parts[] = 'UNTIL=' . $this->until->format('Ymd');
+            } else {
+                $untilStr = 'UNTIL=' . $this->until->format('Ymd\THis');
+                if ($this->until->getTimezone()->getName() === 'UTC' || $this->until->getTimezone()->getName() === 'Z') {
+                    $untilStr .= 'Z';
+                }
+                $parts[] = $untilStr;
             }
-            $parts[] = $untilStr;
         }
 
         if ($this->wkst !== 'MO') {
@@ -314,7 +331,8 @@ readonly class RRule
             $this->byWeekNo,
             $this->byMonth,
             $this->bySetPos,
-            $this->wkst
+            $this->wkst,
+            $this->untilIsDate
         );
     }
 
@@ -337,7 +355,8 @@ readonly class RRule
             $this->byWeekNo,
             $this->byMonth,
             $this->bySetPos,
-            $this->wkst
+            $this->wkst,
+            $this->untilIsDate
         );
     }
 
@@ -360,14 +379,15 @@ readonly class RRule
             $this->byWeekNo,
             $this->byMonth,
             $this->bySetPos,
-            $this->wkst
+            $this->wkst,
+            $this->untilIsDate
         );
     }
 
     /**
      * Create a new RRule with modified until date
      */
-    public function withUntil(?\DateTimeImmutable $until): self
+    public function withUntil(?\DateTimeImmutable $until, bool $isDate = false): self
     {
         return new self(
             $this->freq,
@@ -383,7 +403,8 @@ readonly class RRule
             $this->byWeekNo,
             $this->byMonth,
             $this->bySetPos,
-            $this->wkst
+            $this->wkst,
+            $isDate
         );
     }
 }

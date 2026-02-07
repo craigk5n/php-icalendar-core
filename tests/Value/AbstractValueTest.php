@@ -47,7 +47,7 @@ class TestValue extends AbstractValue
         return 'TEST';
     }
 
-    public function getRawValue(): mixed
+    public function getRawValue(): string
     {
         return 'test-value';
     }

@@ -133,6 +133,98 @@ class VCalendar extends AbstractComponent
     }
 
     /**
+     * Set the refresh interval for this calendar (RFC 7986)
+     *
+     * @param string $interval The duration string (e.g., "PT1H")
+     * @return self For method chaining
+     */
+    public function setRefreshInterval(string $interval): self
+    {
+        $this->removeProperty('REFRESH-INTERVAL');
+        $this->addProperty(GenericProperty::create('REFRESH-INTERVAL', $interval));
+        return $this;
+    }
+
+    /**
+     * Get the refresh interval for this calendar
+     *
+     * @return string|null The interval duration or null if not set
+     */
+    public function getRefreshInterval(): ?string
+    {
+        $prop = $this->getProperty('REFRESH-INTERVAL');
+        if ($prop === null) {
+            return null;
+        }
+        return $prop->getValue()->getRawValue();
+    }
+
+    /**
+     * Set the COLOR property for this calendar (RFC 7986)
+     *
+     * @param string $color The color name or code
+     * @return self For method chaining
+     */
+    public function setColor(string $color): self
+    {
+        $this->removeProperty('COLOR');
+        $this->addProperty(GenericProperty::create('COLOR', $color));
+        return $this;
+    }
+
+    /**
+     * Get the COLOR property for this calendar
+     *
+     * @return string|null The color or null if not set
+     */
+    public function getColor(): ?string
+    {
+        $prop = $this->getProperty('COLOR');
+        if ($prop === null) {
+            return null;
+        }
+        return $prop->getValue()->getRawValue();
+    }
+
+    /**
+     * Set the display name of the calendar (Common extension)
+     */
+    public function setCalendarName(string $name): self
+    {
+        $this->removeProperty('X-WR-CALNAME');
+        $this->addProperty(GenericProperty::create('X-WR-CALNAME', $name));
+        return $this;
+    }
+
+    /**
+     * Get the display name of the calendar
+     */
+    public function getCalendarName(): ?string
+    {
+        $prop = $this->getProperty('X-WR-CALNAME');
+        return $prop?->getValue()->getRawValue();
+    }
+
+    /**
+     * Set the default timezone for the calendar (Common extension)
+     */
+    public function setCalendarTimezone(string $tzid): self
+    {
+        $this->removeProperty('X-WR-TIMEZONE');
+        $this->addProperty(GenericProperty::create('X-WR-TIMEZONE', $tzid));
+        return $this;
+    }
+
+    /**
+     * Get the default timezone for the calendar
+     */
+    public function getCalendarTimezone(): ?string
+    {
+        $prop = $this->getProperty('X-WR-TIMEZONE');
+        return $prop?->getValue()->getRawValue();
+    }
+
+    /**
      * Validate this VCALENDAR component against RFC 5545 requirements
      *
      * Ensures that all required properties (PRODID and VERSION) are present.
@@ -157,5 +249,17 @@ class VCalendar extends AbstractComponent
                 self::ERR_MISSING_VERSION
             );
         }
+    }
+
+    /**
+     * Convert the entire calendar to jCal JSON string
+     */
+    public function toJson(int $options = 0): string
+    {
+        $json = json_encode($this->toArray(), $options);
+        if ($json === false) {
+            throw new \RuntimeException('Failed to encode iCalendar to JSON: ' . json_last_error_msg());
+        }
+        return $json;
     }
 }

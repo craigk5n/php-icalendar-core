@@ -79,31 +79,30 @@ class IntegerWriterTest extends TestCase
     public function testWriteInvalidType(): void
     {
         $this->expectException(\InvalidArgumentException::class);
-        $this->expectExceptionMessage('IntegerWriter expects int, got string');
+        $this->expectExceptionMessage('IntegerWriter expects int or string, got array');
         
-        $this->writer->write('42');
+        $this->writer->write([42]);
     }
 
     public function testWriteFloat(): void
     {
         $this->expectException(\InvalidArgumentException::class);
-        $this->expectExceptionMessage('IntegerWriter expects int, got double');
+        $this->expectExceptionMessage('IntegerWriter expects int or string, got double');
         
         $this->writer->write(42.0);
     }
 
     public function testWriteNumericString(): void
     {
-        $this->expectException(\InvalidArgumentException::class);
-        $this->expectExceptionMessage('IntegerWriter expects int, got string');
-        
-        $this->writer->write('123');
+        // Now strings are supported
+        $result = $this->writer->write('123');
+        $this->assertEquals('123', $result);
     }
 
     public function testWriteNull(): void
     {
         $this->expectException(\InvalidArgumentException::class);
-        $this->expectExceptionMessage('IntegerWriter expects int, got NULL');
+        $this->expectExceptionMessage('IntegerWriter expects int or string, got NULL');
         
         $this->writer->write(null);
     }
@@ -111,7 +110,7 @@ class IntegerWriterTest extends TestCase
     public function testWriteArray(): void
     {
         $this->expectException(\InvalidArgumentException::class);
-        $this->expectExceptionMessage('IntegerWriter expects int, got array');
+        $this->expectExceptionMessage('IntegerWriter expects int or string, got array');
         
         $this->writer->write([42]);
     }
@@ -119,7 +118,7 @@ class IntegerWriterTest extends TestCase
     public function testWriteObject(): void
     {
         $this->expectException(\InvalidArgumentException::class);
-        $this->expectExceptionMessage('IntegerWriter expects int, got object');
+        $this->expectExceptionMessage('IntegerWriter expects int or string, got object');
         
         $this->writer->write(new \stdClass());
     }
@@ -127,7 +126,7 @@ class IntegerWriterTest extends TestCase
     public function testWriteBoolean(): void
     {
         $this->expectException(\InvalidArgumentException::class);
-        $this->expectExceptionMessage('IntegerWriter expects int, got boolean');
+        $this->expectExceptionMessage('IntegerWriter expects int or string, got boolean');
         
         $this->writer->write(true);
     }
@@ -135,7 +134,7 @@ class IntegerWriterTest extends TestCase
     public function testWriteFalseBoolean(): void
     {
         $this->expectException(\InvalidArgumentException::class);
-        $this->expectExceptionMessage('IntegerWriter expects int, got boolean');
+        $this->expectExceptionMessage('IntegerWriter expects int or string, got boolean');
         
         $this->writer->write(false);
     }
@@ -156,9 +155,8 @@ class IntegerWriterTest extends TestCase
         $this->assertTrue($this->writer->canWrite(0));
         $this->assertTrue($this->writer->canWrite(PHP_INT_MAX));
         $this->assertTrue($this->writer->canWrite(PHP_INT_MIN));
+        $this->assertTrue($this->writer->canWrite('42'));
         
-        $this->assertFalse($this->writer->canWrite('42'));
-        $this->assertFalse($this->writer->canWrite('123'));
         $this->assertFalse($this->writer->canWrite(42.0));
         $this->assertFalse($this->writer->canWrite(null));
         $this->assertFalse($this->writer->canWrite([]));
@@ -280,7 +278,7 @@ class IntegerWriterTest extends TestCase
         }
     }
 
-    public function testWriteRealWorldExamples(): void
+    public function testWriteRealWorldIntegers(): void
     {
         $realWorldIntegers = [
             2026,        // Year
@@ -322,14 +320,12 @@ class IntegerWriterTest extends TestCase
 
     public function testWriteStrictIntegerCheck(): void
     {
-        // Test that only actual integers are accepted
+        // Test that only actual integers or strings are accepted
         $nonIntegers = [
-            '42',      // String
             42.0,      // Float
             42.5,      // Float with decimal
             true,      // Boolean
             false,     // Boolean
-            '42abc',   // Invalid string
             null,      // Null
             [],        // Array
             new \stdClass(), // Object

@@ -45,7 +45,10 @@ class ValueWriterFactory
     private function initializeWriters(): void
     {
         foreach ($this->typeMap as $type => $class) {
-            $this->writers[$type] = new $class();
+            $instance = new $class();
+            if ($instance instanceof ValueWriterInterface) {
+                $this->writers[$type] = $instance;
+            }
         }
     }
 

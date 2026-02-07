@@ -102,4 +102,33 @@ abstract class AbstractComponent implements ComponentInterface
     {
         $this->parent = $parent;
     }
+
+    /**
+     * @return array<mixed>
+     */
+    public function toArray(): array
+    {
+        $name = strtolower($this->getName());
+        $properties = [];
+        foreach ($this->getProperties() as $property) {
+            $propName = strtolower($property->getName());
+            $params = (object) array_change_key_case($property->getParameters(), CASE_LOWER);
+            $type = strtolower($property->getValue()->getType());
+            $value = $property->getValue()->getRawValue();
+            
+            // Basic handling for multi-valued properties (simplified for now)
+            if (str_contains($value, ',') && !in_array($propName, ['summary', 'description', 'location'])) {
+                 // Should ideally split by comma if not escaped, but keeping it simple for now
+            }
+
+            $properties[] = [$propName, $params, $type, $value];
+        }
+
+        $components = [];
+        foreach ($this->getComponents() as $component) {
+            $components[] = $component->toArray();
+        }
+
+        return [$name, $properties, $components];
+    }
 }

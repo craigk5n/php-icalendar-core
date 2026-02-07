@@ -9,6 +9,7 @@ use DateTimeInterface;
 
 /**
  * Writer for PERIOD values (start/end or start/duration)
+ * Supports multiple comma-separated periods.
  */
 class PeriodWriter implements ValueWriterInterface
 {
@@ -23,13 +24,44 @@ class PeriodWriter implements ValueWriterInterface
 
     public function write(mixed $value): string
     {
-        if (!is_array($value) || !isset($value['start'])) {
-            throw new \InvalidArgumentException('PeriodWriter expects array with start and end/duration');
+        if (is_string($value)) {
+            return $value;
         }
 
-        $start = $value['start'];
-        $end = $value['end'] ?? null;
-        $duration = $value['duration'] ?? null;
+        if (!is_array($value)) {
+            throw new \InvalidArgumentException('PeriodWriter expects array or string, got ' . gettype($value));
+        }
+
+        if (empty($value)) {
+            return '';
+        }
+
+        // Check if it's a single period or a list of periods
+        // A single period can be [start, end/duration] or ['start' => ..., 'end' => ...]
+        if ($this->isSinglePeriod($value)) {
+            return $this->writeSinglePeriod($value);
+        }
+
+        // It's a list of periods
+        return implode(',', array_map([$this, 'writeSinglePeriod'], $value));
+    }
+
+    private function isSinglePeriod(array $value): bool
+    {
+        if (isset($value['start']) || isset($value['end']) || isset($value['duration'])) return true;
+        if (count($value) === 2 && isset($value[0]) && $value[0] instanceof DateTimeInterface) return true;
+        return false;
+    }
+
+    private function writeSinglePeriod(mixed $period): string
+    {
+        if (!is_array($period)) {
+            throw new \InvalidArgumentException('Each period must be an array');
+        }
+
+        $start = $period['start'] ?? $period[0] ?? null;
+        $end = $period['end'] ?? $period[1] ?? null;
+        $duration = $period['duration'] ?? (isset($period[1]) && $period[1] instanceof DateInterval ? $period[1] : null);
 
         if (!$start instanceof DateTimeInterface) {
             throw new \InvalidArgumentException('Period start must be DateTimeInterface');
@@ -37,18 +69,12 @@ class PeriodWriter implements ValueWriterInterface
 
         $parts = [$this->dateTimeWriter->write($start)];
 
-        if ($end !== null) {
-            if (!$end instanceof DateTimeInterface) {
-                throw new \InvalidArgumentException('Period end must be DateTimeInterface');
-            }
+        if ($end instanceof DateTimeInterface) {
             $parts[] = $this->dateTimeWriter->write($end);
-        } elseif ($duration !== null) {
-            if (!$duration instanceof DateInterval) {
-                throw new \InvalidArgumentException('Period duration must be DateInterval');
-            }
+        } elseif ($duration instanceof DateInterval) {
             $parts[] = $this->durationWriter->write($duration);
         } else {
-            throw new \InvalidArgumentException('Period must have end or duration');
+            throw new \InvalidArgumentException('Period must have end (DateTimeInterface) or duration (DateInterval)');
         }
 
         return implode('/', $parts);
@@ -61,6 +87,6 @@ class PeriodWriter implements ValueWriterInterface
 
     public function canWrite(mixed $value): bool
     {
-        return is_array($value) && isset($value['start']);
+        return is_array($value) || is_string($value);
     }
 }

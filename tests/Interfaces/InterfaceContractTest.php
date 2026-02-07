@@ -138,7 +138,7 @@ class InterfaceContractTest extends TestCase
                 return 'TEXT';
             }
 
-            public function getRawValue(): mixed
+            public function getRawValue(): string
             {
                 return 'test value';
             }

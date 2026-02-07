@@ -36,24 +36,33 @@ class CalAddressParser implements ValueParserInterface
         $parsed = parse_url($value);
 
         if ($parsed === false || !isset($parsed['scheme'])) {
-            throw new ParseException(
-                'Invalid CAL-ADDRESS: must be a URI with scheme: ' . $value,
-                self::ERR_INVALID_CAL_ADDRESS
-            );
+            if ($this->strict) {
+                throw new ParseException(
+                    'Invalid CAL-ADDRESS: must be a URI with scheme: ' . $value,
+                    self::ERR_INVALID_CAL_ADDRESS
+                );
+            }
+            return $value;
         }
 
         if ($parsed['scheme'] !== 'mailto') {
-            throw new ParseException(
-                'Invalid CAL-ADDRESS: scheme must be mailto: ' . $value,
-                self::ERR_INVALID_CAL_ADDRESS
-            );
+            if ($this->strict) {
+                throw new ParseException(
+                    'Invalid CAL-ADDRESS: scheme must be mailto: ' . $value,
+                    self::ERR_INVALID_CAL_ADDRESS
+                );
+            }
+            return $value;
         }
 
         if (!isset($parsed['path']) || empty($parsed['path'])) {
-            throw new ParseException(
-                'Invalid CAL-ADDRESS: missing email address: ' . $value,
-                self::ERR_INVALID_CAL_ADDRESS
-            );
+            if ($this->strict) {
+                throw new ParseException(
+                    'Invalid CAL-ADDRESS: missing email address: ' . $value,
+                    self::ERR_INVALID_CAL_ADDRESS
+                );
+            }
+            return $value;
         }
 
         // Validate email format - extract email from "Name <email>" format if present
@@ -62,10 +71,12 @@ class CalAddressParser implements ValueParserInterface
             $email = $matches[1];
         }
         if (filter_var($email, FILTER_VALIDATE_EMAIL) === false) {
-            throw new ParseException(
-                'Invalid CAL-ADDRESS: invalid email format: ' . $parsed['path'],
-                self::ERR_INVALID_CAL_ADDRESS
-            );
+            if ($this->strict) {
+                throw new ParseException(
+                    'Invalid CAL-ADDRESS: invalid email format: ' . $parsed['path'],
+                    self::ERR_INVALID_CAL_ADDRESS
+                );
+            }
         }
 
         return $value;

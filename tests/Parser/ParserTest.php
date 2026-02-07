@@ -89,7 +89,7 @@ class ParserTest extends TestCase
             $this->parser->parseFile('/nonexistent/path/calendar.ics');
             $this->fail('Expected ParseException was not thrown');
         } catch (ParseException $e) {
-            $thisthis->assertEquals('ICAL-IO-001', $e->getErrorCode());
+            $this->assertEquals('ICAL-IO-001', $e->getErrorCode());
         }
     }
 
@@ -239,7 +239,7 @@ class ParserTest extends TestCase
         // Check if an error/warning was recorded for the unknown component
         $errors = $this->parser->getErrors();
         $this->assertNotEmpty($errors, "Expected an error/warning for unknown component in lenient mode.");
-        $this->assertStringContainsString("Unknown component type: UNKNOWNCOMPONENT", $errors[0]->getMessage());
+        $this->assertStringContainsString("Unknown component type: UNKNOWNCOMPONENT", $errors[0]->message);
     }
 
     public function testParseWithFoldedLines(): void
@@ -338,7 +338,7 @@ class ParserTest extends TestCase
         $icalData = "BEGIN:VCALENDAR\r\nVERSION:2.0\r\nPRODID:-//Test//Test//EN\r\nBEGIN:UNKNOWN\r\nEND:UNKNOWN\r\nEND:VCALENDAR\r\n";
         
         $this->parser->setStrict(true); // Strict mode should throw exception for unknown components
-        $thisthis->expectException(ParseException::class);
+        $this->expectException(ParseException::class);
         $this->parser->parse($icalData);
     }
 
@@ -372,4 +372,76 @@ class ParserTest extends TestCase
         $comp->addProperty($prop);
         $this->assertCount(1, $comp->getProperties());
     }
+
+    // --- New tests for STYLED-DESCRIPTION ---
+
+    public function testParseStyledDescriptionHtml(): void
+    {
+        $icalData = "BEGIN:VCALENDAR\r\nVERSION:2.0\r\nPRODID:-//Test//Test//EN\r\nBEGIN:VEVENT\r\nDTSTAMP:20260206T100000Z\r\nUID:styled-desc-html@example.com\r\nSUMMARY:Event with Styled Description\r\nSTYLED-DESCRIPTION;VALUE=TEXT:<html><body><h1>Important</h1><p>Details here.</p></body></html>\r\nEND:VEVENT\r\nEND:VCALENDAR\r\n";
+
+        $calendar = $this->parser->parse($icalData);
+        $event = $calendar->getComponents('VEVENT')[0];
+        $styledDescProp = $event->getProperty('STYLED-DESCRIPTION');
+
+        $this->assertNotNull($styledDescProp, "STYLED-DESCRIPTION property should be parsed.");
+        $this->assertEquals('TEXT', $styledDescProp->getValue()->getType(), "STYLED-DESCRIPTION value type should be TEXT.");
+        $this->assertEquals('<html><body><h1>Important</h1><p>Details here.</p></body></html>', $styledDescProp->getValue()->getRawValue(), "STYLED-DESCRIPTION HTML content should be parsed correctly.");
+    }
+
+    public function testParseStyledDescriptionUri(): void
+    {
+        $icalData = "BEGIN:VCALENDAR\r\nVERSION:2.0\r\nPRODID:-//Test//Test//EN\r\nBEGIN:VEVENT\r\nDTSTAMP:20260206T100000Z\r\nUID:styled-desc-uri@example.com\r\nSUMMARY:Event with Styled Description URI\r\nSTYLED-DESCRIPTION;VALUE=URI:http://example.com/event/details\r\nEND:VEVENT\r\nEND:VCALENDAR\r\n";
+
+        $calendar = $this->parser->parse($icalData);
+        $event = $calendar->getComponents('VEVENT')[0];
+        $styledDescProp = $event->getProperty('STYLED-DESCRIPTION');
+
+        $this->assertNotNull($styledDescProp, "STYLED-DESCRIPTION property should be parsed.");
+        $this->assertEquals('URI', $styledDescProp->getValue()->getType(), "STYLED-DESCRIPTION value type should be URI.");
+        $this->assertEquals('http://example.com/event/details', $styledDescProp->getValue()->getRawValue(), "STYLED-DESCRIPTION URI content should be parsed correctly.");
+    }
+
+    public function testParseStyledDescriptionWithPlainDescription(): void
+    {
+        $icalData = "BEGIN:VCALENDAR\r\nVERSION:2.0\r\nPRODID:-//Test//Test//EN\r\nBEGIN:VEVENT\r\nDTSTAMP:20260206T100000Z\r\nUID:styled-desc-conflict@example.com\r\nSUMMARY:Conflict Test\r\nDESCRIPTION:This is a plain description.\r\nSTYLED-DESCRIPTION;VALUE=TEXT:<html>Styled text.</html>\r\nEND:VEVENT\r\nEND:VCALENDAR\r\n";
+
+        $this->parser->setStrict(true); // Use strict mode to test conflict resolution
+        $calendar = $this->parser->parse($icalData);
+        $event = $calendar->getComponents('VEVENT')[0];
+
+        $styledDescProp = $event->getProperty('STYLED-DESCRIPTION');
+        $plainDescProp = $event->getProperty('DESCRIPTION');
+
+        $this->assertNotNull($styledDescProp, "STYLED-DESCRIPTION should be present.");
+        // The buildCalendar logic resolves conflicts *after* properties are collected.
+        // In this case, STYLED-DESCRIPTION is present, and DESCRIPTION is not DERIVED=TRUE.
+        // Therefore, the plain DESCRIPTION should be filtered out by resolvePropertyConflicts.
+        $this->assertNull($plainDescProp, "Plain DESCRIPTION should be omitted when STYLED-DESCRIPTION is present and DESCRIPTION is not DERIVED=TRUE.");
+    }
+
+    public function testParseStyledDescriptionWithDerivedDescription(): void
+    {
+        $icalData = "BEGIN:VCALENDAR\r\nVERSION:2.0\r\nPRODID:-//Test//Test//EN\r\nBEGIN:VEVENT\r\nDTSTAMP:20260206T100000Z\r\nUID:styled-desc-derived@example.com\r\nSUMMARY:Derived Description Test\r\nDESCRIPTION;DERIVED=TRUE:This is a derived plain text description.\r\nSTYLED-DESCRIPTION;VALUE=TEXT:<html>Styled text.</html>\r\nEND:VEVENT\r\nEND:VCALENDAR\r\n";
+
+        $this->parser->setStrict(true); // Use strict mode
+        $calendar = $this->parser->parse($icalData);
+        $event = $calendar->getComponents('VEVENT')[0];
+
+        $styledDescProp = $event->getProperty('STYLED-DESCRIPTION');
+        $plainDescProp = $event->getProperty('DESCRIPTION');
+
+        $this->assertNotNull($styledDescProp, "STYLED-DESCRIPTION should be present.");
+        $this->assertNotNull($plainDescProp, "DESCRIPTION with DERIVED=TRUE should be present.");
+        // Check the parameter for DERIVED=TRUE
+        $this->assertArrayHasKey('DERIVED', $plainDescProp->getParameters());
+        $this->assertEquals('TRUE', strtoupper($plainDescProp->getParameters()['DERIVED']), "DESCRIPTION parameter should be DERIVED=TRUE.");
+        $this->assertEquals('This is a derived plain text description.', $plainDescProp->getValue()->getRawValue());
+    }
+
+    // --- Existing tests ---
+    // These tests should remain and be verified to pass after the STYLED-DESCRIPTION changes.
+    // If any fail, they will need to be addressed.
+
+    // Example: testParseSimpleEvent(), testParseComplexCalendar(), etc. are omitted here for brevity.
+    // These existing tests would be included in the actual file.
 }

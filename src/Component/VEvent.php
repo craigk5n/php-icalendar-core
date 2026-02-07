@@ -334,7 +334,7 @@ class VEvent extends AbstractComponent
     /**
      * Get the categories for this event
      *
-     * @return array Array of category names, empty if not set
+     * @return array<string> Array of category names, empty if not set
      */
     public function getCategories(): array
     {
@@ -394,7 +394,7 @@ class VEvent extends AbstractComponent
     /**
      * Get the geographic coordinates for this event
      *
-     * @return array|null Array with 'latitude' and 'longitude' keys, or null if not set
+     * @return array{latitude: float, longitude: float}|null Array with 'latitude' and 'longitude' keys, or null if not set
      */
     public function getGeo(): ?array
     {
@@ -403,7 +403,7 @@ class VEvent extends AbstractComponent
             return null;
         }
         $value = $prop->getValue()->getRawValue();
-        if (is_string($value) && strpos($value, ';') !== false) {
+        if (strpos($value, ';') !== false) {
             [$lat, $lon] = explode(';', $value);
             return ['latitude' => (float) $lat, 'longitude' => (float) $lon];
         }
@@ -413,10 +413,10 @@ class VEvent extends AbstractComponent
     /**
      * Add an alarm to this event
      *
-     * @param object $alarm The VALARM component to add
+     * @param VAlarm $alarm The VALARM component to add
      * @return self For method chaining
      */
-    public function addAlarm(object $alarm): self
+    public function addAlarm(VAlarm $alarm): self
     {
         $this->addComponent($alarm);
         return $this;
@@ -425,11 +425,117 @@ class VEvent extends AbstractComponent
     /**
      * Get all alarms associated with this event
      *
-     * @return array Array of VALARM components
+     * @return array<VAlarm> Array of VALARM components
      */
     public function getAlarms(): array
     {
+        /** @var array<VAlarm> */
         return $this->getComponents('VALARM');
+    }
+
+    /**
+     * Set the IMAGE property for this event
+     *
+     * @param string $image The image URI or binary data
+     * @param string $valueType The value type (default 'URI', can be 'BINARY')
+     * @return self For method chaining
+     */
+    public function setImage(string $image, string $valueType = 'URI'): self
+    {
+        $this->removeProperty('IMAGE');
+        $params = [];
+        if (strtoupper($valueType) !== 'URI') {
+            $params['VALUE'] = strtoupper($valueType);
+        }
+        $this->addProperty(new GenericProperty('IMAGE', new \Icalendar\Value\GenericValue($image, $valueType), $params));
+        return $this;
+    }
+
+    /**
+     * Get the IMAGE property for this event
+     *
+     * @return string|null The image URI or data or null if not set
+     */
+    public function getImage(): ?string
+    {
+        $prop = $this->getProperty('IMAGE');
+        if ($prop === null) {
+            return null;
+        }
+        return $prop->getValue()->getRawValue();
+    }
+
+    /**
+     * Set the COLOR property for this event
+     *
+     * @param string $color The CSS3 color name or hex code (e.g., "blue", "#0000FF")
+     * @return self For method chaining
+     */
+    public function setColor(string $color): self
+    {
+        $this->removeProperty('COLOR');
+        $this->addProperty(GenericProperty::create('COLOR', $color));
+        return $this;
+    }
+
+    /**
+     * Get the COLOR property for this event
+     *
+     * @return string|null The color name/code or null if not set
+     */
+    public function getColor(): ?string
+    {
+        $prop = $this->getProperty('COLOR');
+        if ($prop === null) {
+            return null;
+        }
+        return $prop->getValue()->getRawValue();
+    }
+
+    /**
+     * Set the CONFERENCE property for this event
+     *
+     * @param string $conference The conference URI (e.g., Zoom/Meet link)
+     * @return self For method chaining
+     */
+    public function setConference(string $conference): self
+    {
+        $this->removeProperty('CONFERENCE');
+        $this->addProperty(GenericProperty::create('CONFERENCE', $conference));
+        return $this;
+    }
+
+    /**
+     * Get the CONFERENCE property for this event
+     *
+     * @return string|null The conference URI or null if not set
+     */
+    public function getConference(): ?string
+    {
+        $prop = $this->getProperty('CONFERENCE');
+        if ($prop === null) {
+            return null;
+        }
+        return $prop->getValue()->getRawValue();
+    }
+
+    /**
+     * Set structured location (Apple extension)
+     */
+    public function setAppleStructuredLocation(string $value, array $parameters = []): self
+    {
+        $this->removeProperty('X-APPLE-STRUCTURED-LOCATION');
+        $this->addProperty(new GenericProperty('X-APPLE-STRUCTURED-LOCATION', new \Icalendar\Value\TextValue($value), $parameters));
+        return $this;
+    }
+
+    /**
+     * Get structured location (Apple extension)
+     */
+    public function getAppleStructuredLocation(): ?string
+    {
+        $prop = $this->getProperty('X-APPLE-STRUCTURED-LOCATION');
+        return $prop?->getValue()->getRawValue();
     }
 
     /**

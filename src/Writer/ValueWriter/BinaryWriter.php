@@ -9,9 +9,6 @@ namespace Icalendar\Writer\ValueWriter;
  */
 class BinaryWriter implements ValueWriterInterface
 {
-    /** @var int Line length for base64 wrapping */
-    private const LINE_LENGTH = 76;
-
     public function write(mixed $value): string
     {
         if (!is_string($value)) {

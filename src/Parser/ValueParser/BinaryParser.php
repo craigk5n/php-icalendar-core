@@ -51,6 +51,9 @@ class BinaryParser implements ValueParserInterface
     private function unwrapBase64(string $value): string
     {
         $lines = preg_split('/\r?\n/', $value);
+        if ($lines === false) {
+            return $value;
+        }
         $unwrapped = '';
 
         foreach ($lines as $i => $line) {
@@ -84,7 +87,7 @@ class BinaryParser implements ValueParserInterface
             return false;
         }
 
-        if ($length % 4 !== 0) {
+        if ($this->strict && $length % 4 !== 0) {
             return false;
         }
 

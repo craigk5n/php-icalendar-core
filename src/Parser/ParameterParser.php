@@ -45,9 +45,7 @@ class ParameterParser
             }
 
             $param = $this->parseParameter($paramPair, $lineNumber, $rawLine);
-            if ($param !== null) {
-                $parameters[$param['name']] = $param['value'];
-            }
+            $parameters[$param['name']] = $param['value'];
         }
 
         return $parameters;
@@ -56,10 +54,10 @@ class ParameterParser
     /**
      * Parse a single parameter pair (name=value)
      *
-     * @return array{name: string, value: string}|null
+     * @return array{name: string, value: string}
      * @throws ParseException if parameter format is invalid
      */
-    private function parseParameter(string $paramPair, int $lineNumber, ?string $rawLine): ?array
+    private function parseParameter(string $paramPair, int $lineNumber, ?string $rawLine): array
     {
         $eqPos = strpos($paramPair, '=');
 

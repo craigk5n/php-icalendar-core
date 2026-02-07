@@ -55,6 +55,8 @@ class ParseException extends \Exception
     public const ERR_RRULE_FREQ_REQUIRED = 'ICAL-RRULE-001';
     public const ERR_RRULE_INVALID_INTERVAL = 'ICAL-RRULE-002';
     public const ERR_RRULE_UNTIL_COUNT_EXCLUSIVE = 'ICAL-RRULE-003';
+    public const ERR_RRULE_INVALID_FORMAT = 'ICAL-RRULE-004';
+    public const ERR_RRULE_INVALID_UNTIL = 'ICAL-RRULE-005';
 
     public function __construct(
         string $message,

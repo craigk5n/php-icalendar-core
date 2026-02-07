@@ -15,9 +15,9 @@ interface ValueInterface
     public function getType(): string;
 
     /**
-     * Get the raw value
+     * Get the raw value as a string
      */
-    public function getRawValue(): mixed;
+    public function getRawValue(): string;
 
     /**
      * Serialize to iCalendar format

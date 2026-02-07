@@ -11,8 +11,20 @@ class UtcOffsetWriter implements ValueWriterInterface
 {
     public function write(mixed $value): string
     {
+        if (is_string($value)) {
+            return $value;
+        }
+
+        if ($value instanceof \DateInterval) {
+            $offsetSeconds = ($value->h * 3600) + ($value->i * 60) + $value->s;
+            if ($value->invert) {
+                $offsetSeconds = -$offsetSeconds;
+            }
+            return $this->formatOffset($offsetSeconds);
+        }
+
         if (!is_int($value)) {
-            throw new \InvalidArgumentException('UtcOffsetWriter expects int (seconds), got ' . gettype($value));
+            throw new \InvalidArgumentException('UtcOffsetWriter expects int (seconds), DateInterval or string, got ' . gettype($value));
         }
 
         return $this->formatOffset($value);
@@ -44,6 +56,6 @@ class UtcOffsetWriter implements ValueWriterInterface
 
     public function canWrite(mixed $value): bool
     {
-        return is_int($value);
+        return is_int($value) || $value instanceof \DateInterval || is_string($value);
     }
 }

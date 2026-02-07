@@ -15,8 +15,12 @@ class DurationWriter implements ValueWriterInterface
 {
     public function write(mixed $value): string
     {
+        if (is_string($value)) {
+            return $value;
+        }
+
         if (!$value instanceof DateInterval) {
-            throw new \InvalidArgumentException('DurationWriter expects DateInterval, got ' . gettype($value));
+            throw new \InvalidArgumentException('DurationWriter expects DateInterval or string, got ' . gettype($value));
         }
 
         return $this->formatInterval($value);
@@ -80,6 +84,6 @@ class DurationWriter implements ValueWriterInterface
 
     public function canWrite(mixed $value): bool
     {
-        return $value instanceof DateInterval;
+        return $value instanceof DateInterval || is_string($value);
     }
 }

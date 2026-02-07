@@ -43,10 +43,14 @@ class BooleanParser implements ValueParserInterface
             return false;
         }
 
-        throw new ParseException(
-            'Invalid BOOLEAN value: ' . $value . ' (must be TRUE or FALSE)',
-            self::ERR_INVALID_BOOLEAN
-        );
+        if ($this->strict) {
+            throw new ParseException(
+                'Invalid BOOLEAN value: ' . $value . ' (must be TRUE or FALSE)',
+                self::ERR_INVALID_BOOLEAN
+            );
+        }
+
+        return false;
     }
 
     public function getType(): string

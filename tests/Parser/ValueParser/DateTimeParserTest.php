@@ -25,8 +25,8 @@ class DateTimeParserTest extends TestCase
         $dt = $this->parser->parse('20260206T100000');
         $this->assertInstanceOf(DateTimeImmutable::class, $dt);
         $this->assertEquals('2026-02-06 10:00:00', $dt->format('Y-m-d H:i:s'));
-        // For local times, the timezone should be null as it's floating.
-        $this->assertNull($dt->getTimezone()); 
+        // Local times should have the default system timezone.
+        $this->assertEquals(date_default_timezone_get(), $dt->getTimezone()->getName()); 
     }
 
     public function testParseDateTimeUtc(): void
@@ -83,21 +83,21 @@ class DateTimeParserTest extends TestCase
     public function testParseInvalidDateTimeHourTooHigh(): void
     {
         $this->expectException(ParseException::class);
-        $this->expectExceptionMessage("Invalid TIME components: 20260206T240000");
+        $this->expectExceptionMessage("Invalid DATE-TIME value: '20260206T240000'");
         $this->parser->parse('20260206T240000');
     }
 
     public function testParseInvalidDateTimeMinuteTooHigh(): void
     {
         $this->expectException(ParseException::class);
-        $thisthis->expectExceptionMessage("Invalid TIME components: 20260206T146000");
+        $this->expectExceptionMessage("Invalid DATE-TIME value: '20260206T146000'");
         $this->parser->parse('20260206T146000');
     }
 
     public function testParseInvalidDateTimeSecondTooHigh(): void
     {
         $this->expectException(ParseException::class);
-        $this->expectExceptionMessage("Invalid TIME components: 20260206T143099");
+        $this->expectExceptionMessage("Invalid DATE-TIME value: '20260206T143099'");
         $this->parser->parse('20260206T143099');
     }
 

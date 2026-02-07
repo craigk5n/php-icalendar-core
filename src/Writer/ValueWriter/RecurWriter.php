@@ -13,8 +13,12 @@ class RecurWriter implements ValueWriterInterface
 {
     public function write(mixed $value): string
     {
+        if (is_string($value)) {
+            return $value;
+        }
+
         if (!$value instanceof RRule) {
-            throw new \InvalidArgumentException('RecurWriter expects RRule, got ' . gettype($value));
+            throw new \InvalidArgumentException('RecurWriter expects RRule or string, got ' . gettype($value));
         }
 
         return $value->toString();
@@ -27,6 +31,6 @@ class RecurWriter implements ValueWriterInterface
 
     public function canWrite(mixed $value): bool
     {
-        return $value instanceof RRule;
+        return $value instanceof RRule || is_string($value);
     }
 }

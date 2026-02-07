@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace Icalendar\Value;
 
 /**
- * DATE-TIME value implementation
+ * DATE-TIME and DATE value implementation
  */
 class DateTimeValue extends AbstractValue
 {
@@ -20,9 +20,9 @@ class DateTimeValue extends AbstractValue
         return $this->type;
     }
 
-    public function getRawValue(): mixed
+    public function getRawValue(): string
     {
-        return $this->value;
+        return $this->serialize();
     }
 
     public function getValue(): \DateTimeInterface
@@ -32,7 +32,16 @@ class DateTimeValue extends AbstractValue
 
     public function serialize(): string
     {
-        return $this->value->format('Ymd\THis');
+        if ($this->type === 'DATE') {
+            return $this->value->format('Ymd');
+        }
+
+        $formatted = $this->value->format('Ymd\THis');
+        $tz = $this->value->getTimezone();
+        if ($tz !== null && ($tz->getName() === 'UTC' || $tz->getName() === 'Z')) {
+            $formatted .= 'Z';
+        }
+        return $formatted;
     }
 
     public function isDefault(): bool

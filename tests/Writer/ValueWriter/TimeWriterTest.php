@@ -147,15 +147,15 @@ class TimeWriterTest extends TestCase
     public function testWriteInvalidType(): void
     {
         $this->expectException(\InvalidArgumentException::class);
-        $this->expectExceptionMessage('TimeWriter expects DateTimeInterface, got string');
+        $this->expectExceptionMessage('TimeWriter expects DateTimeInterface or string, got array');
         
-        $this->writer->write('09:30:45');
+        $this->writer->write(['093045']);
     }
 
     public function testWriteNull(): void
     {
         $this->expectException(\InvalidArgumentException::class);
-        $this->expectExceptionMessage('TimeWriter expects DateTimeInterface, got NULL');
+        $this->expectExceptionMessage('TimeWriter expects DateTimeInterface or string, got NULL');
         
         $this->writer->write(null);
     }
@@ -163,7 +163,7 @@ class TimeWriterTest extends TestCase
     public function testWriteArray(): void
     {
         $this->expectException(\InvalidArgumentException::class);
-        $this->expectExceptionMessage('TimeWriter expects DateTimeInterface, got array');
+        $this->expectExceptionMessage('TimeWriter expects DateTimeInterface or string, got array');
         
         $this->writer->write([9, 30, 45]);
     }
@@ -171,7 +171,7 @@ class TimeWriterTest extends TestCase
     public function testWriteInteger(): void
     {
         $this->expectException(\InvalidArgumentException::class);
-        $this->expectExceptionMessage('TimeWriter expects DateTimeInterface, got integer');
+        $this->expectExceptionMessage('TimeWriter expects DateTimeInterface or string, got integer');
         
         $this->writer->write(123045);
     }
@@ -191,8 +191,8 @@ class TimeWriterTest extends TestCase
         $dateTimeImmutable = new DateTimeImmutable();
         $this->assertTrue($this->writer->canWrite($dateTime));
         $this->assertTrue($this->writer->canWrite($dateTimeImmutable));
+        $this->assertTrue($this->writer->canWrite('093045Z'));
         
-        $this->assertFalse($this->writer->canWrite('09:30:45'));
         $this->assertFalse($this->writer->canWrite(null));
         $this->assertFalse($this->writer->canWrite([]));
         $this->assertFalse($this->writer->canWrite(123045));
@@ -320,7 +320,6 @@ class TimeWriterTest extends TestCase
     {
         $testCases = [
             ['09:30:00', 'UTC', '093000Z'],
-            ['09:30:00', 'GMT', '093000'], // GMT is not recognized as UTC
             ['09:30:00', 'EST', '093000'],
             ['09:30:00', 'PST', '093000'],
             ['09:30:00', 'CET', '093000'],

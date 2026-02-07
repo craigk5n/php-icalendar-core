@@ -77,6 +77,8 @@ class ValueParserFactory
         'PRODID' => 'TEXT',
         'VERSION' => 'TEXT',
         'CALSCALE' => 'TEXT',
+        'BUSYTYPE' => 'TEXT',
+        'PARTICIPANT-TYPE' => 'TEXT',
 
         // Calendar address properties
         'ORGANIZER' => 'CAL-ADDRESS',
@@ -88,6 +90,17 @@ class ValueParserFactory
 
         // Period properties
         'FREEBUSY' => 'PERIOD',
+
+        // RFC 9073: Event Publishing Extensions
+        // STYLED-DESCRIPTION can contain rich text (HTML) or URIs.
+        // TEXT parser is suitable for capturing raw HTML/rich text.
+        'STYLED-DESCRIPTION' => 'TEXT',
+
+        // RFC 7986: New Properties for iCalendar
+        'IMAGE' => 'URI',
+        'COLOR' => 'TEXT',
+        'CONFERENCE' => 'URI',
+        'REFRESH-INTERVAL' => 'DURATION',
     ];
 
     /**

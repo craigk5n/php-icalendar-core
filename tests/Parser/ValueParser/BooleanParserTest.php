@@ -77,6 +77,7 @@ class BooleanParserTest extends TestCase
 
     public function testParseYes(): void
     {
+        $this->parser->setStrict(true);
         $this->expectException(ParseException::class);
         $this->expectExceptionMessage('must be TRUE or FALSE');
 
@@ -85,6 +86,7 @@ class BooleanParserTest extends TestCase
 
     public function testParseNo(): void
     {
+        $this->parser->setStrict(true);
         $this->expectException(ParseException::class);
 
         $this->parser->parse('no');
@@ -92,6 +94,7 @@ class BooleanParserTest extends TestCase
 
     public function testParseOne(): void
     {
+        $this->parser->setStrict(true);
         $this->expectException(ParseException::class);
 
         $this->parser->parse('1');
@@ -99,6 +102,7 @@ class BooleanParserTest extends TestCase
 
     public function testParseZero(): void
     {
+        $this->parser->setStrict(true);
         $this->expectException(ParseException::class);
 
         $this->parser->parse('0');

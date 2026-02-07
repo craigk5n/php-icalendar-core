@@ -224,7 +224,7 @@ class VTodo extends AbstractComponent
     }
 
     /**
-     * Get the percentage completion for this to-do item
+     * Get the completion percentage for this to-do item
      *
      * @return int|null The completion percentage or null if not set
      */
@@ -234,7 +234,8 @@ class VTodo extends AbstractComponent
         if ($prop === null) {
             return null;
         }
-        return (int) $prop->getValue()->getRawValue();
+        $value = $prop->getValue()->getRawValue();
+        return is_numeric($value) ? (int)$value : null;
     }
 
     /**
@@ -268,7 +269,8 @@ class VTodo extends AbstractComponent
         if ($prop === null) {
             return null;
         }
-        return (int) $prop->getValue()->getRawValue();
+        $value = $prop->getValue()->getRawValue();
+        return is_numeric($value) ? (int)$value : null;
     }
 
     /**
@@ -436,7 +438,7 @@ class VTodo extends AbstractComponent
     /**
      * Get the categories for this to-do item
      *
-     * @return array Array of category names, empty if not set
+     * @return array<string> Array of category names, empty if not set
      */
     public function getCategories(): array
     {
@@ -454,10 +456,10 @@ class VTodo extends AbstractComponent
     /**
      * Add an alarm to this to-do item
      *
-     * @param object $alarm The VALARM component to add
+     * @param VAlarm $alarm The VALARM component to add
      * @return self For method chaining
      */
-    public function addAlarm(object $alarm): self
+    public function addAlarm(VAlarm $alarm): self
     {
         $this->addComponent($alarm);
         return $this;
@@ -466,10 +468,11 @@ class VTodo extends AbstractComponent
     /**
      * Get all alarms associated with this to-do item
      *
-     * @return array Array of VALARM components
+     * @return array<VAlarm> Array of VALARM components
      */
     public function getAlarms(): array
     {
+        /** @var array<VAlarm> */
         return $this->getComponents('VALARM');
     }
 

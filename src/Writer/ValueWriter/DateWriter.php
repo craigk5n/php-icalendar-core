@@ -13,8 +13,12 @@ class DateWriter implements ValueWriterInterface
 {
     public function write(mixed $value): string
     {
+        if (is_string($value)) {
+            return $value;
+        }
+
         if (!$value instanceof DateTimeInterface) {
-            throw new \InvalidArgumentException('DateWriter expects DateTimeInterface, got ' . gettype($value));
+            throw new \InvalidArgumentException('DateWriter expects DateTimeInterface or string, got ' . gettype($value));
         }
 
         return $value->format('Ymd');
@@ -27,6 +31,6 @@ class DateWriter implements ValueWriterInterface
 
     public function canWrite(mixed $value): bool
     {
-        return $value instanceof DateTimeInterface;
+        return $value instanceof DateTimeInterface || is_string($value);
     }
 }

@@ -227,7 +227,7 @@ class EdgeCaseTest extends TestCase
         for ($i = 0; $i < 1000; $i++) { // Reduced to 1000 for test speed
             $event = new VEvent();
             $event->setUid("event-{$i}@test.com");
-            $event->setDtStart("2026-01-01T" . str_pad((string)($i % 24), 2, '0', STR_PAD_LEFT) . ":00:00Z");
+            $event->setDtStart("20260101T" . str_pad((string)($i % 24), 2, '0', STR_PAD_LEFT) . "0000Z");
             $event->setSummary("Event {$i}");
             $calendar->addComponent($event);
         }

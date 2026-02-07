@@ -9,13 +9,13 @@ use Icalendar\Exception\ParseException;
 /**
  * Handles line folding and unfolding for iCalendar content
  *
- * RFC 5545 §3.1 specifies that content lines can be "folded" by inserting\n
+ * RFC 5545 §3.1 specifies that content lines can be "folded" by inserting CRLF
  * followed by a single space (U+0020) or tab (U+0009) character.
  */
 class LineFolder
 {
     /**
-     * Unfold content lines by removing folding sequences\n + space/tab)
+     * Unfold content lines by removing folding sequences (CRLF + space/tab)
      *
      * @param string $data The raw iCalendar data
      * @return string The unfolded data
@@ -29,27 +29,24 @@ class LineFolder
         // Remove trailing CRLF if present
         $data = rtrim($data, "\r\n");
 
-        // Split into lines by CRLF
+            // Split into lines by CRLF
         $lines = explode("\r\n", $data);
         $result = [];
         $currentLine = '';
-        $lineNumber = 0;
 
         // Track if we have processed any lines
         $hasProcessedLines = false;
 
         foreach ($lines as $index => $line) {
-            $lineNumber = $index + 1;
-
             // Check if this line starts with space or tab (continuation)
-            if (!empty($line) && ($line[0] === ' ' || $line[0] === "\t")) {
+            if ($line !== '' && ($line[0] === ' ' || $line[0] === "\t")) {
                 // This is a continuation line
+                // Continuation without a preceding line - malformed
                 if (!$hasProcessedLines) {
-                    // Continuation without a preceding line - malformed
                     throw new ParseException(
                         'Malformed folding: continuation line without preceding content',
                         ParseException::ERR_MALFORMED_FOLDING,
-                        $lineNumber,
+                        $index + 1,
                         $line
                     );
                 }

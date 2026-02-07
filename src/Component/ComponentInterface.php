@@ -64,4 +64,11 @@ interface ComponentInterface
      * Set parent component
      */
     public function setParent(?ComponentInterface $parent): void;
+
+    /**
+     * Convert component to jCal array format (RFC 7265)
+     *
+     * @return array<mixed>
+     */
+    public function toArray(): array;
 }

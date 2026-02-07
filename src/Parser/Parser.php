@@ -14,6 +14,9 @@ use Icalendar\Component\VTimezone;
 use Icalendar\Component\Standard;
 use Icalendar\Component\Daylight;
 use Icalendar\Component\VAlarm;
+use Icalendar\Component\VAvailability;
+use Icalendar\Component\Available;
+use Icalendar\Component\Participant;
 use Icalendar\Component\GenericComponent;
 use Icalendar\Exception\ParseException;
 use Icalendar\Property\GenericProperty;
@@ -84,17 +87,22 @@ class Parser implements ParserInterface
     {
         $calendar = new VCalendar();
         $componentStack = [$calendar];
-        $currentComponent = $calendar;
+        
+        // Stack for property buffers, one for each component in the component stack
+        $propertyBuffers = [[]];
 
         foreach ($contentLines as $contentLine) {
             // Re-parse with strict flag if needed (lexer only does basic parsing)
-            // Note: The 'strict' flag here refers to the internal property of the parser,
-            // which is now controlled by the $mode constructor argument.
             if ($this->mode === self::STRICT) {
                 $contentLine = $this->propertyParser->parse($contentLine->getRawLine(), $contentLine->getContentLineNumber(), true);
             }
 
             $name = $contentLine->getName();
+            $currentComponent = end($componentStack);
+            if ($currentComponent === false) {
+                // This should not happen as $calendar is always pushed first
+                throw new \LogicException('Component stack is empty');
+            }
 
             // Handle BEGIN marker
             if ($name === 'BEGIN') {
@@ -102,6 +110,12 @@ class Parser implements ParserInterface
 
                 // BEGIN:VCALENDAR uses the existing calendar object
                 if (strtoupper($componentName) === 'VCALENDAR') {
+                    if ($this->currentDepth > 0) {
+                        // Nested VCALENDAR - create a new one
+                        $nestedCalendar = new VCalendar();
+                        $componentStack[] = $nestedCalendar;
+                        $propertyBuffers[] = [];
+                    }
                     $this->currentDepth++;
                     $this->securityValidator->checkDepth($this->currentDepth);
                     continue;
@@ -134,24 +148,36 @@ class Parser implements ParserInterface
                 $this->securityValidator->checkDepth($this->currentDepth);
 
                 $componentStack[] = $component;
-                $currentComponent = $component;
+                $propertyBuffers[] = []; // New buffer for this component
                 continue;
             }
 
             // Handle END marker
             if ($name === 'END') {
-                $componentName = $contentLine->getValue();
+                $componentName = strtoupper($contentLine->getValue());
 
-                if (strtoupper($componentName) === 'VCALENDAR') {
+                if ($componentName === 'VCALENDAR' && count($componentStack) === 1) {
+                    // Top-level VCALENDAR closing
+                    $props = array_pop($propertyBuffers);
+                    $finalProperties = $this->resolvePropertyConflicts($props ?? []);
+                    foreach ($finalProperties as $prop) {
+                        $calendar->addProperty($prop);
+                    }
                     $this->currentDepth--;
                     continue;
                 }
 
                 if (count($componentStack) > 1) {
                     $completedComponent = array_pop($componentStack);
+                    // $completedComponent is never null here due to the check count($componentStack) > 1
+                    
+                    $completedProperties = array_pop($propertyBuffers);
                     $parentComponent = end($componentStack);
+                    if ($parentComponent === false) {
+                        throw new \LogicException('Parent component not found');
+                    }
 
-                    if ($completedComponent->getName() !== $componentName) {
+                    if (strtoupper($completedComponent->getName()) !== $componentName) {
                         $this->addError(
                             'ICAL-PARSE-006',
                             "END marker mismatch: expected {$completedComponent->getName()}, got {$componentName}",
@@ -161,11 +187,15 @@ class Parser implements ParserInterface
                             $contentLine->getContentLineNumber(),
                             ErrorSeverity::ERROR
                         );
-                    } else {
-                        $parentComponent->addComponent($completedComponent);
                     }
 
-                    $currentComponent = $parentComponent;
+                    // Resolve property conflicts for the completed component
+                    $finalProperties = $this->resolvePropertyConflicts($completedProperties ?? []);
+                    foreach ($finalProperties as $prop) {
+                        $completedComponent->addProperty($prop);
+                    }
+
+                    $parentComponent->addComponent($completedComponent);
                     $this->currentDepth--;
                 } else {
                     $this->addError(
@@ -189,15 +219,115 @@ class Parser implements ParserInterface
             if ($currentComponent === $calendar
                 && $name !== 'VERSION' && $name !== 'PRODID'
                 && $name !== 'CALSCALE' && $name !== 'METHOD'
+                && $name !== 'REFRESH-INTERVAL' && $name !== 'COLOR'
                 && !str_starts_with($name, 'X-')) {
                 continue;
             }
 
-            $this->addPropertyToComponent($currentComponent, $contentLine, $name, $parameters, $value);
+            // Temporarily store property in the current component's buffer
+            try {
+                $parser = $this->valueParserFactory->getParserForProperty($name, $parameters);
+                $parsedValue = $parser->parse($value, $parameters);
+                $type = $parser->getType();
+                $propertyValue = $this->formatParsedValue($parsedValue, $type);
+                $property = new GenericProperty($name, new \Icalendar\Value\GenericValue($propertyValue, $type), $parameters);
+                
+                // Add to the buffer for the current component
+                $propertyBuffers[count($propertyBuffers) - 1][] = $property;
+            } catch (\Exception $e) {
+                // Add error and potentially throw if in strict mode
+                $this->addError(
+                    'ICAL-PARSE-006', // Generic parse error code
+                    $e->getMessage(),
+                    $currentComponent->getName(), // Component name
+                    $name, // Property name
+                    $contentLine->getRawLine(),
+                    $contentLine->getContentLineNumber(),
+                    $this->mode === self::STRICT ? ErrorSeverity::ERROR : ErrorSeverity::WARNING
+                );
+
+                if ($this->mode === self::STRICT) {
+                    if ($e instanceof ParseException) {
+                        throw $e;
+                    }
+                    throw new ParseException($e->getMessage(), 'ICAL-PARSE-006', $contentLine->getContentLineNumber(), $contentLine->getRawLine(), $e);
+                }
+            }
+        }
+
+        // Final cleanup: if VCALENDAR was not explicitly closed or properties remain
+        if (!empty($propertyBuffers)) {
+            $remainingProperties = array_pop($propertyBuffers);
+            if (!empty($remainingProperties)) {
+                $finalProperties = $this->resolvePropertyConflicts($remainingProperties);
+                foreach ($finalProperties as $prop) {
+                    $calendar->addProperty($prop);
+                }
+            }
         }
 
         return $calendar;
     }
+
+    /**
+     * Resolve conflicts between DESCRIPTION and STYLED-DESCRIPTION properties
+     * according to RFC 9073.
+     *
+     * @param GenericProperty[] $properties The list of properties for a component.
+     * @return GenericProperty[] The filtered list of properties.
+     */
+    private function resolvePropertyConflicts(array $properties): array
+    {
+        $styledDescPresent = false;
+        foreach ($properties as $property) {
+            if (strtoupper($property->getName()) === 'STYLED-DESCRIPTION') {
+                $styledDescPresent = true;
+                break;
+            }
+        }
+
+        if (!$styledDescPresent) {
+            return $properties;
+        }
+
+        $descriptionIndices = [];
+        $finalProperties = [];
+
+        foreach ($properties as $property) {
+            $name = strtoupper($property->getName());
+            if ($name === 'STYLED-DESCRIPTION') {
+                $finalProperties[] = $property;
+            } elseif ($name === 'DESCRIPTION') {
+                $descriptionIndices[] = [
+                    'index' => count($finalProperties),
+                    'property' => $property
+                ];
+                $finalProperties[] = $property;
+            } else {
+                $finalProperties[] = $property;
+            }
+        }
+
+        if (!empty($descriptionIndices)) {
+            $toRemove = [];
+            foreach ($descriptionIndices as $info) {
+                $params = $info['property']->getParameters();
+                $derivedParam = $params['DERIVED'] ?? null;
+                if ($derivedParam === null || strtoupper($derivedParam) !== 'TRUE') {
+                    $toRemove[] = $info['index'];
+                }
+            }
+
+            if (!empty($toRemove)) {
+                foreach (array_reverse($toRemove) as $index) {
+                    array_splice($finalProperties, $index, 1);
+                }
+            }
+        }
+
+        return $finalProperties;
+    }
+
 
     /**
      * Create a component from its name
@@ -214,66 +344,43 @@ class Parser implements ParserInterface
             'STANDARD' => new Standard(),
             'DAYLIGHT' => new Daylight(),
             'VALARM' => new VAlarm(),
+            'VAVAILABILITY' => new VAvailability(),
+            'AVAILABLE' => new Available(),
+            'PARTICIPANT' => new Participant(),
             default => new GenericComponent($componentName),
         };
     }
 
     /**
-     * Add a property to a component
-     */
-    private function addPropertyToComponent(ComponentInterface $component, ContentLine $contentLine, string $name, array $parameters, string $value): void
-    {
-        try {
-            // Value parsing will respect the mode set by the parser
-            $parsedValue = $this->valueParserFactory->parseValue($name, $value, $parameters);
-            
-            $propertyValue = $this->formatParsedValue($parsedValue);
-
-            $property = new GenericProperty($name, new TextValue($propertyValue), $parameters);
-            $component->addProperty($property);
-        } catch (\Exception $e) {
-            // Collect errors for lenient mode, throw for strict mode
-            $this->addError(
-                'ICAL-PARSE-006', // Generic parse error code
-                $e->getMessage(),
-                $component->getName(),
-                $name,
-                $contentLine->getRawLine(),
-                $contentLine->getContentLineNumber(),
-                // Use ERROR severity for strict, WARNING for lenient, unless it's a known specific error like date/time/summary
-                ($this->mode === self::STRICT || 
-                 ($name === 'DTSTART' || $name === 'DTEND' || $name === 'DURATION' || $name === 'RRULE' || $name === 'SUMMARY') // Specific properties to collect warnings for
-                ) ? ErrorSeverity::ERROR : ErrorSeverity::WARNING
-            );
-
-            if ($this->mode === self::STRICT) {
-                // If in strict mode, re-throw the exception
-                if ($e instanceof ParseException) {
-                    throw $e;
-                }
-                // Wrap other exceptions in ParseException for consistency in strict mode
-                throw new ParseException($e->getMessage(), 'ICAL-PARSE-006', $contentLine->getContentLineNumber(), $contentLine->getRawLine(), $e);
-            }
-            // In lenient mode, we continue processing after adding the warning to errors list.
-        }
-    }
-
-    /**
      * Format parsed values back to string for storage in GenericProperty
      */
-    private function formatParsedValue(mixed $value): string
+    private function formatParsedValue(mixed $value, ?string $type = null): string
     {
         if ($value instanceof \DateTimeInterface) {
+            if ($type === 'DATE') {
+                return $value->format('Ymd');
+            }
+            
+            // Default DATE-TIME format
             // Ensure timezone is handled correctly for formatting. UTC should append 'Z'.
             $timezone = $value->getTimezone();
             $formattedDate = $value->format('Ymd\THis');
-            if ($timezone !== null && ($timezone->getName() === 'UTC' || $timezone->getName() === 'Z')) {
+            if ($timezone->getName() === 'UTC' || $timezone->getName() === 'Z') {
                 $formattedDate .= 'Z';
             }
             return $formattedDate;
         }
 
         if ($value instanceof \DateInterval) {
+            if ($type === 'UTC-OFFSET') {
+                $sign = $value->invert ? '-' : '+';
+                if ($value->s > 0) {
+                    return sprintf('%s%02d%02d%02d', $sign, $value->h, $value->i, $value->s);
+                }
+                return sprintf('%s%02d%02d', $sign, $value->h, $value->i);
+            }
+
+            // Default DURATION format
             $parts = [];
             if ($value->y > 0) $parts[] = $value->y . 'Y';
             if ($value->m > 0) $parts[] = $value->m . 'M';
@@ -294,19 +401,24 @@ class Parser implements ParserInterface
 
         if (is_array($value)) {
             // Handle cases like PERIOD (array of DateTime/Interval) or RECUR (array of rules)
+            // PERIOD [start, end/duration]
             if (count($value) === 2 && !isset($value['FREQ']) && (
                 $value[0] instanceof \DateTimeInterface || $value[0] instanceof \DateInterval ||
                 $value[1] instanceof \DateTimeInterface || $value[1] instanceof \DateInterval)
             ) {
-                 // If it's a single period [start, end/duration]
                  return $this->formatParsedValue($value[0]) . '/' . $this->formatParsedValue($value[1]);
             }
             
             // For other arrays (like BY* rules), join them with commas
-            return implode(',', array_map(fn($v) => $this->formatParsedValue($v), $value));
+            return implode(',', array_map(fn($v) => (string)$this->formatParsedValue($v), $value));
         }
 
-        return (string)$value;
+        if (is_object($value) && method_exists($value, 'toString')) {
+            $str = $value->toString();
+            return (string)$str;
+        }
+
+        return is_scalar($value) ? (string)$value : 'COMPLEX';
     }
 
     public function parseFile(string $filepath): VCalendar
@@ -346,25 +458,42 @@ class Parser implements ParserInterface
         }
     }
 
-    // The setStrict method is now superseded by the $mode property set in the constructor.
-    // Keeping it for backward compatibility might be an option, but it's better to deprecate or remove if not needed.
-    // For now, let's make it set the mode.
     public function setStrict(bool $strict): void
     {
         $this->mode = $strict;
         $this->valueParserFactory->setStrict($strict);
     }
 
+    /**
+     * Get the current parsing mode.
+     *
+     * @return bool Parser::STRICT or Parser::LENIENT
+     */
+    public function getMode(): bool
+    {
+        return $this->mode;
+    }
+
+    /**
+     * Get all errors and warnings collected during parsing.
+     *
+     * @return ValidationError[]
+     */
     public function getErrors(): array
     {
         return $this->errors;
     }
 
     /**
-     * Adds an error/warning to the parser's error list.
-     * In strict mode, some errors might be re-thrown immediately.
-     * In lenient mode, errors are collected and can be retrieved by getErrors().
+     * Get all warnings collected during parsing (alias for getErrors).
+     *
+     * @return ValidationError[]
      */
+    public function getWarnings(): array
+    {
+        return $this->getErrors();
+    }
+
     private function addError(
         string $code,
         string $message,
@@ -374,13 +503,9 @@ class Parser implements ParserInterface
         int $lineNumber,
         ErrorSeverity $severity
     ): void {
-        // Only collect errors if in lenient mode or if it's a warning
-        // or if it's a critical error that we want to report even in lenient mode.
-        // For strict mode, we re-throw, so this only applies to lenient mode's collection.
         if ($this->mode === self::LENIENT || $severity === ErrorSeverity::WARNING) {
             $this->errors[] = new ValidationError($code, $message, $component, $property, $line, $lineNumber, $severity);
         }
-        // Note: The specific handling for strict mode re-throwing is in addPropertyToComponent.
     }
 
     public function setMaxDepth(int $maxDepth): void

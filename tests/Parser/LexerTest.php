@@ -106,7 +106,7 @@ class LexerTest extends TestCase
         }
         file_put_contents($tempFile, $content);
         
-        $memoryBefore = memory_get_usage(true);
+        $memoryBefore = memory_get_peak_usage(true);
         $lineCount = 0;
         
         foreach ($this->lexer->tokenizeFile($tempFile) as $line) {
@@ -118,8 +118,8 @@ class LexerTest extends TestCase
             $this->assertNotEmpty($value);
         }
         
-        $memoryAfter = memory_get_usage(true);
-        $memoryIncrease = $memoryAfter['peak'] - $memoryBefore['peak'];
+        $memoryAfter = memory_get_peak_usage(true);
+        $memoryIncrease = $memoryAfter - $memoryBefore;
         
         // Should use reasonable memory (less than 50MB for 10K lines)
         $this->assertLessThan(50 * 1024 * 1024, $memoryIncrease);
@@ -220,7 +220,7 @@ class LexerTest extends TestCase
         // Create a large amount of data to test memory efficiency
         $largeData = str_repeat("PROP:value\r\n", 10000);
         
-        $memoryBefore = memory_get_usage(true);
+        $memoryBefore = memory_get_peak_usage(true);
         $lineCount = 0;
         
         foreach ($this->lexer->tokenize($largeData) as $line) {
@@ -232,8 +232,8 @@ class LexerTest extends TestCase
             $this->assertNotEmpty($value);
         }
         
-        $memoryAfter = memory_get_usage(true);
-        $memoryIncrease = $memoryAfter['peak'] - $memoryBefore['peak'];
+        $memoryAfter = memory_get_peak_usage(true);
+        $memoryIncrease = $memoryAfter - $memoryBefore;
         
         // Should use reasonable memory (less than 50MB for 10K lines)
         $this->assertLessThan(50 * 1024 * 1024, $memoryIncrease);

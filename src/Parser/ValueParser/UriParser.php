@@ -28,7 +28,9 @@ class UriParser implements ValueParserInterface
             throw new ParseException('Empty URI value', self::ERR_INVALID_URI);
         }
 
-        if ($this->strict && !filter_var($value, FILTER_VALIDATE_URL)) {
+        // RFC 3986 allows many types of URIs that FILTER_VALIDATE_URL rejects (like geo:, mailto:, data:)
+        // For iCalendar, we should be more permissive.
+        if ($this->strict && !preg_match('/^[a-z][a-z0-9+.-]*:.+/i', $value)) {
             throw new ParseException('Invalid URI format: ' . $value, self::ERR_INVALID_URI);
         }
 
@@ -44,7 +46,7 @@ class UriParser implements ValueParserInterface
     {
         $value = trim($value);
         if ($value === '') return false;
-        if (!$this->strict) return true; // Anything non-empty is a "URI" in lenient mode
-        return (bool) filter_var($value, FILTER_VALIDATE_URL);
+        if (!$this->strict) return true;
+        return (bool) preg_match('/^[a-z][a-z0-9+.-]*:.+/i', $value);
     }
 }

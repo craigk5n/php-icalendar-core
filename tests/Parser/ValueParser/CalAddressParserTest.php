@@ -55,6 +55,7 @@ class CalAddressParserTest extends TestCase
 
     public function testParseMissingScheme(): void
     {
+        $this->parser->setStrict(true);
         $this->expectException(ParseException::class);
         $this->expectExceptionMessage('must be a URI with scheme');
 
@@ -63,6 +64,7 @@ class CalAddressParserTest extends TestCase
 
     public function testParseNonMailtoScheme(): void
     {
+        $this->parser->setStrict(true);
         $this->expectException(ParseException::class);
         $this->expectExceptionMessage('scheme must be mailto');
 
@@ -71,6 +73,7 @@ class CalAddressParserTest extends TestCase
 
     public function testParseMailtoWithoutAddress(): void
     {
+        $this->parser->setStrict(true);
         $this->expectException(ParseException::class);
         $this->expectExceptionMessage('missing email address');
 

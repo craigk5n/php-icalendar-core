@@ -160,15 +160,15 @@ class DurationWriterTest extends TestCase
     public function testWriteInvalidType(): void
     {
         $this->expectException(\InvalidArgumentException::class);
-        $this->expectExceptionMessage('DurationWriter expects DateInterval, got string');
+        $this->expectExceptionMessage('DurationWriter expects DateInterval or string, got array');
         
-        $this->writer->write('PT1H');
+        $this->writer->write(['P' => '1H']);
     }
 
     public function testWriteNull(): void
     {
         $this->expectException(\InvalidArgumentException::class);
-        $this->expectExceptionMessage('DurationWriter expects DateInterval, got NULL');
+        $this->expectExceptionMessage('DurationWriter expects DateInterval or string, got NULL');
         
         $this->writer->write(null);
     }
@@ -176,15 +176,15 @@ class DurationWriterTest extends TestCase
     public function testWriteArray(): void
     {
         $this->expectException(\InvalidArgumentException::class);
-        $this->expectExceptionMessage('DurationWriter expects DateInterval, got array');
+        $this->expectExceptionMessage('DurationWriter expects DateInterval or string, got array');
         
-        $this->writer->write(['P' => '1H']);
+        $this->writer->write([]);
     }
 
     public function testWriteInteger(): void
     {
         $this->expectException(\InvalidArgumentException::class);
-        $this->expectExceptionMessage('DurationWriter expects DateInterval, got integer');
+        $this->expectExceptionMessage('DurationWriter expects DateInterval or string, got integer');
         
         $this->writer->write(3600);
     }
@@ -205,8 +205,8 @@ class DurationWriterTest extends TestCase
         
         $this->assertTrue($this->writer->canWrite($interval));
         $this->assertTrue($this->writer->canWrite($mockInterval));
+        $this->assertTrue($this->writer->canWrite('PT1H'));
         
-        $this->assertFalse($this->writer->canWrite('PT1H'));
         $this->assertFalse($this->writer->canWrite(null));
         $this->assertFalse($this->writer->canWrite([]));
         $this->assertFalse($this->writer->canWrite(new \stdClass()));
@@ -282,7 +282,7 @@ class DurationWriterTest extends TestCase
         }
     }
 
-    public function testWriteTimeComponentDetection(): void
+    public function testWriteTimezoneDetection(): void
     {
         // Test that time component is only included when needed
         $noTime = new DateInterval('P1D');

@@ -120,12 +120,12 @@ class VJournal extends AbstractComponent
     /**
      * Get all descriptions
      *
-     * @return string[]
+     * @return array<string>
      */
     public function getDescriptions(): array
     {
         return array_map(
-            fn($prop) => $prop->getValue()->getRawValue(),
+            fn($prop) => (string)$prop->getValue()->getRawValue(),
             $this->getAllProperties('DESCRIPTION')
         );
     }
@@ -150,6 +150,9 @@ class VJournal extends AbstractComponent
         return $this;
     }
 
+    /**
+     * @return array<string>
+     */
     public function getCategories(): array
     {
         $prop = $this->getProperty('CATEGORIES');
