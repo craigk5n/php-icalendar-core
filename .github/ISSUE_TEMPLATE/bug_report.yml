@@ -1,0 +1,59 @@
+name: Bug Report
+description: Report a bug in PHP iCalendar Core
+labels: ["bug"]
+body:
+  - type: textarea
+    id: description
+    attributes:
+      label: Description
+      description: A clear description of the bug.
+    validations:
+      required: true
+
+  - type: textarea
+    id: steps
+    attributes:
+      label: Steps to reproduce
+      description: Steps to reproduce the behavior.
+      placeholder: |
+        1. Parse a VCALENDAR with ...
+        2. Call ...
+        3. See error
+    validations:
+      required: true
+
+  - type: textarea
+    id: expected
+    attributes:
+      label: Expected behavior
+      description: What you expected to happen.
+    validations:
+      required: true
+
+  - type: textarea
+    id: actual
+    attributes:
+      label: Actual behavior
+      description: What actually happened. Include error messages or stack traces if applicable.
+    validations:
+      required: true
+
+  - type: dropdown
+    id: php-version
+    attributes:
+      label: PHP version
+      options:
+        - "8.2"
+        - "8.3"
+        - "8.4"
+    validations:
+      required: true
+
+  - type: textarea
+    id: icalendar-input
+    attributes:
+      label: iCalendar input
+      description: Paste the .ics content that triggers the bug, if applicable.
+      render: text
+    validations:
+      required: false
