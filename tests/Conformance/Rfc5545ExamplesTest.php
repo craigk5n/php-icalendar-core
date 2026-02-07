@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Icalendar\Tests\Conformance;
 
 use Icalendar\Component\VCalendar;
+use Icalendar\Component\VEvent;
 use Icalendar\Parser\Parser;
 use Icalendar\Writer\Writer;
 use PHPUnit\Framework\TestCase;
@@ -32,12 +33,16 @@ class Rfc5545ExamplesTest extends TestCase
     private function assertRoundTrip(string $fixture): void
     {
         $original = file_get_contents($fixture);
+        // Ensure the parser is in lenient mode for reading fixtures that might have minor issues
+        $this->parser->setStrict(false); 
         $calendar = $this->parser->parse($original);
         $output = $this->writer->write($calendar);
+        // Reparse in strict mode to catch any writing issues
+        $this->parser->setStrict(true); 
         $reparsed = $this->parser->parse($output);
 
         $this->assertCalendarsEquivalent($calendar, $reparsed, 
-            "Round-trip failed for fixture: " . basename($fixture));
+            'Round-trip failed for fixture: ' . basename($fixture));
     }
 
     /**
@@ -50,13 +55,18 @@ class Rfc5545ExamplesTest extends TestCase
         $originalEvents = $original->getComponents('VEVENT');
         $reparsedEvents = $reparsed->getComponents('VEVENT');
 
-        $this->assertEquals(count($originalEvents), count($reparsedEvents), 
+        $this->assertCount(count($originalEvents), $reparsedEvents, 
             $message . ' Event count mismatch');
 
         // Compare key properties of each event (ignoring minor formatting differences)
+        // For DTSTART, we compare the raw value which should be consistently formatted by the writer/parser.
         for ($i = 0; $i < count($originalEvents); $i++) {
             $originalEvent = $originalEvents[$i];
             $reparsedEvent = $reparsedEvents[$i];
+
+            // Assert that properties exist before getting their values
+            $this->assertNotNull($originalEvent->getProperty('UID'), $message . " UID property missing in original event $i");
+            $this->assertNotNull($reparsedEvent->getProperty('UID'), $message . " UID property missing in reparsed event $i");
 
             $this->assertEquals(
                 $originalEvent->getProperty('UID')->getValue()->getRawValue(),
@@ -64,11 +74,34 @@ class Rfc5545ExamplesTest extends TestCase
                 $message . " UID mismatch for event $i"
             );
 
-            $this->assertEquals(
-                $originalEvent->getProperty('DTSTART')->getValue()->getRawValue(),
-                $reparsedEvent->getProperty('DTSTART')->getValue()->getRawValue(),
-                $message . " DTSTART mismatch for event $i"
-            );
+            $this->assertNotNull($originalEvent->getProperty('DTSTART'), $message . " DTSTART property missing in original event $i");
+            $this->assertNotNull($reparsedEvent->getProperty('DTSTART'), $message . " DTSTART property missing in reparsed event $i");
+
+            // DTSTART can be DATE or DATETIME. The writer should format it consistently.
+            // For DATE values (YYYYMMDD), writer adds no timezone. For DATETIME, it adds Z if UTC.
+            // The test fixture 'all-day-event.ics' has DTSTART:20080202, which is a DATE.
+            // The writer should preserve this as YYYYMMDD. The parser might interpret it as UTC midnight if no TZID is present,
+            // but the raw value from the parser should match the raw value from the writer.
+            if ($originalEvent->getProperty('DTSTART')->getValue()->getType() === 'DATE') {
+                $this->assertEquals(
+                    $originalEvent->getProperty('DTSTART')->getValue()->getRawValue(),
+                    $reparsedEvent->getProperty('DTSTART')->getValue()->getRawValue(),
+                    $message . " DTSTART (DATE) mismatch for event $i"
+                );
+            } else { // DATETIME
+                // For DATETIME, we compare the formatted string, as the parser might add Z for UTC
+                // or interpret local time without explicit timezone. The writer should format it consistently.
+                // The writer *should* add Z for UTC, and omit for local.
+                // Let's check the raw value for consistency between parser/writer for DATETIME too.
+                $this->assertEquals(
+                    $originalEvent->getProperty('DTSTART')->getValue()->getRawValue(),
+                    $reparsedEvent->getProperty('DTSTART')->getValue()->getRawValue(),
+                    $message . " DTSTART (DATETIME) mismatch for event $i"
+                );
+            }
+
+            $this->assertNotNull($originalEvent->getProperty('SUMMARY'), $message . " SUMMARY property missing in original event $i");
+            $this->assertNotNull($reparsedEvent->getProperty('SUMMARY'), $message . " SUMMARY property missing in reparsed event $i");
 
             $this->assertEquals(
                 $originalEvent->getProperty('SUMMARY')->getValue()->getRawValue(),
@@ -78,12 +111,16 @@ class Rfc5545ExamplesTest extends TestCase
         }
 
         // Check calendar properties
+        $this->assertNotNull($original->getProperty('PRODID'), $message . ' PRODID property missing in original calendar');
+        $this->assertNotNull($reparsed->getProperty('PRODID'), $message . ' PRODID property missing in reparsed calendar');
         $this->assertEquals(
             $original->getProperty('PRODID')->getValue()->getRawValue(),
             $reparsed->getProperty('PRODID')->getValue()->getRawValue(),
             $message . ' PRODID mismatch'
         );
 
+        $this->assertNotNull($original->getProperty('VERSION'), $message . ' VERSION property missing in original calendar');
+        $this->assertNotNull($reparsed->getProperty('VERSION'), $message . ' VERSION property missing in reparsed calendar');
         $this->assertEquals(
             $original->getProperty('VERSION')->getValue()->getRawValue(),
             $reparsed->getProperty('VERSION')->getValue()->getRawValue(),

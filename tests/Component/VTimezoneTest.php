@@ -294,4 +294,54 @@ class VTimezoneTest extends TestCase
         $this->assertNull($timezone->validate());
         $this->assertTrue(true); // Test passes if no exception is thrown
     }
+
+    public function testBuildTransitionsWithNoObservances(): void
+    {
+        $timezone = new VTimezone();
+        $timezone->setTzId('America/New_York');
+        
+        $timezone->buildTransitions();
+        $this->assertEmpty($timezone->getTransitions());
+    }
+
+    public function testGetOffsetAtEmpty(): void
+    {
+        $timezone = new VTimezone();
+        $timezone->setTzId('America/New_York');
+        
+        // No transitions built yet
+        $this->assertEquals(0, $timezone->getOffsetAt(new \DateTime()));
+        $this->assertEquals('UTC', $timezone->getAbbreviationAt(new \DateTime()));
+    }
+
+    public function testToPhpDateTimeZoneWithEmptyTzid(): void
+    {
+        $timezone = new VTimezone();
+        // TZID not set
+        $this->assertNull($timezone->toPhpDateTimeZone());
+    }
+
+    public function testBuildTransitionsWithInvalidDate(): void
+    {
+        $timezone = new VTimezone();
+        $timezone->setTzId('America/New_York');
+        
+        $standard = new Standard();
+        // DTSTART is missing or invalid
+        $standard->setTzOffsetTo(-18000);
+        
+        $timezone->addStandard($standard);
+        
+        // This should not throw but skip the invalid observance
+        $timezone->buildTransitions();
+        $this->assertEmpty($timezone->getTransitions());
+    }
+
+    public function testToPhpDateTimeZoneFailure(): void
+    {
+        $timezone = new VTimezone();
+        $timezone->setTzId('Invalid/Timezone');
+        
+        $this->assertNull($timezone->toPhpDateTimeZone());
+    }
 }

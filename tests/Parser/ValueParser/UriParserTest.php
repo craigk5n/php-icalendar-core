@@ -15,6 +15,7 @@ class UriParserTest extends TestCase
     protected function setUp(): void
     {
         $this->parser = new UriParser();
+        $this->parser->setStrict(true);
     }
 
     public function testParseHttpUrl(): void

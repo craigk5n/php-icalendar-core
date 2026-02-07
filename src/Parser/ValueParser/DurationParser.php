@@ -8,27 +8,17 @@ use Icalendar\Exception\ParseException;
 
 /**
  * Parser for DURATION values according to RFC 5545 §3.3.6
- *
- * DURATION format is ISO 8601:
- * - P[n]W - weeks
- * - P[n]D - days
- * - PT[n]H - hours
- * - PT[n]M - minutes
- * - PT[n]S - seconds
- * - Combinations: P[n]DT[n]H[n]M[n]S
- * - Can be negative: -P1D
- *
- * Examples:
- * - P3W (3 weeks)
- * - P3D (3 days)
- * - PT1H (1 hour)
- * - P1DT2H (1 day, 2 hours)
- * - PT30S (30 seconds)
- * - -P1D (negative 1 day)
  */
 class DurationParser implements ValueParserInterface
 {
-    public const ERR_INVALID_DURATION = 'ICAL-TYPE-006';  // Per PRD §6 - DURATION error code
+    private bool $strict = false;
+
+    public function setStrict(bool $strict): void
+    {
+        $this->strict = $strict;
+    }
+
+    public const ERR_INVALID_DURATION = 'ICAL-TYPE-006';
 
     /**
      * Parse a DURATION value into a DateInterval
@@ -43,10 +33,7 @@ class DurationParser implements ValueParserInterface
         $value = trim($value);
 
         if ($value === '') {
-            throw new ParseException(
-                'Empty DURATION value',
-                self::ERR_INVALID_DURATION
-            );
+            throw new ParseException('Empty DURATION value', self::ERR_INVALID_DURATION);
         }
 
         $isNegative = false;
@@ -56,19 +43,13 @@ class DurationParser implements ValueParserInterface
         }
 
         if (!str_starts_with($value, 'P')) {
-            throw new ParseException(
-                'Invalid DURATION format: must start with P',
-                self::ERR_INVALID_DURATION
-            );
+            throw new ParseException('Invalid DURATION format: must start with P', self::ERR_INVALID_DURATION);
         }
 
         $content = substr($value, 1);
 
         if ($content === '') {
-            throw new ParseException(
-                'Invalid DURATION format: missing duration components',
-                self::ERR_INVALID_DURATION
-            );
+            throw new ParseException('Invalid DURATION format: missing duration components', self::ERR_INVALID_DURATION);
         }
 
         $hasTimeComponent = str_contains($content, 'T');
@@ -115,10 +96,7 @@ class DurationParser implements ValueParserInterface
         $matches = [];
 
         if (!preg_match($pattern, $datePart, $matches)) {
-            throw new ParseException(
-                'Invalid DURATION date component: ' . $datePart,
-                self::ERR_INVALID_DURATION
-            );
+            throw new ParseException('Invalid DURATION date component: ' . $datePart, self::ERR_INVALID_DURATION);
         }
 
         $value = (int) $matches[1];
@@ -133,103 +111,40 @@ class DurationParser implements ValueParserInterface
 
     private function parseTimePart(string $timePart, int &$hours, int &$minutes, int &$seconds): void
     {
-        $pattern = '/^(\d+)H(\d+)M(\d+)S$/';
-        $matches = [];
+        $patterns = [
+            '/^(\d+)H(\d+)M(\d+)S$/' => function($m) use (&$hours, &$minutes, &$seconds) { $hours = (int)$m[1]; $minutes = (int)$m[2]; $seconds = (int)$m[3]; },
+            '/^(\d+)H(\d+)M$/' => function($m) use (&$hours, &$minutes) { $hours = (int)$m[1]; $minutes = (int)$m[2]; },
+            '/^(\d+)H$/' => function($m) use (&$hours) { $hours = (int)$m[1]; },
+            '/^(\d+)M(\d+)S$/' => function($m) use (&$minutes, &$seconds) { $minutes = (int)$m[1]; $seconds = (int)$m[2]; },
+            '/^(\d+)M$/' => function($m) use (&$minutes) { $minutes = (int)$m[1]; },
+            '/^(\d+)S$/' => function($m) use (&$seconds) { $seconds = (int)$m[1]; }
+        ];
 
-        if (preg_match($pattern, $timePart, $matches)) {
-            $hours = (int) $matches[1];
-            $minutes = (int) $matches[2];
-            $seconds = (int) $matches[3];
-            return;
+        foreach ($patterns as $pattern => $callback) {
+            if (preg_match($pattern, $timePart, $matches)) {
+                $callback($matches);
+                return;
+            }
         }
 
-        $pattern = '/^(\d+)H(\d+)M$/';
-        if (preg_match($pattern, $timePart, $matches)) {
-            $hours = (int) $matches[1];
-            $minutes = (int) $matches[2];
-            $seconds = 0;
-            return;
-        }
-
-        $pattern = '/^(\d+)H$/';
-        if (preg_match($pattern, $timePart, $matches)) {
-            $hours = (int) $matches[1];
-            $minutes = 0;
-            $seconds = 0;
-            return;
-        }
-
-        $pattern = '/^(\d+)M(\d+)S$/';
-        if (preg_match($pattern, $timePart, $matches)) {
-            $hours = 0;
-            $minutes = (int) $matches[1];
-            $seconds = (int) $matches[2];
-            return;
-        }
-
-        $pattern = '/^(\d+)M$/';
-        if (preg_match($pattern, $timePart, $matches)) {
-            $hours = 0;
-            $minutes = (int) $matches[1];
-            $seconds = 0;
-            return;
-        }
-
-        $pattern = '/^(\d+)S$/';
-        if (preg_match($pattern, $timePart, $matches)) {
-            $hours = 0;
-            $minutes = 0;
-            $seconds = (int) $matches[1];
-            return;
-        }
-
-        throw new ParseException(
-            'Invalid DURATION time component: ' . $timePart,
-            self::ERR_INVALID_DURATION
-        );
+        throw new ParseException('Invalid DURATION time component: ' . $timePart, self::ERR_INVALID_DURATION);
     }
 
-    /**
-     * Get the data type name
-     */
     public function getType(): string
     {
         return 'DURATION';
     }
 
-    /**
-     * Check if the value is a valid DURATION format
-     */
     public function canParse(string $value): bool
     {
         $value = trim($value);
-
-        if ($value === '') {
-            return false;
-        }
-
-        $isNegative = str_starts_with($value, '-');
-        if ($isNegative) {
-            $value = substr($value, 1);
-        }
-
-        if (!str_starts_with($value, 'P')) {
-            return false;
-        }
-
+        if ($value === '') return false;
+        if (str_starts_with($value, '-')) $value = substr($value, 1);
+        if (!str_starts_with($value, 'P')) return false;
         $content = substr($value, 1);
+        if ($content === '') return false;
 
-        if ($content === '') {
-            return false;
-        }
-
-        return $this->isValidDurationContent($content);
-    }
-
-    private function isValidDurationContent(string $content): bool
-    {
         $hasTimeComponent = str_contains($content, 'T');
-
         if ($hasTimeComponent) {
             $parts = explode('T', $content, 2);
             $datePart = $parts[0];
@@ -239,44 +154,19 @@ class DurationParser implements ValueParserInterface
             $timePart = '';
         }
 
-        if ($datePart !== '') {
-            if (!$this->isValidDatePart($datePart)) {
-                return false;
-            }
-        }
-
+        if ($datePart !== '' && !preg_match('/^(\d+)[DW]$/', $datePart)) return false;
         if ($timePart !== '') {
-            if (!$this->isValidTimePart($timePart)) {
-                return false;
+            $validTime = false;
+            $patterns = ['/^\d+H\d+M\d+S$/', '/^\d+H\d+M$/', '/^\d+H$/', '/^\d+M\d+S$/', '/^\d+M$/', '/^\d+S$/'];
+            foreach ($patterns as $p) {
+                if (preg_match($p, $timePart)) {
+                    $validTime = true;
+                    break;
+                }
             }
+            if (!$validTime) return false;
         }
 
         return true;
-    }
-
-    private function isValidDatePart(string $datePart): bool
-    {
-        $pattern = '/^(\d+)[DW]$/';
-        return (bool) preg_match($pattern, $datePart);
-    }
-
-    private function isValidTimePart(string $timePart): bool
-    {
-        $patterns = [
-            '/^\d+H\d+M\d+S$/',
-            '/^\d+H\d+M$/',
-            '/^\d+H$/',
-            '/^\d+M\d+S$/',
-            '/^\d+M$/',
-            '/^\d+S$/',
-        ];
-
-        foreach ($patterns as $pattern) {
-            if (preg_match($pattern, $timePart)) {
-                return true;
-            }
-        }
-
-        return false;
     }
 }

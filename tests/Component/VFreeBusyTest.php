@@ -219,6 +219,18 @@ class VFreeBusyTest extends TestCase
         }
     }
 
+    public function testAddFreeBusyWithInvalidPeriodEnd(): void
+    {
+        $freebusy = new VFreeBusy();
+
+        try {
+            $freebusy->addFreeBusy('20240215T090000Z/INVALID');
+            $this->fail('Expected ValidationException');
+        } catch (ValidationException $e) {
+            $this->assertEquals('ICAL-VFB-VAL-001', $e->getErrorCode());
+        }
+    }
+
     public function testValidateMissingDtStamp(): void
     {
         $freebusy = new VFreeBusy();

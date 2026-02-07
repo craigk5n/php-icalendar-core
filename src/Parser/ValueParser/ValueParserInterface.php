@@ -38,4 +38,11 @@ interface ValueParserInterface
      * @return bool True if the value format is valid for this type
      */
     public function canParse(string $value): bool;
+
+    /**
+     * Set strict mode for this parser
+     *
+     * @param bool $strict True for strict RFC compliance, false for lenient parsing
+     */
+    public function setStrict(bool $strict): void;
 }

@@ -235,23 +235,12 @@ readonly class RRule
             $parts[] = 'COUNT=' . $this->count;
         }
 
-        if ($this->until !== null) {
-            $parts[] = 'UNTIL=' . $this->until->format('Ymd\THis');
-            if ($this->until->getTimezone()->getName() === 'UTC') {
-                $parts[count($parts) - 1] .= 'Z';
-            }
+        if (!empty($this->byMonth)) {
+            $parts[] = 'BYMONTH=' . implode(',', $this->byMonth);
         }
 
-        if (!empty($this->bySecond)) {
-            $parts[] = 'BYSECOND=' . implode(',', $this->bySecond);
-        }
-
-        if (!empty($this->byMinute)) {
-            $parts[] = 'BYMINUTE=' . implode(',', $this->byMinute);
-        }
-
-        if (!empty($this->byHour)) {
-            $parts[] = 'BYHOUR=' . implode(',', $this->byHour);
+        if (!empty($this->byMonthDay)) {
+            $parts[] = 'BYMONTHDAY=' . implode(',', $this->byMonthDay);
         }
 
         if (!empty($this->byDay)) {
@@ -267,10 +256,6 @@ readonly class RRule
             $parts[] = 'BYDAY=' . implode(',', $dayParts);
         }
 
-        if (!empty($this->byMonthDay)) {
-            $parts[] = 'BYMONTHDAY=' . implode(',', $this->byMonthDay);
-        }
-
         if (!empty($this->byYearDay)) {
             $parts[] = 'BYYEARDAY=' . implode(',', $this->byYearDay);
         }
@@ -279,12 +264,28 @@ readonly class RRule
             $parts[] = 'BYWEEKNO=' . implode(',', $this->byWeekNo);
         }
 
-        if (!empty($this->byMonth)) {
-            $parts[] = 'BYMONTH=' . implode(',', $this->byMonth);
+        if (!empty($this->byHour)) {
+            $parts[] = 'BYHOUR=' . implode(',', $this->byHour);
+        }
+
+        if (!empty($this->byMinute)) {
+            $parts[] = 'BYMINUTE=' . implode(',', $this->byMinute);
+        }
+
+        if (!empty($this->bySecond)) {
+            $parts[] = 'BYSECOND=' . implode(',', $this->bySecond);
         }
 
         if (!empty($this->bySetPos)) {
             $parts[] = 'BYSETPOS=' . implode(',', $this->bySetPos);
+        }
+
+        if ($this->until !== null) {
+            $untilStr = 'UNTIL=' . $this->until->format('Ymd\THis');
+            if ($this->until->getTimezone()->getName() === 'UTC' || $this->until->getTimezone()->getName() === 'Z') {
+                $untilStr .= 'Z';
+            }
+            $parts[] = $untilStr;
         }
 
         if ($this->wkst !== 'MO') {

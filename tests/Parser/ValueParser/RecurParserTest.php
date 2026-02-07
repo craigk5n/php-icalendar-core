@@ -15,6 +15,7 @@ class RecurParserTest extends TestCase
     protected function setUp(): void
     {
         $this->parser = new RecurParser();
+        $this->parser->setStrict(true);
     }
 
     public function testParseDailyFrequency(): void

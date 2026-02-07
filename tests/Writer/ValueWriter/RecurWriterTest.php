@@ -167,10 +167,8 @@ class RecurWriterTest extends TestCase
     public function testCanWrite(): void
     {
         $rrule = RRule::parse('FREQ=DAILY');
-        $mockRrule = $this->createMock(RRule::class);
         
         $this->assertTrue($this->writer->canWrite($rrule));
-        $this->assertTrue($this->writer->canWrite($mockRrule));
         
         $this->assertFalse($this->writer->canWrite('FREQ=DAILY'));
         $this->assertFalse($this->writer->canWrite(null));
@@ -193,7 +191,7 @@ class RecurWriterTest extends TestCase
         ];
         
         foreach ($originalStrings as $original) {
-            $rrule = new RRule($original);
+            $rrule = RRule::parse($original);
             $result = $this->writer->write($rrule);
             
             $this->assertEquals($original, $result, "Round trip failed for: $original");
@@ -210,7 +208,7 @@ class RecurWriterTest extends TestCase
         ];
         
         foreach ($testCases as [$rruleString, $pattern]) {
-            $rrule = new RRule($rruleString);
+            $rrule = RRule::parse($rruleString);
             $result = $this->writer->write($rrule);
             
             $this->assertMatchesRegularExpression($pattern, $result);

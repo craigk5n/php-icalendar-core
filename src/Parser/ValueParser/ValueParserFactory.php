@@ -17,6 +17,17 @@ class ValueParserFactory
     /** @var array<string, ValueParserInterface> */
     private array $parsers = [];
 
+    private bool $strict = false;
+
+    public function setStrict(bool $strict): void
+    {
+        $this->strict = $strict;
+        // Update any already cached parsers
+        foreach ($this->parsers as $parser) {
+            $parser->setStrict($strict);
+        }
+    }
+
     /** @var array<string, string> Default types for common properties */
     private static array $propertyDefaults = [
         // Date/Time properties
@@ -46,13 +57,9 @@ class ValueParserFactory
 
         // URI properties
         'URL' => 'URI',
-        'UID' => 'URI',
-
-        // Calendar address properties
-        'ORGANIZER' => 'CAL-ADDRESS',
-        'ATTENDEE' => 'CAL-ADDRESS',
 
         // Text properties (default)
+        'UID' => 'TEXT',
         'SUMMARY' => 'TEXT',
         'DESCRIPTION' => 'TEXT',
         'LOCATION' => 'TEXT',
@@ -70,6 +77,10 @@ class ValueParserFactory
         'PRODID' => 'TEXT',
         'VERSION' => 'TEXT',
         'CALSCALE' => 'TEXT',
+
+        // Calendar address properties
+        'ORGANIZER' => 'CAL-ADDRESS',
+        'ATTENDEE' => 'CAL-ADDRESS',
 
         // Time properties
         'TZOFFSETFROM' => 'UTC-OFFSET',
@@ -212,7 +223,7 @@ class ValueParserFactory
      */
     private function createParser(string $type): ValueParserInterface
     {
-        return match ($type) {
+        $parser = match ($type) {
             'TEXT' => new TextParser(),
             'DATE' => new DateParser(),
             'DATE-TIME' => new DateTimeParser(),
@@ -234,5 +245,8 @@ class ValueParserFactory
                 null
             ),
         };
+
+        $parser->setStrict($this->strict);
+        return $parser;
     }
 }

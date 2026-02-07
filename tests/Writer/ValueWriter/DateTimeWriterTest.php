@@ -402,8 +402,6 @@ public function testWriteWithZeroOffsetTimezone(): void
         
         $finalMemory = memory_get_usage();
         
-        // Memory tests are system-dependent, skip assertion
-        // $memoryIncrease = $finalMemory - $initialMemory;
-        // $this->assertLessThan(2048, $memoryIncrease);
+        $this->assertGreaterThanOrEqual($initialMemory, $finalMemory);
     }
 }

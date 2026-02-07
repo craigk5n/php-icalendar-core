@@ -5,84 +5,91 @@ declare(strict_types=1);
 namespace Icalendar\Recurrence;
 
 use Icalendar\Exception\ParseException;
+use Icalendar\Parser\ValueParser\DateParser;
 use Icalendar\Parser\ValueParser\DateTimeParser;
-use Icalendar\Parser\ValueParser\RecurParser;
 
 /**
- * Parser for RRULE (recurrence rules) that returns immutable RRule objects
- *
- * This is a wrapper around RecurParser that converts the array output
- * into a strongly-typed, immutable RRule value object.
- *
- * @see RRule
- * @see RecurParser
+ * Parser for RRULE strings according to RFC 5545 §3.3.10
  */
 class RRuleParser
 {
-    private RecurParser $recurParser;
-    private DateTimeParser $dateTimeParser;
+    private bool $strict = false;
 
-    public function __construct()
+    public function setStrict(bool $strict): void
     {
-        $this->recurParser = new RecurParser();
-        $this->dateTimeParser = new DateTimeParser();
+        $this->strict = $strict;
     }
 
-    /**
-     * Parse an RRULE string into an immutable RRule object
-     *
-     * @param string $rrule The RRULE string (e.g., "FREQ=DAILY;COUNT=10")
-     * @return RRule The parsed, immutable recurrence rule
-     * @throws ParseException If the RRULE is invalid
-     */
-    public function parse(string $rrule): RRule
+    public function parse(string $data): RRule
     {
-        $rules = $this->recurParser->parse($rrule);
+        if (empty($data)) {
+            throw new ParseException('Empty RRULE string', ParseException::ERR_RRULE_INVALID_FORMAT);
+        }
+
+        $parts = explode(';', $data);
+        $rules = [];
+
+        foreach ($parts as $part) {
+            if (empty($part)) continue;
+            $kv = explode('=', $part, 2);
+            if (count($kv) !== 2) {
+                throw new ParseException("Invalid RRULE component: {$part}", ParseException::ERR_RRULE_INVALID_FORMAT);
+            }
+            $key = strtoupper(trim($kv[0]));
+            $value = trim($kv[1]);
+            $rules[$key] = $value;
+        }
 
         return $this->buildRRule($rules);
     }
 
-    /**
-     * Check if a string can be parsed as an RRULE
-     *
-     * @param string $rrule The string to check
-     * @return bool True if the string is a valid RRULE format
-     */
-    public function canParse(string $rrule): bool
-    {
-        return $this->recurParser->canParse($rrule);
-    }
-
-    /**
-     * Build an RRule object from the parsed rules array
-     *
-     * @param array<string, string> $rules
-     * @return RRule
-     */
     private function buildRRule(array $rules): RRule
     {
-        $freq = $rules['FREQ'];
+        if (!isset($rules['FREQ'])) {
+            throw new ParseException('RRULE must have FREQ component', ParseException::ERR_RRULE_FREQ_REQUIRED);
+        }
+
+        $freq = strtoupper($rules['FREQ']);
         $interval = isset($rules['INTERVAL']) ? (int) $rules['INTERVAL'] : 1;
         $count = isset($rules['COUNT']) ? (int) $rules['COUNT'] : null;
         $until = isset($rules['UNTIL']) ? $this->parseUntil($rules['UNTIL']) : null;
-        $wkst = $rules['WKST'] ?? 'MO';
+        $wkst = isset($rules['WKST']) ? strtoupper($rules['WKST']) : 'MO';
 
-        // Parse BY* components
-        $bySecond = isset($rules['BYSECOND']) ? $this->parseIntList($rules['BYSECOND']) : [];
-        $byMinute = isset($rules['BYMINUTE']) ? $this->parseIntList($rules['BYMINUTE']) : [];
-        $byHour = isset($rules['BYHOUR']) ? $this->parseIntList($rules['BYHOUR']) : [];
-        $byDay = isset($rules['BYDAY']) ? $this->parseByDay($rules['BYDAY']) : [];
-        $byMonthDay = isset($rules['BYMONTHDAY']) ? $this->parseIntList($rules['BYMONTHDAY']) : [];
-        $byYearDay = isset($rules['BYYEARDAY']) ? $this->parseIntList($rules['BYYEARDAY']) : [];
-        $byWeekNo = isset($rules['BYWEEKNO']) ? $this->parseIntList($rules['BYWEEKNO']) : [];
-        $byMonth = isset($rules['BYMONTH']) ? $this->parseIntList($rules['BYMONTH']) : [];
-        $bySetPos = isset($rules['BYSETPOS']) ? $this->parseIntList($rules['BYSETPOS']) : [];
+        if ($until !== null && $count !== null) {
+            throw new ParseException('RRULE cannot have both UNTIL and COUNT', ParseException::ERR_RRULE_UNTIL_COUNT_EXCLUSIVE);
+        }
+
+        // Parse BY* components directly, ensuring empty arrays are passed if value is empty or missing.
+        // This explicitly handles cases where a BY* parameter is present but empty (e.g., BYSECOND=).
+        $bySecond = !isset($rules['BYSECOND']) || $rules['BYSECOND'] === '' ? [] : array_map('intval', explode(',', $rules['BYSECOND']));
+        $byMinute = !isset($rules['BYMINUTE']) || $rules['BYMINUTE'] === '' ? [] : array_map('intval', explode(',', $rules['BYMINUTE']));
+        $byHour = !isset($rules['BYHOUR']) || $rules['BYHOUR'] === '' ? [] : array_map('intval', explode(',', $rules['BYHOUR']));
+        
+        $byDay = [];
+        if (isset($rules['BYDAY']) && !empty($rules['BYDAY'])) {
+            $parts = explode(',', $rules['BYDAY']);
+            foreach ($parts as $part) {
+                if (preg_match('/^([+-]?\d+)?(MO|TU|WE|TH|FR|SA|SU)$/i', $part, $matches)) {
+                    $byDay[] = [
+                        'day' => strtoupper($matches[2]),
+                        'ordinal' => (isset($matches[1]) && $matches[1] !== '' && $matches[1] !== '+' && $matches[1] !== '-') ? (int) $matches[1] : null,
+                    ];
+                }
+            }
+        }
+
+        $byMonthDay = !isset($rules['BYMONTHDAY']) || $rules['BYMONTHDAY'] === '' ? [] : array_map('intval', explode(',', $rules['BYMONTHDAY']));
+        $byYearDay = !isset($rules['BYYEARDAY']) || $rules['BYYEARDAY'] === '' ? [] : array_map('intval', explode(',', $rules['BYYEARDAY']));
+        $byWeekNo = !isset($rules['BYWEEKNO']) || $rules['BYWEEKNO'] === '' ? [] : array_map('intval', explode(',', $rules['BYWEEKNO']));
+        $byMonth = !isset($rules['BYMONTH']) || $rules['BYMONTH'] === '' ? [] : array_map('intval', explode(',', $rules['BYMONTH']));
+        $bySetPos = !isset($rules['BYSETPOS']) || $rules['BYSETPOS'] === '' ? [] : array_map('intval', explode(',', $rules['BYSETPOS']));
 
         return new RRule(
             $freq,
             $interval,
             $count,
             $until,
+            $wkst,
             $bySecond,
             $byMinute,
             $byHour,
@@ -91,74 +98,31 @@ class RRuleParser
             $byYearDay,
             $byWeekNo,
             $byMonth,
-            $bySetPos,
-            $wkst
+            $bySetPos
         );
     }
 
-    /**
-     * Parse the UNTIL value into a DateTimeImmutable
-     *
-     * @param string $until
-     * @return \DateTimeImmutable
-     */
-    private function parseUntil(string $until): \DateTimeImmutable
+    private function parseUntil(string $value): \DateTimeImmutable
     {
-        // Try to parse as DATE-TIME (has 'T')
-        if (str_contains($until, 'T')) {
-            return $this->dateTimeParser->parse($until);
-        }
-
-        // Parse as DATE (YYYYMMDD)
-        if (strlen($until) === 8) {
-            return $this->dateTimeParser->parse($until . 'T000000');
-        }
-
-        throw new ParseException(
-            'Invalid UNTIL value: ' . $until,
-            RecurParser::ERR_INVALID_RECUR
-        );
+        $dateParser = new DateParser();
+        $dateTimeParser = new DateTimeParser();
+        if ($dateTimeParser->canParse($value)) return $dateTimeParser->parse($value);
+        if ($dateParser->canParse($value)) return $dateParser->parse($value);
+        throw new ParseException("Invalid RRULE UNTIL value: {$value}", ParseException::ERR_RRULE_INVALID_UNTIL);
     }
 
-    /**
-     * Parse a comma-separated list of integers
-     *
-     * @param string $value
-     * @return array<int>
-     */
-    private function parseIntList(string $value): array
+    public function canParse(string $data): bool
     {
-        $parts = explode(',', $value);
-        return array_map('intval', $parts);
-    }
-
-    /**
-     * Parse BYDAY values into structured format
-     *
-     * Format: "MO" or "2TU" or "-1FR"
-     *
-     * @param string $value
-     * @return array<array{day: string, ordinal: int|null}>
-     */
-    private function parseByDay(string $value): array
-    {
-        $days = explode(',', $value);
-        $result = [];
-
-        foreach ($days as $day) {
-            // Match pattern: optional ordinal (+-n) followed by day abbreviation
-            if (preg_match('/^([+-]?\d+)?(MO|TU|WE|TH|FR|SA|SU)$/', $day, $matches)) {
-                $ordinal = null;
-                if (isset($matches[1]) && $matches[1] !== '') {
-                    $ordinal = (int) $matches[1];
-                }
-                $result[] = [
-                    'day' => $matches[2],
-                    'ordinal' => $ordinal,
-                ];
+        if (empty($data) || !str_contains($data, 'FREQ=')) return false;
+        $validKeys = ['FREQ', 'INTERVAL', 'COUNT', 'UNTIL', 'WKST', 'BYSECOND', 'BYMINUTE', 'BYHOUR', 'BYDAY', 'BYMONTHDAY', 'BYYEARDAY', 'BYWEEKNO', 'BYMONTH', 'BYSETPOS'];
+        $parts = explode(';', $data);
+        foreach ($parts as $part) {
+            $kv = explode('=', $part, 2);
+            if (count($kv) !== 2) return false;
+            if (!in_array(strtoupper(trim($kv[0])), $validKeys, true)) {
+                if ($this->strict) return false;
             }
         }
-
-        return $result;
+        return true;
     }
 }

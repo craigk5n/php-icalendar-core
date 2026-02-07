@@ -13,6 +13,13 @@ use Icalendar\Exception\ParseException;
  */
 class CalAddressParser implements ValueParserInterface
 {
+    private bool $strict = false;
+
+    public function setStrict(bool $strict): void
+    {
+        $this->strict = $strict;
+    }
+
     public const ERR_INVALID_CAL_ADDRESS = 'ICAL-TYPE-003';
 
     public function parse(string $value, array $parameters = []): string

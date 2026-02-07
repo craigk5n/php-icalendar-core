@@ -8,32 +8,25 @@ use Icalendar\Exception\ParseException;
 
 /**
  * Parser for UTC-OFFSET values according to RFC 5545 §3.3.14
- *
- * UTC-OFFSET format is [+/-]HHMM[SS] where:
- * - HH is hours offset (-23 to +23)
- * - MM is minutes offset (00-59)
- * - SS is optional seconds offset (00-59)
  */
 class UtcOffsetParser implements ValueParserInterface
 {
+    private bool $strict = false;
+
+    public function setStrict(bool $strict): void
+    {
+        $this->strict = $strict;
+    }
+
     public const ERR_INVALID_UTC_OFFSET = 'ICAL-TYPE-014';
 
     public function parse(string $value, array $parameters = []): \DateInterval
     {
         $value = trim($value);
-
-        if ($value === '') {
-            throw new ParseException(
-                'Empty UTC-OFFSET value',
-                self::ERR_INVALID_UTC_OFFSET
-            );
-        }
+        if ($value === '') throw new ParseException('Empty UTC-OFFSET value', self::ERR_INVALID_UTC_OFFSET);
 
         if (!preg_match('/^([+-])(\d{2})(\d{2})(?:(\d{2}))?$/', $value, $matches)) {
-            throw new ParseException(
-                'Invalid UTC-OFFSET format: ' . $value . ' (expected [+/-]HHMM or [+/-]HHMMSS)',
-                self::ERR_INVALID_UTC_OFFSET
-            );
+            throw new ParseException('Invalid UTC-OFFSET format: ' . $value, self::ERR_INVALID_UTC_OFFSET);
         }
 
         $sign = $matches[1];
@@ -41,28 +34,12 @@ class UtcOffsetParser implements ValueParserInterface
         $minutes = (int) $matches[3];
         $seconds = isset($matches[4]) ? (int) $matches[4] : 0;
 
-        if ($hours > 23) {
-            throw new ParseException(
-                'Invalid UTC-OFFSET: hours must be 00-23, got: ' . $hours,
-                self::ERR_INVALID_UTC_OFFSET
-            );
+        if ($this->strict) {
+            if ($hours > 23) throw new ParseException("Invalid UTC-OFFSET: hours must be 00-23, got: $hours", self::ERR_INVALID_UTC_OFFSET);
+            if ($minutes > 59) throw new ParseException("Invalid UTC-OFFSET: minutes must be 00-59, got: $minutes", self::ERR_INVALID_UTC_OFFSET);
+            if ($seconds > 59) throw new ParseException("Invalid UTC-OFFSET: seconds must be 00-59, got: $seconds", self::ERR_INVALID_UTC_OFFSET);
         }
 
-        if ($minutes > 59) {
-            throw new ParseException(
-                'Invalid UTC-OFFSET: minutes must be 00-59, got: ' . $minutes,
-                self::ERR_INVALID_UTC_OFFSET
-            );
-        }
-
-        if ($seconds > 59) {
-            throw new ParseException(
-                'Invalid UTC-OFFSET: seconds must be 00-59, got: ' . $seconds,
-                self::ERR_INVALID_UTC_OFFSET
-            );
-        }
-
-        // Create interval directly from parsed values
         $interval = new \DateInterval('PT0S');
         $interval->h = $hours;
         $interval->i = $minutes;
@@ -80,11 +57,7 @@ class UtcOffsetParser implements ValueParserInterface
     public function canParse(string $value): bool
     {
         $value = trim($value);
-
-        if ($value === '') {
-            return false;
-        }
-
+        if ($value === '') return false;
         return (bool) preg_match('/^[+-]\d{4}(?:\d{2})?$/', $value);
     }
 }

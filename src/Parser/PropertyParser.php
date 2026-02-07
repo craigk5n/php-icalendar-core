@@ -31,9 +31,10 @@ class PropertyParser
      *
      * @param string $line The property line to parse
      * @param int $lineNumber Line number for error reporting (optional)
+     * @param bool $strict True for strict RFC compliance
      * @throws ParseException if the line format is invalid
      */
-    public function parse(string $line, int $lineNumber = 0): ContentLine
+    public function parse(string $line, int $lineNumber = 0, bool $strict = false): ContentLine
     {
         // Validate line contains a colon separator
         if (!str_contains($line, ':')) {
@@ -64,7 +65,7 @@ class PropertyParser
         $value = substr($line, $colonPos + 1);
 
         // Parse property name and parameters
-        $name = $this->parsePropertyName($nameAndParams, $line, $lineNumber);
+        $name = $this->parsePropertyName($nameAndParams, $line, $lineNumber, $strict);
         $parameters = $this->parseParameters($nameAndParams, $line, $lineNumber);
 
         return new ContentLine($line, $name, $parameters, $value, $lineNumber);
@@ -75,7 +76,7 @@ class PropertyParser
      *
      * @throws ParseException if property name is invalid
      */
-    private function parsePropertyName(string $nameAndParams, string $rawLine, int $lineNumber): string
+    private function parsePropertyName(string $nameAndParams, string $rawLine, int $lineNumber, bool $strict): string
     {
         // Find the first semicolon (separator between name and parameters)
         $semicolonPos = strpos($nameAndParams, ';');
@@ -98,7 +99,7 @@ class PropertyParser
         }
 
         // Validate property name format (IANA token or X-name)
-        if (!$this->isValidPropertyName($name)) {
+        if (!$this->isValidPropertyName($name, $strict)) {
             throw new ParseException(
                 "Invalid property name: '{$name}'",
                 ParseException::ERR_INVALID_PROPERTY_NAME,
@@ -118,11 +119,11 @@ class PropertyParser
      * - IANA token: alphanumeric and hyphen, must start with letter
      * - X-name: starts with "X-" or "x-" followed by vendor ID and name
      */
-    private function isValidPropertyName(string $name): bool
+    private function isValidPropertyName(string $name, bool $strict): bool
     {
         // X-names start with X- or x-
         if (str_starts_with($name, 'X-') || str_starts_with($name, 'x-')) {
-            return $this->isValidXName($name);
+            return $this->isValidXName($name, $strict);
         }
 
         // IANA tokens: letters, digits, and hyphens
@@ -140,7 +141,7 @@ class PropertyParser
      * Format: x-vendorid-propname
      * where vendorid is 1-8 alphanumeric characters
      */
-    private function isValidXName(string $name): bool
+    private function isValidXName(string $name, bool $strict): bool
     {
         // Must be at least "X-A" (X- + 1 char vendor + 1 char name)
         if (strlen($name) < 4) {
@@ -152,7 +153,7 @@ class PropertyParser
         if (!preg_match('/^[Xx]-[A-Za-z0-9]{1,8}-[A-Za-z0-9\-]+$/', $name)) {
             // Also allow simple X-NAME format (without vendor ID)
             // This is commonly used despite strict RFC interpretation
-            if (!preg_match('/^[Xx]-[A-Za-z][A-Za-z0-9\-]*$/', $name)) {
+            if ($strict || !preg_match('/^[Xx]-[A-Za-z][A-Za-z0-9\-]*$/', $name)) {
                 return false;
             }
         }

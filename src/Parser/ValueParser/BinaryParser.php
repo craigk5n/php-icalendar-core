@@ -14,6 +14,13 @@ use Icalendar\Exception\ParseException;
  */
 class BinaryParser implements ValueParserInterface
 {
+    private bool $strict = false;
+
+    public function setStrict(bool $strict): void
+    {
+        $this->strict = $strict;
+    }
+
     public const ERR_INVALID_BINARY = 'ICAL-TYPE-001';
 
     public function parse(string $value, array $parameters = []): string

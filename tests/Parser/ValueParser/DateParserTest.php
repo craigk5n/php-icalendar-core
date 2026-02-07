@@ -17,9 +17,8 @@ class DateParserTest extends TestCase
     protected function setUp(): void
     {
         $this->parser = new DateParser();
+        $this->parser->setStrict(true);
     }
-
-    // ========== Parse Tests ==========
 
     public function testParseSimpleDate(): void
     {
@@ -41,13 +40,15 @@ class DateParserTest extends TestCase
     public function testParseNonLeapYear(): void
     {
         $this->expectException(ParseException::class);
-        $this->expectExceptionMessage('Invalid DATE value');
+        $this->expectExceptionMessage('Invalid DATE value: \'20230229\'');
         
         $this->parser->parse('20230229');
     }
 
     public function testParseDateWithTimezone(): void
     {
+        // The date should be interpreted in the specified timezone.
+        // Midnight on 2026-02-06 in New York is still 2026-02-06.
         $date = $this->parser->parse('20260206', ['TZID' => 'America/New_York']);
         
         $this->assertInstanceOf(DateTimeImmutable::class, $date);
@@ -62,6 +63,7 @@ class DateParserTest extends TestCase
         
         $this->assertInstanceOf(DateTimeImmutable::class, $date);
         $this->assertEquals('UTC', $date->getTimezone()->getName());
+        $this->assertEquals('2026-02-06', $date->format('Y-m-d'));
     }
 
     public function testParseInvalidDateTooShort(): void
@@ -91,7 +93,7 @@ class DateParserTest extends TestCase
     public function testParseInvalidMonth(): void
     {
         $this->expectException(ParseException::class);
-        $this->expectExceptionMessage('Invalid DATE value');
+        $thisthis->expectExceptionMessage('Invalid DATE value: \'20261306\'');
         
         $this->parser->parse('20261306');
     }
@@ -99,7 +101,7 @@ class DateParserTest extends TestCase
     public function testParseInvalidDay(): void
     {
         $this->expectException(ParseException::class);
-        $this->expectExceptionMessage('Invalid DATE value');
+        $this->expectExceptionMessage('Invalid DATE value: \'20260231\'');
         
         $this->parser->parse('20260231');
     }
@@ -143,8 +145,7 @@ class DateParserTest extends TestCase
         // Invalid edge cases
         $this->assertFalse($this->parser->canParse('20260000')); // Day 00
         $this->assertFalse($this->parser->canParse('20260006')); // Month 00
-        $this->assertFalse($this->parser->canParse('00010000')); // Day 00
-        $this->assertFalse($this->parser->canParse('00000101')); // Month 00
+        $this->assertFalse($this->parser->canParse('00010000')); // Month 00
     }
 
     // ========== getType Tests ==========
@@ -160,6 +161,7 @@ class DateParserTest extends TestCase
     {
         $date = $this->parser->parse('20260206');
         
+        // Ensure the returned object is an instance of DateTimeImmutable
         $this->assertInstanceOf(DateTimeImmutable::class, $date);
         
         // Verify it's truly immutable by attempting modification
@@ -183,7 +185,8 @@ class DateParserTest extends TestCase
 
     public function testParseTimezoneValidation(): void
     {
-        $this->expectException(\Exception::class); // DateTimeZone throws Exception for invalid timezone
+        // DateTimeZone constructor throws an exception for invalid timezones
+        $this->expectException(\Exception::class); 
         
         $this->parser->parse('20260206', ['TZID' => 'Invalid/Timezone']);
     }

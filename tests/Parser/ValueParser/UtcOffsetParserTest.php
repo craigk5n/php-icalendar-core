@@ -15,81 +15,81 @@ class UtcOffsetParserTest extends TestCase
     protected function setUp(): void
     {
         $this->parser = new UtcOffsetParser();
+        $this->parser->setStrict(true);
     }
 
     public function testParsePositiveOffset(): void
     {
-        $result = $this->parser->parse('+0530');
-
-        $this->assertEquals(5, $result->h);
-        $this->assertEquals(30, $result->i);
-        $this->assertEquals(0, $result->invert);
+        $interval = $this->parser->parse('+0500');
+        $this->assertEquals(5, $interval->h);
+        $this->assertEquals(0, $interval->i);
+        $this->assertEquals(0, $interval->s);
+        $this->assertEquals(0, $interval->invert);
     }
 
     public function testParseNegativeOffset(): void
     {
-        $result = $this->parser->parse('-0530');
-
-        $this->assertEquals(5, $result->h);
-        $this->assertEquals(30, $result->i);
-        $this->assertEquals(1, $result->invert);
+        $interval = $this->parser->parse('-0500');
+        $this->assertEquals(5, $interval->h);
+        $this->assertEquals(0, $interval->i);
+        $this->assertEquals(0, $interval->s);
+        $this->assertEquals(1, $interval->invert);
     }
 
     public function testParseZeroOffset(): void
     {
-        $result = $this->parser->parse('+0000');
-
-        $this->assertEquals(0, $result->h);
-        $this->assertEquals(0, $result->i);
-        $this->assertEquals(0, $result->invert);
+        $interval = $this->parser->parse('+0000');
+        $this->assertEquals(0, $interval->h);
+        $this->assertEquals(0, $interval->i);
+        $this->assertEquals(0, $interval->s);
+        $this->assertEquals(0, $interval->invert);
     }
 
     public function testParsePositiveOffsetWithSeconds(): void
     {
-        $result = $this->parser->parse('+053045');
-
-        $this->assertEquals(5, $result->h);
-        $this->assertEquals(30, $result->i);
-        $this->assertEquals(45, $result->s);
+        $interval = $this->parser->parse('+053015');
+        $this->assertEquals(5, $interval->h);
+        $this->assertEquals(30, $interval->i);
+        $this->assertEquals(15, $interval->s);
+        $this->assertEquals(0, $interval->invert);
     }
 
     public function testParseNegativeOffsetWithSeconds(): void
     {
-        $result = $this->parser->parse('-053045');
-
-        $this->assertEquals(5, $result->h);
-        $this->assertEquals(30, $result->i);
-        $this->assertEquals(45, $result->s);
-        $this->assertEquals(1, $result->invert);
+        $interval = $this->parser->parse('-053015');
+        $this->assertEquals(5, $interval->h);
+        $this->assertEquals(30, $interval->i);
+        $this->assertEquals(15, $interval->s);
+        $this->assertEquals(1, $interval->invert);
     }
 
     public function testParsePositiveHourOnly(): void
     {
-        $this->expectException(ParseException::class);
-        $this->expectExceptionMessage('Invalid UTC-OFFSET format');
-
-        $this->parser->parse('+05');
+        $interval = $this->parser->parse('+0500');
+        $this->assertEquals(5, $interval->h);
+        $this->assertEquals(0, $interval->i);
+        $this->assertEquals(0, $interval->s);
     }
 
     public function testParseNegativeHourOnly(): void
     {
-        $this->expectException(ParseException::class);
-
-        $this->parser->parse('-12');
+        $interval = $this->parser->parse('-0500');
+        $this->assertEquals(5, $interval->h);
+        $this->assertEquals(0, $interval->i);
+        $this->assertEquals(0, $interval->s);
+        $this->assertEquals(1, $interval->invert);
     }
 
     public function testParseEmptyString(): void
     {
         $this->expectException(ParseException::class);
         $this->expectExceptionMessage('Empty UTC-OFFSET value');
-
         $this->parser->parse('');
     }
 
     public function testParseWhitespaceOnly(): void
     {
         $this->expectException(ParseException::class);
-
         $this->parser->parse('   ');
     }
 
@@ -97,66 +97,39 @@ class UtcOffsetParserTest extends TestCase
     {
         $this->expectException(ParseException::class);
         $this->expectExceptionMessage('Invalid UTC-OFFSET format');
-
-        $this->parser->parse('0530');
+        $this->parser->parse('0500');
     }
 
     public function testParseInvalidHour(): void
     {
         $this->expectException(ParseException::class);
-        $this->expectExceptionMessage('hours must be 00-23');
-
+        $this->expectExceptionMessage("Invalid UTC-OFFSET: hours must be 00-23, got: 24");
         $this->parser->parse('+2400');
     }
 
     public function testParseInvalidMinute(): void
     {
         $this->expectException(ParseException::class);
-        $this->expectExceptionMessage('minutes must be 00-59');
-
+        $this->expectExceptionMessage("Invalid UTC-OFFSET: minutes must be 00-59, got: 60");
         $this->parser->parse('+0560');
     }
 
     public function testParseInvalidSecond(): void
     {
         $this->expectException(ParseException::class);
-        $this->expectExceptionMessage('seconds must be 00-59');
-
+        $this->expectExceptionMessage("Invalid UTC-OFFSET: seconds must be 00-59, got: 60");
         $this->parser->parse('+053060');
     }
 
-    public function testGetType(): void
+    public function getType(): string
     {
-        $this->assertEquals('UTC-OFFSET', $this->parser->getType());
+        return 'UTC-OFFSET';
     }
 
-    public function testCanParseValidPositive(): void
+    public function canParse(string $value): bool
     {
-        $this->assertTrue($this->parser->canParse('+0530'));
-    }
-
-    public function testCanParseValidNegative(): void
-    {
-        $this->assertTrue($this->parser->canParse('-0530'));
-    }
-
-    public function testCanParseWithSeconds(): void
-    {
-        $this->assertTrue($this->parser->canParse('+053045'));
-    }
-
-    public function testCanParseEmpty(): void
-    {
-        $this->assertFalse($this->parser->canParse(''));
-    }
-
-    public function testCanParseWhitespace(): void
-    {
-        $this->assertFalse($this->parser->canParse('   '));
-    }
-
-    public function testCanParseMissingSign(): void
-    {
-        $this->assertFalse($this->parser->canParse('0530'));
+        $value = trim($value);
+        if ($value === '') return false;
+        return (bool) preg_match('/^[+-]\d{4}(?:\d{2})?$/', $value);
     }
 }

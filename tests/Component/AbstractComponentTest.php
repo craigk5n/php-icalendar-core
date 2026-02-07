@@ -47,6 +47,27 @@ class AbstractComponentTest extends TestCase
         $result = $this->component->getProperty('SUMMARY');
         $this->assertSame($property2, $result);
     }
+
+    public function testGetAllProperties(): void
+    {
+        $prop1 = $this->createMockProperty('ATTENDEE', 'user1@example.com');
+        $prop2 = $this->createMockProperty('SUMMARY', 'Meeting');
+        $prop3 = $this->createMockProperty('ATTENDEE', 'user2@example.com');
+
+        $this->component->addProperty($prop1);
+        $this->component->addProperty($prop2);
+        $this->component->addProperty($prop3);
+
+        // Test with name
+        $attendees = $this->component->getAllProperties('ATTENDEE');
+        $this->assertCount(2, $attendees);
+        $this->assertSame($prop1, $attendees[0]);
+        $this->assertSame($prop3, $attendees[1]);
+
+        // Test without name
+        $all = $this->component->getAllProperties();
+        $this->assertCount(3, $all);
+    }
     
     public function tearDown(): void
     {

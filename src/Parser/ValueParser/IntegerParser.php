@@ -8,11 +8,16 @@ use Icalendar\Exception\ParseException;
 
 /**
  * Parser for INTEGER values according to RFC 5545 §3.3.8
- *
- * INTEGER is a signed integer value.
  */
 class IntegerParser implements ValueParserInterface
 {
+    private bool $strict = false;
+
+    public function setStrict(bool $strict): void
+    {
+        $this->strict = $strict;
+    }
+
     public const ERR_INVALID_INTEGER = 'ICAL-TYPE-008';
 
     public function parse(string $value, array $parameters = []): int
@@ -20,17 +25,16 @@ class IntegerParser implements ValueParserInterface
         $value = trim($value);
 
         if ($value === '') {
-            throw new ParseException(
-                'Empty INTEGER value',
-                self::ERR_INVALID_INTEGER
-            );
+            throw new ParseException('Empty INTEGER value', self::ERR_INVALID_INTEGER);
         }
 
-        if (!preg_match('/^-?\d+$/', $value)) {
-            throw new ParseException(
-                'Invalid INTEGER format: ' . $value,
-                self::ERR_INVALID_INTEGER
-            );
+        if (!preg_match('/^[+-]?\d+$/', $value)) {
+            // In lenient mode, we could try to handle common issues like float strings "42.0"
+            if (!$this->strict && is_numeric($value)) {
+                return (int) round((float) $value);
+            }
+
+            throw new ParseException('Invalid INTEGER format: ' . $value, self::ERR_INVALID_INTEGER);
         }
 
         return (int) $value;
@@ -44,11 +48,12 @@ class IntegerParser implements ValueParserInterface
     public function canParse(string $value): bool
     {
         $value = trim($value);
-
-        if ($value === '') {
-            return false;
-        }
-
-        return (bool) preg_match('/^-?\d+$/', $value);
+        if ($value === '') return false;
+        
+        if (preg_match('/^[+-]?\d+$/', $value)) return true;
+        
+        if (!$this->strict && is_numeric($value)) return true;
+        
+        return false;
     }
 }

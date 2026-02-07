@@ -18,6 +18,7 @@ class TextParserTest extends TestCase
     protected function setUp(): void
     {
         $this->parser = new TextParser();
+        $this->parser->setStrict(true);
     }
 
     public function testUnescapeBackslash(): void

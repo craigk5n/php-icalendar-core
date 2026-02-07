@@ -15,6 +15,7 @@ class IntegerParserTest extends TestCase
     protected function setUp(): void
     {
         $this->parser = new IntegerParser();
+        $this->parser->setStrict(true);
     }
 
     public function testParsePositiveInteger(): void

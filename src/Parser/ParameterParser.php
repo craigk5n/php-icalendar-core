@@ -182,23 +182,7 @@ class ParameterParser
             return $this->parseMultiValuedParameter($value, $lineNumber, $rawLine);
         }
 
-        // Handle single quoted string
-        if (str_starts_with($value, '"') && str_ends_with($value, '"')) {
-            // Remove surrounding quotes
-            $value = substr($value, 1, -1);
-            // Decode RFC 6868 sequences in quoted values
-            $value = $this->decodeRfc6868($value, $lineNumber, $rawLine);
-        } elseif (str_starts_with($value, '"') || str_ends_with($value, '"')) {
-            // Mismatched quotes
-            throw new ParseException(
-                'Invalid parameter format: mismatched quotes',
-                ParseException::ERR_UNCLOSED_QUOTED_STRING,
-                $lineNumber,
-                $rawLine
-            );
-        }
-
-        return $value;
+        return $this->parseSingleParameterValue($value, $lineNumber, $rawLine);
     }
 
     /**

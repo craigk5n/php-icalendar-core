@@ -15,104 +15,97 @@ class TimeParserTest extends TestCase
     protected function setUp(): void
     {
         $this->parser = new TimeParser();
+        $this->parser->setStrict(true);
     }
 
     public function testParseTimeWithoutZ(): void
     {
-        $result = $this->parser->parse('143022');
-
-        $this->assertEquals('14:30:22', $result->format('H:i:s'));
-        $this->assertInstanceOf(\DateTimeImmutable::class, $result);
+        $time = $this->parser->parse('100000');
+        $this->assertInstanceOf(\DateTimeImmutable::class, $time);
+        $this->assertEquals('10:00:00', $time->format('H:i:s'));
+        $this->assertNull($time->getTimezone()); // Local time is floating
     }
 
     public function testParseTimeWithZ(): void
     {
-        $result = $this->parser->parse('143022Z');
-
-        $this->assertEquals('14:30:22', $result->format('H:i:s'));
-        $this->assertEquals('UTC', $result->getTimezone()->getName());
+        $time = $this->parser->parse('100000Z');
+        $this->assertInstanceOf(\DateTimeImmutable::class, $time);
+        $this->assertEquals('UTC', $time->getTimezone()->getName());
+        $this->assertEquals('10:00:00', $time->format('H:i:s'));
     }
 
     public function testParseMidnight(): void
     {
-        $result = $this->parser->parse('000000');
-
-        $this->assertEquals('00:00:00', $result->format('H:i:s'));
+        $time = $this->parser->parse('000000');
+        $this->assertEquals('00:00:00', $time->format('H:i:s'));
     }
 
     public function testParseEndOfDay(): void
     {
-        $result = $this->parser->parse('235959');
-
-        $this->assertEquals('23:59:59', $result->format('H:i:s'));
+        $time = $this->parser->parse('235960'); // Leap second allowed
+        $this->assertEquals('23:59:60', $time->format('H:i:s'));
     }
 
     public function testParseLeapSecond(): void
     {
-        $result = $this->parser->parse('235960');
-
-        $this->assertInstanceOf(\DateTimeImmutable::class, $result);
+        $time = $this->parser->parse('235960Z');
+        $this->assertEquals('UTC', $time->getTimezone()->getName());
+        $this->assertEquals('23:59:60', $time->format('H:i:s'));
     }
 
     public function testParseEmptyString(): void
     {
         $this->expectException(ParseException::class);
         $this->expectExceptionMessage('Empty TIME value');
-
         $this->parser->parse('');
     }
 
     public function testParseWhitespaceOnly(): void
     {
         $this->expectException(ParseException::class);
-
         $this->parser->parse('   ');
     }
 
     public function testParseTooShort(): void
     {
         $this->expectException(ParseException::class);
-        $this->expectExceptionMessage('Invalid TIME format');
-
-        $this->parser->parse('14302');
+        $this->expectExceptionMessage("Invalid TIME format: '1000'. Expected HHMMSS or HHMMSSZ");
+        $this->parser->parse('1000');
     }
 
     public function testParseTooLong(): void
     {
         $this->expectException(ParseException::class);
-
-        $this->parser->parse('1430223');
+        $this->expectExceptionMessage("Invalid TIME format: '1000000'. Expected HHMMSS or HHMMSSZ");
+        $this->parser->parse('1000000');
     }
 
     public function testParseInvalidHour(): void
     {
         $this->expectException(ParseException::class);
-        $this->expectExceptionMessage('hours must be 00-23');
-
-        $this->parser->parse('243022');
+        $this->expectExceptionMessage("Invalid TIME: hours must be 00-23, got: 24");
+        $this->parser->parse('240000');
     }
 
     public function testParseInvalidMinute(): void
     {
         $this->expectException(ParseException::class);
-        $this->expectExceptionMessage('minutes must be 00-59');
-
-        $this->parser->parse('146022');
+        $this->expectExceptionMessage("Invalid TIME: minutes must be 00-59, got: 60");
+        $this->parser->parse('106000');
     }
 
     public function testParseInvalidSecond(): void
     {
         $this->expectException(ParseException::class);
-        $this->expectExceptionMessage('seconds must be 00-60');
-
-        $this->parser->parse('143099');
+        $this->expectExceptionMessage("Invalid TIME: seconds must be 00-60, got: 61");
+        $this->parser->parse('100061');
     }
 
     public function testParseNonNumeric(): void
     {
         $this->expectException(ParseException::class);
-
-        $this->parser->parse('14:30:22');
+        $this->expectExceptionMessage("Invalid TIME format: 'abc'");
+        $this->parser->parse('abc');
     }
 
     public function testGetType(): void
@@ -122,12 +115,14 @@ class TimeParserTest extends TestCase
 
     public function testCanParseValidWithoutZ(): void
     {
-        $this->assertTrue($this->parser->canParse('143022'));
+        $this->assertTrue($this->parser->canParse('100000'));
+        $this->assertTrue($this->parser->canParse('235960'));
     }
 
     public function testCanParseValidWithZ(): void
     {
-        $this->assertTrue($this->parser->canParse('143022Z'));
+        $this->assertTrue($this->parser->canParse('100000Z'));
+        $this->assertTrue($this->parser->canParse('235960Z'));
     }
 
     public function testCanParseEmpty(): void
@@ -142,16 +137,24 @@ class TimeParserTest extends TestCase
 
     public function testCanParseTooShort(): void
     {
-        $this->assertFalse($this->parser->canParse('14302'));
+        $this->assertFalse($this->parser->canParse('1000'));
     }
 
     public function testCanParseTooLong(): void
     {
-        $this->assertFalse($this->parser->canParse('1430223'));
+        $this->assertFalse($this->parser->canParse('1000000'));
     }
 
     public function testCanParseNonNumeric(): void
     {
-        $this->assertFalse($this->parser->canParse('14:30:22'));
+        $this->assertFalse($this->parser->canParse('abc'));
+    }
+
+    // Lenient mode test
+    public function testParseLenientMode(): void
+    {
+        $this->parser->setStrict(false);
+        $time = $this->parser->parse('10:00:00');
+        $this->assertEquals('10:00:00', $time->format('H:i:s'));
     }
 }

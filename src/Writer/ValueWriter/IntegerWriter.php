@@ -11,11 +11,11 @@ class IntegerWriter implements ValueWriterInterface
 {
     public function write(mixed $value): string
     {
-        if (!is_int($value) && !(is_float($value) && floor($value) === $value)) {
+        if (!is_int($value)) {
             throw new \InvalidArgumentException('IntegerWriter expects int, got ' . gettype($value));
         }
 
-        return (string) (int) $value;
+        return strval($value);
     }
 
     public function getType(): string
@@ -25,6 +25,6 @@ class IntegerWriter implements ValueWriterInterface
 
     public function canWrite(mixed $value): bool
     {
-        return is_int($value) || (is_float($value) && floor($value) === $value);
+        return is_int($value);
     }
 }

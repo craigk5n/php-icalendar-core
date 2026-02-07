@@ -32,6 +32,9 @@ class DateValidator
      */
     public static function isLeapYear(int $year): bool
     {
+        if ($year === 0) {
+            return false;
+        }
         return ($year % 4 === 0 && $year % 100 !== 0) || ($year % 400 === 0);
     }
 }

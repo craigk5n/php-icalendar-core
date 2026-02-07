@@ -15,11 +15,7 @@ class CalAddressWriter implements ValueWriterInterface
             throw new \InvalidArgumentException('CalAddressWriter expects string, got ' . gettype($value));
         }
 
-        // Normalize mailto: prefix to lowercase
-        $value = preg_replace('/^mailto:/i', 'mailto:', $value);
-
-        // Ensure it starts with mailto:
-        if (!str_starts_with($value, 'mailto:')) {
+        if (!str_starts_with(strtolower($value), 'mailto:')) {
             $value = 'mailto:' . $value;
         }
 

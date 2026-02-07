@@ -13,6 +13,13 @@ use Icalendar\Exception\ParseException;
  */
 class BooleanParser implements ValueParserInterface
 {
+    private bool $strict = false;
+
+    public function setStrict(bool $strict): void
+    {
+        $this->strict = $strict;
+    }
+
     public const ERR_INVALID_BOOLEAN = 'ICAL-TYPE-002';
 
     public function parse(string $value, array $parameters = []): bool

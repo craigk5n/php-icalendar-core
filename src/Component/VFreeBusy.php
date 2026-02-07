@@ -247,14 +247,13 @@ class VFreeBusy extends AbstractComponent
             return false;
         }
 
-        // Check if end is a DATE-TIME or DURATION
+        // Check if end is a DATE-TIME
         if (preg_match('/^\d{8}T\d{6}Z?$/', $endOrDuration)) {
-            // It's a DATE-TIME (end)
             return true;
         }
 
+        // Check if it's a DURATION
         if (preg_match('/^-?P/', $endOrDuration)) {
-            // It's a DURATION
             return true;
         }
 

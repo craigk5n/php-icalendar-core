@@ -15,33 +15,37 @@ class PeriodParserTest extends TestCase
     protected function setUp(): void
     {
         $this->parser = new PeriodParser();
+        $this->parser->setStrict(true);
     }
 
     public function testParseWithDateTimes(): void
     {
         $result = $this->parser->parse('19970101T230000Z/19970102T010000Z');
 
-        $this->assertCount(2, $result);
-        $this->assertInstanceOf(\DateTimeImmutable::class, $result[0]);
-        $this->assertInstanceOf(\DateTimeImmutable::class, $result[1]);
+        $this->assertCount(1, $result);
+        $this->assertCount(2, $result[0]);
+        $this->assertInstanceOf(\DateTimeImmutable::class, $result[0][0]);
+        $this->assertInstanceOf(\DateTimeImmutable::class, $result[0][1]);
     }
 
     public function testParseWithDateTimeAndDuration(): void
     {
         $result = $this->parser->parse('19970101T230000Z/PT2H');
 
-        $this->assertCount(2, $result);
-        $this->assertInstanceOf(\DateTimeImmutable::class, $result[0]);
-        $this->assertInstanceOf(\DateInterval::class, $result[1]);
+        $this->assertCount(1, $result);
+        $this->assertCount(2, $result[0]);
+        $this->assertInstanceOf(\DateTimeImmutable::class, $result[0][0]);
+        $this->assertInstanceOf(\DateInterval::class, $result[0][1]);
     }
 
     public function testParseLocalDateTimePeriod(): void
     {
         $result = $this->parser->parse('20260110T100000/20260110T120000');
 
-        $this->assertCount(2, $result);
-        $this->assertEquals('2026-01-10 10:00:00', $result[0]->format('Y-m-d H:i:s'));
-        $this->assertEquals('2026-01-10 12:00:00', $result[1]->format('Y-m-d H:i:s'));
+        $this->assertCount(1, $result);
+        $this->assertCount(2, $result[0]);
+        $this->assertEquals('2026-01-10 10:00:00', $result[0][0]->format('Y-m-d H:i:s'));
+        $this->assertEquals('2026-01-10 12:00:00', $result[0][1]->format('Y-m-d H:i:s'));
     }
 
     public function testParseEmptyString(): void

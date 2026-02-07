@@ -19,6 +19,7 @@ class RRuleParserTest extends TestCase
     protected function setUp(): void
     {
         $this->parser = new RRuleParser();
+        $this->parser->setStrict(true);
     }
 
     /** @test */

@@ -8,6 +8,7 @@ use DateInterval;
 use DateTime;
 use DateTimeImmutable;
 use DateTimeInterface;
+use DateTimeZone;
 use Icalendar\Writer\ValueWriter\PeriodWriter;
 use PHPUnit\Framework\TestCase;
 
@@ -54,8 +55,9 @@ class PeriodWriterTest extends TestCase
 
     public function testWriteWithDateTimeImmutable(): void
     {
-        $start = new DateTimeImmutable('2026-02-06T09:00:00');
-        $end = new DateTimeImmutable('2026-02-06T10:30:00');
+        $tz = new DateTimeZone('America/New_York');
+        $start = new DateTimeImmutable('2026-02-06T09:00:00', $tz);
+        $end = new DateTimeImmutable('2026-02-06T10:30:00', $tz);
         
         $period = [
             'start' => $start,

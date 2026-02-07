@@ -229,6 +229,8 @@ class ValueParserFactoryTest extends TestCase
             {
                 return true;
             }
+
+            public function setStrict(bool $strict): void {}
         };
 
         $this->factory->registerParser('CUSTOM', $customParser);
