@@ -51,7 +51,7 @@ $warnings = $parserLenient->getWarnings(); // Note: getErrors() is an alias for 
 
 ## Installation
 
-Requires PHP 8.1+ and no external production dependencies.
+Requires PHP 8.2+ and no external production dependencies.
 
 ```bash
 # Assuming you have Composer installed

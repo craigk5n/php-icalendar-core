@@ -37,7 +37,7 @@ This document outlines the current development status of PHP iCalendar Core.
 
 ## Dependencies
 
--   PHP 8.1+
+-   PHP 8.2+
 -   No external production dependencies.
 
 ## Current Development Focus

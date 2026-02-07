@@ -4,7 +4,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project Overview
 
-PHP iCalendar Core - an RFC 5545 compliant PHP library for parsing and writing iCalendar data with zero external dependencies. Requires PHP >=8.1.
+PHP iCalendar Core - an RFC 5545 compliant PHP library for parsing and writing iCalendar data with zero external dependencies. Requires PHP >=8.2.
 
 ## Commands
 
