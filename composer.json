@@ -1,5 +1,5 @@
 {
-    "name": "phpical/php-icalendar-core",
+    "name": "craigk5n/php-icalendar-core",
     "description": "RFC 5545 compliant PHP library for iCalendar parsing and writing",
     "license": "MIT",
     "type": "library",

@@ -1,4 +1,7 @@
 1
 vendor
+build/
+.phpunit.cache/
+psalm.xml
 GEMINI.md
 CLAUDE.md
