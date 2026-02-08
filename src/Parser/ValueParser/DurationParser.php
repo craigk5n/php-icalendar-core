@@ -11,12 +11,10 @@ use Icalendar\Exception\ParseException;
  */
 class DurationParser implements ValueParserInterface
 {
-    private bool $strict = false;
-
     #[\Override]
     public function setStrict(bool $strict): void
     {
-        $this->strict = $strict;
+        // Not used in DurationParser
     }
 
     public const ERR_INVALID_DURATION = 'ICAL-TYPE-006';
@@ -25,7 +23,7 @@ class DurationParser implements ValueParserInterface
      * Parse a DURATION value into a DateInterval
      *
      * @param string $value The duration string (e.g., "P3D", "PT1H30M")
-     * @param array $parameters Property parameters (unused for DURATION)
+     * @param array<string, string> $parameters Property parameters (unused for DURATION)
      * @return \DateInterval The parsed duration as a DateInterval
      * @throws ParseException if the duration format is invalid
      */

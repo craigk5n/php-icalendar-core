@@ -20,7 +20,7 @@ use Icalendar\Value\ValueInterface;
      *
      * @param string $name The property name (e.g., "SUMMARY", "DTSTART")
      * @param ValueInterface $value The property value object
-     * @param array $parameters Optional array of property parameters (key-value pairs)
+     * @param array<string, string> $parameters Optional array of property parameters (key-value pairs)
      */
     public function __construct(
         private string $name,

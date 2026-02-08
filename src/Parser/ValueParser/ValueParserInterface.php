@@ -20,6 +20,10 @@ interface ValueParserInterface
      * @return mixed The parsed value (type depends on implementation)
      * @throws \Icalendar\Exception\ParseException if the value cannot be parsed
      */
+    /**
+     * @param array<string, string> $parameters
+     */
+    #[\Override]
     public function parse(string $value, array $parameters = []): mixed;
 
     /**

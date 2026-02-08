@@ -21,6 +21,9 @@ class DateTimeParser implements ValueParserInterface
         $this->strict = $strict;
     }
 
+    /**
+     * @param array<string, string> $parameters
+     */
     #[\Override]
     public function parse(string $value, array $parameters = []): DateTimeImmutable
     {

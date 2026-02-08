@@ -23,6 +23,9 @@ class CalAddressParser implements ValueParserInterface
 
     public const ERR_INVALID_CAL_ADDRESS = 'ICAL-TYPE-003';
 
+    /**
+     * @param array<string, string> $parameters
+     */
     #[\Override]
     public function parse(string $value, array $parameters = []): string
     {

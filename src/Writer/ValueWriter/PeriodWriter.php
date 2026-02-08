@@ -47,6 +47,9 @@ class PeriodWriter implements ValueWriterInterface
         return implode(',', array_map([$this, 'writeSinglePeriod'], $value));
     }
 
+    /**
+     * @param array<array-key, mixed> $value
+     */
     private function isSinglePeriod(array $value): bool
     {
         if (isset($value['start']) || isset($value['end']) || isset($value['duration'])) return true;

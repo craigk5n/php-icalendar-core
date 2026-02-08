@@ -100,6 +100,9 @@ class Parser implements ParserInterface
 
             $name = $contentLine->getName();
             $currentComponent = end($componentStack);
+            if ($currentComponent === false) {
+                $currentComponent = $calendar;
+            }
 
             // Handle BEGIN marker
             if ($name === 'BEGIN') {

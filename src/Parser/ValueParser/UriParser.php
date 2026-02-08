@@ -21,6 +21,9 @@ class UriParser implements ValueParserInterface
 
     public const ERR_INVALID_URI = 'ICAL-TYPE-013';
 
+    /**
+     * @param array<string, string> $parameters
+     */
     #[\Override]
     public function parse(string $value, array $parameters = []): string
     {

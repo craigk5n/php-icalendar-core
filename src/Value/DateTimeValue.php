@@ -41,7 +41,7 @@ class DateTimeValue extends AbstractValue
 
         $formatted = $this->value->format('Ymd\THis');
         $tz = $this->value->getTimezone();
-        if ($tz !== false && ($tz->getName() === 'UTC' || $tz->getName() === 'Z')) {
+        if ($tz instanceof \DateTimeZone && ($tz->getName() === 'UTC' || $tz->getName() === 'Z')) {
             $formatted .= 'Z';
         }
         return $formatted;

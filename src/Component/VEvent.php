@@ -525,6 +525,8 @@ class VEvent extends AbstractComponent
 
     /**
      * Set structured location (Apple extension)
+     * 
+     * @param array<string, string> $parameters
      */
     public function setAppleStructuredLocation(string $value, array $parameters = []): self
     {

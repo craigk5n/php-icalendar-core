@@ -36,6 +36,9 @@ class Validator
     /** @var VTimezone[] */
     private array $timezones = [];
 
+    /**
+     * @return ValidationError[]
+     */
     public function validate(VCalendar $calendar): array
     {
         $this->errors = [];
@@ -142,6 +145,8 @@ class Validator
 
     /**
      * Validate a single component and return errors
+     * 
+     * @return ValidationError[]
      */
     public function validateSingleComponent(ComponentInterface $component): array
     {
@@ -152,6 +157,8 @@ class Validator
 
     /**
      * Validate a component (backward compatibility)
+     * 
+     * @return ValidationError[]
      */
     public function validateComponent(ComponentInterface $component): array
     {
@@ -741,6 +748,8 @@ class Validator
 
     /**
      * Validate a property value
+     * 
+     * @return ValidationError[]
      */
     public function validateProperty(PropertyInterface $property): array
     {
@@ -789,6 +798,8 @@ class Validator
 
     /**
      * Get count of errors by severity
+     * 
+     * @return array{WARNING: int, ERROR: int, FATAL: int}
      */
     public function getErrorCounts(VCalendar $calendar): array
     {

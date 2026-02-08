@@ -24,6 +24,9 @@ class BinaryParser implements ValueParserInterface
 
     public const ERR_INVALID_BINARY = 'ICAL-TYPE-001';
 
+    /**
+     * @param array<string, string> $parameters
+     */
     #[\Override]
     public function parse(string $value, array $parameters = []): string
     {

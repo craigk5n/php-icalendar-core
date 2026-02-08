@@ -29,6 +29,10 @@ class SecurityValidator
     /** @var array<string> Private IP ranges to block */
     private array $privateIpRanges;
 
+    /**
+     * @param array<string>|null $allowedSchemes
+     * @param array<string>|null $privateIpRanges
+     */
     public function __construct(
         int $maxDepth = 100,
         ?array $allowedSchemes = null,

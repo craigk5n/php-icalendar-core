@@ -21,6 +21,9 @@ class FloatParser implements ValueParserInterface
 
     public const ERR_INVALID_FLOAT = 'ICAL-TYPE-007';
 
+    /**
+     * @param array<string, string> $parameters
+     */
     #[\Override]
     public function parse(string $value, array $parameters = []): float
     {

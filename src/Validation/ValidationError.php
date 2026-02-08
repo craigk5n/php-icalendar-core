@@ -22,6 +22,8 @@ readonly class ValidationError
 
     /**
      * Convert to array for serialization
+     * 
+     * @return array{code: string, message: string, component: string, property: string|null, line: string|null, lineNumber: int, severity: string}
      */
     public function toArray(): array
     {
@@ -38,6 +40,8 @@ readonly class ValidationError
 
     /**
      * Create from array (for deserialization)
+     * 
+     * @param array{code: string, message: string, component: string, property?: string|null, line?: string|null, lineNumber: int, severity: string} $data
      */
     public static function fromArray(array $data): self
     {

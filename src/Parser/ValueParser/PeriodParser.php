@@ -29,6 +29,10 @@ class PeriodParser implements ValueParserInterface
         $this->dateTimeParser = new DateTimeParser();
     }
 
+    /**
+     * @param array<string, string> $parameters
+     * @return array<array-key, array{0: \DateTimeImmutable, 1: \DateTimeImmutable|\DateInterval}>
+     */
     #[\Override]
     public function parse(string $value, array $parameters = []): array
     {
@@ -77,6 +81,9 @@ class PeriodParser implements ValueParserInterface
         return $periods;
     }
 
+    /**
+     * @param array<string, string> $parameters
+     */
     private function parsePeriodEnd(string $value, array $parameters): \DateTimeImmutable|\DateInterval
     {
         $value = trim($value);

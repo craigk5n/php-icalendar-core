@@ -21,6 +21,9 @@ class UtcOffsetParser implements ValueParserInterface
 
     public const ERR_INVALID_UTC_OFFSET = 'ICAL-TYPE-014';
 
+    /**
+     * @param array<string, string> $parameters
+     */
     #[\Override]
     public function parse(string $value, array $parameters = []): \DateInterval
     {

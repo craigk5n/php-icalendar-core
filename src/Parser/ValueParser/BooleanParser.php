@@ -23,6 +23,9 @@ class BooleanParser implements ValueParserInterface
 
     public const ERR_INVALID_BOOLEAN = 'ICAL-TYPE-002';
 
+    /**
+     * @param array<string, string> $parameters
+     */
     #[\Override]
     public function parse(string $value, array $parameters = []): bool
     {

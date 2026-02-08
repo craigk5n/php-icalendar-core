@@ -21,6 +21,9 @@ class IntegerParser implements ValueParserInterface
 
     public const ERR_INVALID_INTEGER = 'ICAL-TYPE-008';
 
+    /**
+     * @param array<string, string> $parameters
+     */
     #[\Override]
     public function parse(string $value, array $parameters = []): int
     {

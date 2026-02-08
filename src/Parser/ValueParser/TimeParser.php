@@ -21,6 +21,9 @@ class TimeParser implements ValueParserInterface
 
     public const ERR_INVALID_TIME = 'ICAL-TYPE-012';
 
+    /**
+     * @param array<string, string> $parameters
+     */
     #[\Override]
     public function parse(string $value, array $parameters = []): \DateTimeImmutable
     {

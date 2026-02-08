@@ -60,6 +60,9 @@ class RRuleParser
         return $this->buildRRule($rules);
     }
 
+    /**
+     * @param array<string, string> $rules
+     */
     private function validateRules(array $rules): void
     {
         if (!isset($rules['FREQ'])) {
@@ -154,6 +157,9 @@ class RRuleParser
         }
     }
 
+    /**
+     * @param array<string, string> $rules
+     */
     private function buildRRule(array $rules): RRule
     {
         if (!isset($rules['FREQ'])) {
@@ -186,7 +192,8 @@ class RRuleParser
             $parts = explode(',', $rules['BYDAY']);
             foreach ($parts as $part) {
                 if (preg_match('/^([+-]?\d+)?(MO|TU|WE|TH|FR|SA|SU)$/i', $part, $matches)) {
-                    $ordinal = (isset($matches[1]) && $matches[1] !== '' && $matches[1] !== '+' && $matches[1] !== '-') ? (int) $matches[1] : null;
+                    $ordinalMatch = $matches[1];
+                    $ordinal = ($ordinalMatch !== '' && $ordinalMatch !== '+' && $ordinalMatch !== '-') ? (int) $ordinalMatch : null;
                     if ($this->strict && $ordinal === 0) {
                         throw new ParseException("Invalid BYDAY ordinal: {$part}", ParseException::ERR_RRULE_INVALID_FORMAT);
                     }
