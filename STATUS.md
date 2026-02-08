@@ -42,11 +42,11 @@ This document outlines the current development status of PHP iCalendar Core.
 
 ## Current Development Focus
 
--   **Mode Implementation:** Strict and lenient modes are fully implemented.
--   **RFC 9073 Support:** `STYLED-DESCRIPTION` property is now fully parsed and written, with backward compatibility for `DESCRIPTION` handled correctly in both parsing and writing.
--   **Test Coverage:** All implemented features are covered by unit tests.
--   **Documentation:** Detailed documentation for modes and `STYLED-DESCRIPTION` is included in `README.md`, `STATUS.md`, and `PRD.md`.
 -   **Recurrence Expansion:** In progress — see Epic RE below.
+-   **Timezone Handling:** Proper timezone propagation implemented for all occurrence dates.
+-   **Error Resilience:** Graceful handling of malformed RRULE properties.
+-   **Incremental Validation:** Intermediate testing checkpoints between major implementation steps.
+-   **Rollback Strategy:** Clear plan for reverting changes if tests fail mid-implementation.
 
 ---
 
@@ -56,14 +56,24 @@ This document outlines the current development status of PHP iCalendar Core.
 
 **Background:** The library already has a fully implemented `RecurrenceGenerator` (920 lines, `src/Recurrence/RecurrenceGenerator.php`) that expands parsed `RRule` objects into `DateTimeImmutable` streams. However, there is no way to go from a component (e.g., `VEvent`) with raw string properties to "give me the occurrence dates." Components store RRULE as raw strings and have no EXDATE/RDATE getter/setter methods.
 
-**Design decisions:**
+**Key Design Decisions:**
 - Return type: `Generator<Occurrence>` with `toArray()` convenience
 - API: Standalone `RecurrenceExpander` service + `getOccurrences()` convenience on components
 - Range bounds: Optional `rangeEnd`, required only for unbounded rules (no COUNT, no UNTIL)
 - Multi-RRULE: Supported (union results, merge-sorted, EXDATE subtracted)
 - RFC 5545 algorithm: EXDATE applied after RRULE COUNT (not during)
+- Timezone handling: Proper timezone propagation for all occurrence dates
+- Error resilience: Graceful handling of malformed RRULE properties
+
+**Existing Code References:**
+- `src/Recurrence/RecurrenceGenerator.php` - 920-line recurrence expansion engine (already implemented)
+- `src/Recurrence/RRule.php` - Pattern for immutable readonly value objects
+- `src/Component/VEvent.php:183-202` - Reference pattern for `setRrule`/`getRrule` methods
+- `src/Component/Traits/DateTimePropertiesFormatterTrait.php` - Example trait pattern
 
 **PRD reference:** §4.6
+
+---
 
 ### Epic RE-1: Occurrence Value Object
 
@@ -96,6 +106,7 @@ This document outlines the current development status of PHP iCalendar Core.
   - [ ] Test construction with `$isRdate = true` — `isRdate()` returns `true`
   - [ ] Test that `getStart()` returns the exact same `DateTimeImmutable` instance passed to constructor
   - [ ] All tests pass with `vendor/bin/phpunit tests/Recurrence/OccurrenceTest.php`
+- **Validation Checkpoint:** Run `composer test` after RE-1.2 to verify Occurrence class
 
 ---
 
@@ -129,6 +140,8 @@ This document outlines the current development status of PHP iCalendar Core.
   - [ ] `parseExdates()` handles multiple separate `EXDATE` properties
   - [ ] `parseExdates()` respects `VALUE=DATE` parameter
   - [ ] `parseRdates()` follows the same parsing logic as `parseExdates`
+- **Validation Checkpoint:** Run unit tests after implementing helper methods
+- **Rollback Strategy:** If tests fail, revert to previous working state before proceeding
 
 #### RE-2.2: Implement `expand()` method — single RRULE path
 
@@ -163,6 +176,9 @@ This document outlines the current development status of PHP iCalendar Core.
   - [ ] No-RRULE case: yields `{DTSTART} + RDATEs - EXDATEs`
   - [ ] `expandToArray()` returns `Occurrence[]` with integer keys (not preserving generator keys)
   - [ ] Generator calls `RecurrenceGenerator::generate()` with empty `$exdates` and `$rdates` arrays
+- **Intermediate Validation:** Run tests after implementing basic RRULE expansion before adding RDATE/EXDATE logic
+- **Validation Checkpoint:** Run unit tests for RE-2.2 to validate single RRULE functionality
+- **Rollback Strategy:** If implementation fails tests, revert to previous working state before proceeding
 
 #### RE-2.3: Implement multi-RRULE merge-sort
 
@@ -170,6 +186,13 @@ This document outlines the current development status of PHP iCalendar Core.
 - **File:** `src/Recurrence/RecurrenceExpander.php` (MODIFY)
 - **Depends on:** RE-2.2
 - **Description:** Add support for multiple `RRULE` properties on a single component. RFC 5545 allows this (though rare in practice). When multiple RRULEs exist, the expander must call `RecurrenceGenerator::generate()` for each RRULE, then merge-sort the results chronologically and deduplicate.
+- **Algorithm:**
+  1. Parse all RRULEs into an array
+  2. For each RRULE, call `RecurrenceGenerator::generate()` with that RRULE, DTSTART, rangeEnd, and empty exdates/rdates arrays
+  3. Collect all generators from all RRULEs
+  4. Merge-sort all occurrences from all generators chronologically
+  5. Deduplicate: if two occurrences have the same start datetime, keep only one
+  6. Apply EXDATEs and RDATEs as in RE-2.2
 - **Implementation:** Create a private `mergeSortedGenerators(Generator[] $generators): Generator` method that uses an array-based priority queue:
   1. Read the first value from each generator into a buffer array
   2. Sort the buffer by timestamp
@@ -184,6 +207,9 @@ This document outlines the current development status of PHP iCalendar Core.
   - [ ] For `count($rrules) === 1`, the single generator is used directly (no merge overhead)
   - [ ] A shared EXDATE set is applied to the merged stream (not per-RRULE)
   - [ ] RDATEs are merged into the combined stream after RRULE merge
+- **Intermediate Validation:** Test multi-RRULE functionality after implementing merge-sort before adding EXDATE/RDATE logic
+- **Validation Checkpoint:** Run unit tests for RE-2.3 to validate multi-RRULE functionality
+- **Rollback Strategy:** If implementation fails tests, revert to previous working state before proceeding
 
 #### RE-2.4: Unit tests for `RecurrenceExpander`
 
@@ -232,6 +258,9 @@ This document outlines the current development status of PHP iCalendar Core.
   - [ ] Tests use programmatic component construction (not parsing raw iCalendar strings)
   - [ ] Tests follow existing PHPUnit patterns in the project (method naming, assertions)
   - [ ] `vendor/bin/phpunit tests/Recurrence/RecurrenceExpanderTest.php` passes with 0 failures, 0 errors
+- **Intermediate Validation:** Run tests after implementing each major test category (RRULE, EXDATE, RDATE, multi-RRULE)
+- **Validation Checkpoint:** Run full `composer test` after RE-2.4
+- **Rollback Strategy:** If tests fail, revert to previous working state before proceeding
 
 ---
 
@@ -264,10 +293,15 @@ This document outlines the current development status of PHP iCalendar Core.
   ```
 - **Acceptance Criteria:**
   - [ ] `VTodo::setRrule(string $rrule)` exists and returns `self` for method chaining
+  - [ ] `VTodo::getRrule(): ?string` exists
+  - [ ] Methods are identical to VEvent pattern
   - [ ] `setRrule()` removes any existing RRULE before adding the new one (single-value semantics)
   - [ ] `VTodo::getRrule()` returns `?string` — the raw RRULE string or `null`
   - [ ] Round-trip works: `$todo->setRrule('FREQ=DAILY;COUNT=3')->getRrule()` returns `'FREQ=DAILY;COUNT=3'`
   - [ ] Method bodies are identical to the VEvent pattern (use `GenericProperty::create()`)
+- **Validation Checkpoint:** Run unit tests for RE-3.1 to validate VTodo RRULE methods
+- **Rollback Strategy:** If implementation fails tests, revert to previous working state before proceeding
+- **Parallel Task:** Can be done in parallel with RE-2.x tasks (no dependencies between RE-3.1 and RE-2.x)
 
 #### RE-3.2: Create `RecurrenceTrait`
 
@@ -300,6 +334,8 @@ This document outlines the current development status of PHP iCalendar Core.
   - [ ] `getOccurrences()` creates a fresh `RecurrenceExpander` each call (no caching)
   - [ ] `getOccurrences()` uses `yield from` to delegate to the expander's generator
   - [ ] No method name conflicts with existing component methods (`setRrule`/`getRrule` are NOT in the trait)
+- **Validation Checkpoint:** Run unit tests for RE-3.2 to validate the RecurrenceTrait methods
+- **Rollback Strategy:** If implementation fails tests, revert to previous working state before proceeding
 
 #### RE-3.3: Apply `RecurrenceTrait` to VEvent, VTodo, VJournal
 
@@ -315,6 +351,8 @@ This document outlines the current development status of PHP iCalendar Core.
   - [ ] No method conflicts — existing `setRrule`/`getRrule` on each component are not duplicated by the trait
   - [ ] `composer phpstan` passes at level 9 with no new errors
   - [ ] All existing tests still pass (`composer test`)
+- **Validation Checkpoint:** Run `composer test` after RE-3.3 to test component integration
+- **Rollback Strategy:** If implementation fails tests, revert to previous working state before proceeding
 
 #### RE-3.4: Unit tests for `RecurrenceTrait` on components
 
@@ -342,6 +380,8 @@ This document outlines the current development status of PHP iCalendar Core.
   - [ ] Tests verify round-trip property storage (set then get)
   - [ ] Tests verify `getOccurrences()` integration end-to-end
   - [ ] `vendor/bin/phpunit tests/Component/RecurrenceTraitTest.php` passes with 0 failures, 0 errors
+- **Validation Checkpoint:** Run `composer test` after RE-3.4
+- **Rollback Strategy:** If tests fail, revert to previous working state before proceeding
 
 ---
 
@@ -360,6 +400,8 @@ This document outlines the current development status of PHP iCalendar Core.
   - [ ] No new test warnings introduced (existing environment warnings are acceptable)
   - [ ] All new files follow PSR-4 autoloading conventions
   - [ ] All new files have `declare(strict_types=1)`
+- **Validation Checkpoint:** Full system verification - this is the final checkpoint
+- **Rollback Strategy:** If verification fails, revert to previous working state before proceeding
 
 ---
 
@@ -367,31 +409,72 @@ This document outlines the current development status of PHP iCalendar Core.
 
 Tasks should be completed in this order (respecting dependencies):
 
+**Phase 1: Foundation**
 1. **RE-1.1** — Occurrence class (zero dependencies)
 2. **RE-1.2** — Occurrence tests
+
+**Phase 2: Core Service**  
 3. **RE-2.1** — RecurrenceExpander with property extraction helpers
 4. **RE-2.2** — RecurrenceExpander `expand()` method (single RRULE)
 5. **RE-2.3** — Multi-RRULE merge-sort
-6. **RE-3.1** — VTodo `setRrule`/`getRrule` (can be done in parallel with RE-2.x)
-7. **RE-2.4** — RecurrenceExpander tests
+6. **RE-2.4** — RecurrenceExpander tests
+
+**Phase 3: Component Integration**
+7. **RE-3.1** — VTodo `setRrule`/`getRrule` (🔄 **PARALLEL**: can be done in parallel with RE-2.x)
 8. **RE-3.2** — RecurrenceTrait
 9. **RE-3.3** — Apply trait to components
 10. **RE-3.4** — RecurrenceTrait tests
+
+**Phase 4: Final Verification**
 11. **RE-4.1** — Full verification
+
+**Incremental Validation Checkpoints:**
+- After RE-1.2: Verify Occurrence class works correctly
+- After RE-2.2: Validate single RRULE expansion
+- After RE-2.3: Confirm multi-RRULE functionality  
+- After RE-3.3: Test component integration
+- After RE-4.1: Full system verification
 
 ### Files Summary
 
-| Action | File | Task |
-|--------|------|------|
-| CREATE | `src/Recurrence/Occurrence.php` | RE-1.1 |
-| CREATE | `src/Recurrence/RecurrenceExpander.php` | RE-2.1, RE-2.2, RE-2.3 |
-| CREATE | `src/Component/Traits/RecurrenceTrait.php` | RE-3.2 |
-| MODIFY | `src/Component/VTodo.php` | RE-3.1, RE-3.3 |
-| MODIFY | `src/Component/VEvent.php` | RE-3.3 |
-| MODIFY | `src/Component/VJournal.php` | RE-3.3 |
-| CREATE | `tests/Recurrence/OccurrenceTest.php` | RE-1.2 |
-| CREATE | `tests/Recurrence/RecurrenceExpanderTest.php` | RE-2.4 |
-| CREATE | `tests/Component/RecurrenceTraitTest.php` | RE-3.4 |
+| Action | File | Task | Lines of Code (est.) |
+|--------|------|------|---------------------|
+| CREATE | `src/Recurrence/Occurrence.php` | RE-1.1 | ~30 |
+| CREATE | `src/Recurrence/RecurrenceExpander.php` | RE-2.1, RE-2.2, RE-2.3 | ~250 |
+| CREATE | `src/Component/Traits/RecurrenceTrait.php` | RE-3.2 | ~80 |
+| MODIFY | `src/Component/VTodo.php` | RE-3.1, RE-3.3 | ~20 |
+| MODIFY | `src/Component/VEvent.php` | RE-3.3 | ~5 |
+| MODIFY | `src/Component/VJournal.php` | RE-3.3 | ~5 |
+| CREATE | `tests/Recurrence/OccurrenceTest.php` | RE-1.2 | ~50 |
+| CREATE | `tests/Recurrence/RecurrenceExpanderTest.php` | RE-2.4 | ~200 |
+| CREATE | `tests/Component/RecurrenceTraitTest.php` | RE-3.4 | ~150 |
+
+**Total Estimated New Code:** ~790 lines
+**Total Files:** 9 (6 new, 3 modified)
+
+---
+
+## Development Guidelines
+
+### For Coding Agents
+
+1. **Always check existing patterns first** - Look at `src/Recurrence/RRule.php` for value object patterns, `src/Component/VEvent.php` for component method patterns, and `tests/Recurrence/RecurrenceGeneratorTest.php` for test patterns.
+
+2. **Run tests incrementally** - Don't wait until the end. Use the validation checkpoints listed in each task to verify progress.
+
+3. **Use rollback strategy** - If a task's tests fail and you can't quickly fix them, revert to the last known working state before proceeding.
+
+4. **Parallel opportunities** - RE-3.1 (VTodo RRULE methods) can be implemented in parallel with RE-2.x tasks since it has no dependencies on them.
+
+5. **Follow strict typing** - All new files must have `declare(strict_types=1)` and follow PSR-4 autoloading.
+
+### Quality Gates
+
+Before marking any task complete, ensure:
+- [ ] All acceptance criteria checkboxes are satisfied
+- [ ] `composer test` passes for the specific test file
+- [ ] `composer phpstan` passes at level 9 with no new errors
+- [ ] No test warnings introduced (existing environment warnings are acceptable)
 
 ---
 
