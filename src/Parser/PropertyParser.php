@@ -143,22 +143,20 @@ class PropertyParser
      */
     private function isValidXName(string $name, bool $strict): bool
     {
-        // Must be at least "X-A" (X- + 1 char vendor + 1 char name)
-        if (strlen($name) < 4) {
+        // Must be at least "X-A" (X- + 1 char name)
+        if (strlen($name) < 3) {
             return false;
         }
 
-        // Must match x-vendorid-rest pattern
-        // Vendor ID is 1-8 alphanumeric characters
-        if (!preg_match('/^[Xx]-[A-Za-z0-9]{1,8}-[A-Za-z0-9\-]+$/', $name)) {
-            // Also allow simple X-NAME format (without vendor ID)
-            // This is commonly used despite strict RFC interpretation
-            if ($strict || !preg_match('/^[Xx]-[A-Za-z][A-Za-z0-9\-]*$/', $name)) {
-                return false;
-            }
+        // RFC 5545 §3.2 says X-names consist of "X-" followed by a name.
+        // It recommends a vendor ID prefix (e.g., X-ABC-NAME), but many 
+        // providers use non-prefixed names like X-WR-CALNAME.
+        // We'll allow any X- followed by alphanumeric and hyphens.
+        if (preg_match('/^[Xx]-[A-Za-z0-9\-]+$/', $name)) {
+            return true;
         }
 
-        return true;
+        return false;
     }
 
     /**
