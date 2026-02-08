@@ -111,11 +111,64 @@ The `Parser` class MUST support two distinct parsing modes: `STRICT` and `LENIEN
 *   **`STYLED-DESCRIPTION` Value Handling:** The library should preserve the raw rich text (e.g., HTML) or URI as a string value for `STYLED-DESCRIPTION`. Specific HTML parsing or rendering is outside the scope of this library.
 *   **Conflict Resolution:** Parsing and writing logic must correctly resolve conflicts between `DESCRIPTION` and `STYLED-DESCRIPTION` based on RFC 9073 rules.
 
+### 4.6 Recurrence Expansion (RRULE Date Expansion)
+
+#### 4.6.1 Overview
+
+The library MUST provide a high-level API to expand recurrence rules (RRULE, EXDATE, RDATE) on calendar components (`VEVENT`, `VTODO`, `VJOURNAL`) into a set of concrete occurrence date/times. This bridges the gap between the low-level `RecurrenceGenerator` (which operates on parsed `RRule` objects) and the component layer (which stores properties as raw iCalendar strings).
+
+#### 4.6.2 Occurrence Value Object
+
+*   The library MUST provide an immutable `Occurrence` value object representing a single occurrence in a recurrence set.
+*   Each `Occurrence` MUST expose:
+    *   `getStart(): DateTimeImmutable` — the start date/time of the occurrence.
+    *   `getEnd(): ?DateTimeImmutable` — the end date/time, computed from `DTEND`, `DURATION`, or `DUE`. Null when no end is defined (e.g., `VJOURNAL`).
+    *   `isRdate(): bool` — `true` if this occurrence originated from an `RDATE` property rather than an `RRULE`.
+
+#### 4.6.3 RecurrenceExpander Service
+
+*   The library MUST provide a `RecurrenceExpander` service class that accepts a `ComponentInterface` and returns a `Generator` of `Occurrence` objects.
+*   **Public API:**
+    *   `expand(ComponentInterface $component, ?DateTimeInterface $rangeEnd = null): Generator<Occurrence>` — lazy generator for memory-efficient iteration.
+    *   `expandToArray(ComponentInterface $component, ?DateTimeInterface $rangeEnd = null): Occurrence[]` — convenience method that collects the generator into an array.
+*   **RFC 5545 Recurrence Set Algorithm** — The expander MUST implement the recurrence set algorithm per RFC 5545 §3.8.5:
+    1.  For each `RRULE` on the component, generate candidate dates (respecting `COUNT`/`UNTIL` per rule).
+    2.  Union all `RRULE` results (merge-sort, deduplicate).
+    3.  Add `RDATE` dates into the sorted stream.
+    4.  Remove `EXDATE` dates from the combined set.
+    5.  Yield `Occurrence` objects with computed end times.
+*   **EXDATE applied after RRULE COUNT** — Per RFC 5545, `EXDATE` exclusions are applied to the recurrence set *after* individual `RRULE` generation (including `COUNT` limits). A rule with `COUNT=5` generates exactly 5 candidates; if one is excluded by `EXDATE`, the result is 4 occurrences, not 5.
+*   **Multi-RRULE support** — RFC 5545 allows multiple `RRULE` properties on a single component. The expander MUST union the results from all `RRULE` properties, merge-sort them chronologically, and deduplicate.
+*   **Range bounds validation** — If a component has an `RRULE` with neither `COUNT` nor `UNTIL`, and no `$rangeEnd` is provided, the expander MUST throw `\InvalidArgumentException`. Bounded rules (`COUNT` or `UNTIL`) MUST work without `$rangeEnd`.
+*   **No-RRULE case** — If the component has no `RRULE`, the recurrence set is `{DTSTART} + RDATEs - EXDATEs`.
+*   **EXDATE date-only matching** — An `EXDATE` with `VALUE=DATE` MUST match all occurrences on that calendar date regardless of time. An `EXDATE` with `VALUE=DATE-TIME` MUST match only the exact date-time.
+*   **Duration computation** — Occurrence end times MUST be computed from: `DTEND` (preferred), `DURATION`, or `DUE` (`VTODO` only). If none are present, `end` is `null`.
+
+#### 4.6.4 Component Convenience Methods
+
+*   `VEVENT`, `VTODO`, and `VJOURNAL` MUST provide the following convenience methods via a shared `RecurrenceTrait`:
+    *   `addExdate(string $exdate, array $params = []): self` — add an `EXDATE` property (accumulates; RFC 5545 allows multiple `EXDATE` properties).
+    *   `setExdate(string $exdate, array $params = []): self` — replace all `EXDATE` properties with a single one.
+    *   `getExdates(): string[]` — return all `EXDATE` raw values.
+    *   `addRdate(string $rdate, array $params = []): self` — add an `RDATE` property (accumulates).
+    *   `setRdate(string $rdate, array $params = []): self` — replace all `RDATE` properties with a single one.
+    *   `getRdates(): string[]` — return all `RDATE` raw values.
+    *   `getOccurrences(?DateTimeInterface $rangeEnd = null): Generator<Occurrence>` — convenience wrapper that creates a `RecurrenceExpander` internally and delegates.
+    *   `getOccurrencesArray(?DateTimeInterface $rangeEnd = null): Occurrence[]` — convenience wrapper returning an array.
+*   `VTODO` MUST also have `setRrule(string): self` and `getRrule(): ?string` methods (currently missing).
+
+#### 4.6.5 Testing Requirements
+
+*   Comprehensive test coverage MUST be provided for:
+    *   The `Occurrence` value object (construction, accessors, immutability).
+    *   `RecurrenceExpander` with single `RRULE`, `EXDATE`, `RDATE`, multi-`RRULE`, range bounds validation, no-`RRULE` edge cases, `VTODO` with `DUE`, and `VJOURNAL` with null end.
+    *   `RecurrenceTrait` methods on `VEvent`, `VTodo`, and `VJournal` (round-trip property storage, integration with `getOccurrences()`).
+
 ## 6. Future Considerations
 
 *   Performance optimizations for extremely large iCalendar files.
 *   Expanding lenient mode warning collection to other properties.
 *   Configuration options for lenient mode error handling.
 *   Potential support for other iCalendar extensions.
-	
+
 The `STYLED-DESCRIPTION` property is a significant addition that extends the capabilities beyond basic RFC 5545. It's crucial to ensure its parsing and writing are handled correctly, especially concerning backward compatibility with the `DESCRIPTION` property. This also means considering how the library interacts with rich text content without attempting to interpret it, simply storing and outputting it as per the RFC.
