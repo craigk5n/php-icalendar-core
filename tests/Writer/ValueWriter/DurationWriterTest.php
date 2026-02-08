@@ -334,7 +334,6 @@ class DurationWriterTest extends TestCase
         $result = $this->writer->write($interval);
         
         // Should maintain proper order: Y M D T H M S
-        $expectedOrder = ['Y', 'M', 'D', 'T', 'H', 'M', 'S'];
         $pattern = '/^-?P([0-9]+Y)?([0-9]+M)?([0-9]+D)?(T([0-9]+H)?([0-9]+M)?([0-9]+S)?)?$/';
         
         $this->assertMatchesRegularExpression($pattern, $result);
@@ -444,6 +443,7 @@ class DurationWriterTest extends TestCase
         // This test ensures our private method coverage detection works
         $reflection = new \ReflectionClass(DurationWriter::class);
         $method = $reflection->getMethod('formatInterval');
+        /** @psalm-suppress UnusedMethodCall */
         $method->setAccessible(true);
         
         $interval = new DateInterval('PT1H');

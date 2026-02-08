@@ -141,7 +141,7 @@ class ParserTest extends TestCase
         $icalData = "BEGIN:VCALENDAR\r\nVERSION:2.0\r\nPRODID:-//Test//Test//EN\r\nBEGIN:VEVENT\r\nDTSTAMP:20260206T100000Z\r\nUID:test@example.com\r\nSUMMARY:Test\r\nEND:VEVENT\r\nEND:VCALENDAR\r\n";
 
         $this->parser->setStrict(true); // Ensure strict mode for error checking
-        $calendar = $this->parser->parse($icalData);
+        $_calendar = $this->parser->parse($icalData);
         $errors = $this->parser->getErrors();
 
         $this->assertEmpty($errors);

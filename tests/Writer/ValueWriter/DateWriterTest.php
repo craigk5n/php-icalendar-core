@@ -194,7 +194,6 @@ class DateWriterTest extends TestCase
 
     public function testWriteWithDifferentDateTimeFormats(): void
     {
-        $baseDate = '2026-02-06';
         $formats = [
             'Y-m-d',
             'Y-m-d H:i:s',

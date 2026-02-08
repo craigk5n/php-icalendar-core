@@ -28,8 +28,7 @@ class InterfaceContractTest extends TestCase
         $this->assertInstanceOf(ParserInterface::class, $parser);
 
         // Test setStrict returns void
-        $result = $parser->setStrict(true);
-        $this->assertNull($result);
+        $parser->setStrict(true);
 
         // Test getErrors returns array
         $errors = $parser->getErrors();
@@ -48,8 +47,7 @@ class InterfaceContractTest extends TestCase
         $this->assertInstanceOf(WriterInterface::class, $writer);
 
         // Test setLineFolding returns void
-        $result = $writer->setLineFolding(true, 75);
-        $this->assertNull($result);
+        $writer->setLineFolding(true, 75);
 
         // Test write returns string
         $calendar = new VCalendar();

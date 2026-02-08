@@ -139,7 +139,7 @@ class PerformanceTest extends TestCase
             $memoryBefore = memory_get_usage(true);
             
             $icalData = $this->generateCalendarData(100); // 100 events
-            $calendar = $this->parser->parse($icalData);
+            $_calendar = $this->parser->parse($icalData);
             
             $memoryAfter = memory_get_usage(true);
             $memoryUsed = $memoryAfter - $memoryBefore;
@@ -176,7 +176,7 @@ class PerformanceTest extends TestCase
             file_put_contents($tempFile, $icalData);
             
             $memoryBefore = memory_get_usage(true);
-            $calendar = $this->parser->parseFile($tempFile);
+            $_calendar = $this->parser->parseFile($tempFile);
             $memoryAfter = memory_get_usage(true);
             
             $memoryUsed = $memoryAfter - $memoryBefore;
@@ -194,7 +194,7 @@ class PerformanceTest extends TestCase
         foreach ($memoryReadings as $reading) {
             $memoryPerMb = $reading['memory_per_mb'];
             // Should use roughly constant memory per MB regardless of file size (streaming)
-            $this->assertLessThan(5.0, $memoryPerMb, 'Streaming parser should use roughly constant memory per MB: ' . $reading['size'] . ' bytes used ' . $memoryPerMb . 'MB');
+            $this->assertLessThan(5.0, $memoryPerMb, 'Streaming parser should use roughly constant memory per MB: ' . $reading['size'] . ' bytes used ' . (string) $memoryPerMb . 'MB');
         }
     }
 
@@ -271,7 +271,7 @@ class PerformanceTest extends TestCase
         // Should handle 5 processes with 100 events each in reasonable time
         $this->assertLessThan(1.0, $totalTime, 'Concurrent parsing of 5 processes with 100 events each should take < 1s');
         
-        foreach ($processes as $index => $calendar) {
+        foreach ($processes as $_index => $calendar) {
             $this->assertCount($eventsPerProcess, $calendar->getComponents('VEVENT'));
             $this->assertEquals("Performance Test Event 0", $calendar->getComponents('VEVENT')[0]->getProperty('SUMMARY')->getValue()->getRawValue());
         }
@@ -304,23 +304,23 @@ class PerformanceTest extends TestCase
                 
                 // Write benchmark
                 $writeStart = microtime(true);
-                $output = $this->writer->write($calendar);
+                $_output = $this->writer->write($calendar);
                 $writeEnd = microtime(true);
                 $writeTime = $writeEnd - $writeStart;
                 
                 $times[] = ['parse' => $parseTime, 'write' => $writeTime];
             }
             
-            $avgParseTime = array_sum(array_column($times, 'parse')) / count($times);
-            $avgWriteTime = array_sum(array_column($times, 'write')) / count($times);
+            $avgParseTime = (float) array_sum(array_column($times, 'parse')) / (float) count($times);
+            $avgWriteTime = (float) array_sum(array_column($times, 'write')) / (float) count($times);
             
             $results[$name] = [
                 'events' => $config['events'],
                 'iterations' => $config['iterations'],
                 'avg_parse_time' => $avgParseTime,
                 'avg_write_time' => $avgWriteTime,
-                'events_per_second_parse' => $config['events'] / $avgParseTime,
-                'events_per_second_write' => $config['events'] / $avgWriteTime,
+                'events_per_second_parse' => (float) $config['events'] / $avgParseTime,
+                'events_per_second_write' => (float) $config['events'] / $avgWriteTime,
             ];
         }
         
@@ -331,7 +331,7 @@ class PerformanceTest extends TestCase
         $this->assertLessThan(0.0005, $results['small_calendar']['avg_write_time'], 'Should write small calendars very quickly');
         
         // Store benchmark results for reference
-        $this->addToAssertionCount(1); // Count this as a successful benchmark run
+        $this->assertTrue(true); // Count this as a successful benchmark run
     }
 
     // === Performance Monitoring Tests ===
@@ -354,12 +354,12 @@ class PerformanceTest extends TestCase
             $memoryBefore = memory_get_usage(true);
             $startTime = microtime(true);
             
-            $calendar = $this->parser->parse($icalData);
+            $_calendar = $this->parser->parse($icalData);
             
             $endTime = microtime(true);
             $memoryAfter = memory_get_usage(true);
             $parseTime = $endTime - $startTime;
-            $eventsPerSecond = $parseTime > 0 ? $eventCount / $parseTime : 0;
+            $eventsPerSecond = $parseTime > 0 ? (float) $eventCount / $parseTime : 0.0;
             
             $metrics[$scenario] = [
                 'event_count' => $eventCount,

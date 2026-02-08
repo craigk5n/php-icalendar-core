@@ -55,7 +55,7 @@ class RealWorldFilesTest extends TestCase
         } catch (\Exception $e) {
             // If strict fails, fall back to lenient to see the diff, but fail the test
             $this->parser->setStrict(false);
-            $reparsedCalendar = $this->parser->parse($exportedIcs);
+            $_reparsedCalendar = $this->parser->parse($exportedIcs);
             $this->fail("Failed to parse exported ICS in strict mode for $filename: " . $e->getMessage());
         }
 

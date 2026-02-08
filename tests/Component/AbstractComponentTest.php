@@ -133,7 +133,7 @@ class AbstractComponentTest extends TestCase
         $this->assertNull($this->component->getParent());
     }
 
-    private function createMockProperty(string $name, string $value): PropertyInterface|MockObject
+    private function createMockProperty(string $name, string $_value): PropertyInterface|MockObject
     {
         $property = $this->createMock(PropertyInterface::class);
         $property->method('getName')->willReturn($name);
