@@ -70,6 +70,7 @@ The `Parser` class MUST support two distinct parsing modes: `STRICT` and `LENIEN
     *   How to select a mode during parser instantiation.
     *   The behavior differences between the two modes.
     *   Support for RFC 9073 and the `STYLED-DESCRIPTION` property, including its value types, parameters, parsing behavior, and interaction with the `DESCRIPTION` property during both parsing and writing.
+    *   The Recurrence Expansion API, including the `getOccurrences()` method, `Occurrence` objects, and memory-efficient expansion.
     *   How to access collected warnings using `getWarnings()`.
 
 ### 4.4 Testing

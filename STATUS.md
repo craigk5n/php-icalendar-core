@@ -400,6 +400,17 @@ This document outlines the current development status of PHP iCalendar Core.
   - [ ] No new test warnings introduced (existing environment warnings are acceptable)
   - [ ] All new files follow PSR-4 autoloading conventions
   - [ ] All new files have `declare(strict_types=1)`
+
+#### RE-4.2: Update Documentation
+
+- **Status:** Not Started
+- **File:** `docs/USAGE.md` (or `README.md`)
+- **Description:** Document the new Recurrence Expansion features (`getOccurrences`, `Occurrence` object) with code examples.
+- **Acceptance Criteria:**
+  - [ ] `docs/USAGE.md` (or `README.md`) includes a section on "Recurrence Expansion"
+  - [ ] Code example shows how to call `getOccurrences()` on a `VEvent`
+  - [ ] Code example shows how to iterate over `Occurrence` objects and access start/end dates
+  - [ ] Documentation explains the optional `$rangeEnd` parameter and its requirement for unbounded rules
 - **Validation Checkpoint:** Full system verification - this is the final checkpoint
 - **Rollback Strategy:** If verification fails, revert to previous working state before proceeding
 
@@ -425,8 +436,9 @@ Tasks should be completed in this order (respecting dependencies):
 9. **RE-3.3** — Apply trait to components
 10. **RE-3.4** — RecurrenceTrait tests
 
-**Phase 4: Final Verification**
+**Phase 4: Final Verification & Documentation**
 11. **RE-4.1** — Full verification
+12. **RE-4.2** — Update Documentation
 
 **Incremental Validation Checkpoints:**
 - After RE-1.2: Verify Occurrence class works correctly
@@ -445,12 +457,13 @@ Tasks should be completed in this order (respecting dependencies):
 | MODIFY | `src/Component/VTodo.php` | RE-3.1, RE-3.3 | ~20 |
 | MODIFY | `src/Component/VEvent.php` | RE-3.3 | ~5 |
 | MODIFY | `src/Component/VJournal.php` | RE-3.3 | ~5 |
+| MODIFY | `docs/USAGE.md` | RE-4.2 | ~50 |
 | CREATE | `tests/Recurrence/OccurrenceTest.php` | RE-1.2 | ~50 |
 | CREATE | `tests/Recurrence/RecurrenceExpanderTest.php` | RE-2.4 | ~200 |
 | CREATE | `tests/Component/RecurrenceTraitTest.php` | RE-3.4 | ~150 |
 
-**Total Estimated New Code:** ~790 lines
-**Total Files:** 9 (6 new, 3 modified)
+**Total Estimated New Code:** ~840 lines
+**Total Files:** 10 (6 new, 4 modified)
 
 ---
 
