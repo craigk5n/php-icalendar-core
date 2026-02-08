@@ -471,9 +471,10 @@ Tasks should be completed in this order (respecting dependencies):
 | CREATE | `tests/Recurrence/RecurrenceExpanderTest.php` | RE-2.4 | ~200 |
 | CREATE | `tests/Component/RecurrenceTraitTest.php` | RE-3.4 | ~150 |
 | CREATE | `tests/Conformance/Rfc5545RecurrenceTest.php` | RE-4.3 | ~150 |
+| CREATE | `tests/Conformance/EdgeCaseRecurrenceTest.php` | Extra | ~60 |
 
-**Total Estimated New Code:** ~990 lines
-**Total Files:** 11 (7 new, 4 modified)
+**Total Estimated New Code:** ~1050 lines
+**Total Files:** 12 (8 new, 4 modified)
 
 ---
 
