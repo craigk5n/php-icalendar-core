@@ -420,6 +420,17 @@ This document outlines the current development status of PHP iCalendar Core.
   - [x] Tests cover edge cases like "Yearly on the 20th Monday" (which requires Year-scope BYDAY logic)
   - [x] Tests cover timezone handling (e.g., comparing UTC UNTIL against local DTSTART)
   - [x] Tests cover combined BYxxx rules (e.g., BYMONTHDAY=1,-1)
+
+#### RE-4.4: Real-World Robustness Test
+
+- **Status:** Completed
+- **File:** `tests/Conformance/RealWorldFilesTest.php` (CREATE)
+- **Description:** Source 10 real-world ICS files from major providers (Google, Office Holidays, etc.), including localized files (Japanese, French, German), and verify semantic round-trip integrity.
+- **Acceptance Criteria:**
+  - [x] 10 diverse, complex ICS files downloaded and added to fixtures
+  - [x] Test implemented to parse, write, re-parse, and compare for semantic equivalence
+  - [x] Verified support for common X-properties (e.g. X-WR-CALNAME, X-PUBLISHED-TTL)
+  - [x] 100% pass rate on all real-world samples
 - **Validation Checkpoint:** Full system verification - this is the final checkpoint
 - **Rollback Strategy:** If verification fails, revert to previous working state before proceeding
 
@@ -448,6 +459,8 @@ Tasks should be completed in this order (respecting dependencies):
 **Phase 4: Final Verification & Documentation**
 11. **RE-4.1** — Full verification
 12. **RE-4.2** — Update Documentation
+13. **RE-4.3** — RFC Recurrence Verification
+14. **RE-4.4** — Real-World Robustness Test
 
 **Incremental Validation Checkpoints:**
 - After RE-1.2: Verify Occurrence class works correctly
@@ -472,9 +485,10 @@ Tasks should be completed in this order (respecting dependencies):
 | CREATE | `tests/Component/RecurrenceTraitTest.php` | RE-3.4 | ~150 |
 | CREATE | `tests/Conformance/Rfc5545RecurrenceTest.php` | RE-4.3 | ~150 |
 | CREATE | `tests/Conformance/EdgeCaseRecurrenceTest.php` | Extra | ~60 |
+| CREATE | `tests/Conformance/RealWorldFilesTest.php` | RE-4.4 | ~100 |
 
-**Total Estimated New Code:** ~1050 lines
-**Total Files:** 12 (8 new, 4 modified)
+**Total Estimated New Code:** ~1150 lines
+**Total Files:** 13 (9 new, 4 modified)
 
 ---
 

@@ -352,15 +352,20 @@ class ParserTest extends TestCase
         // Simple X-NAME without vendor ID
         $icalData = "BEGIN:VCALENDAR\r\nVERSION:2.0\r\nPRODID:-//Test\r\nX-CUSTOM:value\r\nEND:VCALENDAR\r\n";
         
-        // Lenient mode should accept it
+        // Both lenient and strict modes should accept it now
         $this->parser->setStrict(false);
         $calendar = $this->parser->parse($icalData);
         $this->assertNotNull($calendar->getProperty('X-CUSTOM'));
 
-        // Strict mode should reject it because it lacks vendor ID (X-vendorid-name)
+        $this->parser->setStrict(true);
+        $calendar = $this->parser->parse($icalData);
+        $this->assertNotNull($calendar->getProperty('X-CUSTOM'));
+
+        // Non-X and non-IANA property should still be rejected in strict mode
+        $invalidData = "BEGIN:VCALENDAR\r\nVERSION:2.0\r\nPRODID:-//Test\r\n1-INVALID:value\r\nEND:VCALENDAR\r\n";
         $this->parser->setStrict(true);
         $this->expectException(ParseException::class);
-        $this->parser->parse($icalData);
+        $this->parser->parse($invalidData);
     }
 
     public function testGenericComponent(): void
