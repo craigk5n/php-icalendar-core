@@ -81,31 +81,31 @@ This document outlines the current development status of PHP iCalendar Core.
 
 #### RE-1.1: Create `Occurrence` class
 
-- **Status:** Not Started
+- **Status:** Completed
 - **File:** `src/Recurrence/Occurrence.php` (CREATE)
 - **Description:** Create an immutable PHP 8.2 `readonly class` in the `Icalendar\Recurrence` namespace representing a single occurrence in a recurrence set. Follow the same pattern as the existing `RRule` class (`src/Recurrence/RRule.php`).
 - **Acceptance Criteria:**
-  - [ ] Class is declared as `readonly class Occurrence` in namespace `Icalendar\Recurrence`
-  - [ ] Constructor accepts three parameters: `DateTimeImmutable $start`, `?DateTimeImmutable $end = null`, `bool $isRdate = false`
-  - [ ] All three constructor parameters are `private readonly`
-  - [ ] `getStart()` returns the `DateTimeImmutable` start value
-  - [ ] `getEnd()` returns the nullable `DateTimeImmutable` end value
-  - [ ] `isRdate()` returns the boolean flag
-  - [ ] Class has `declare(strict_types=1)` at the top
-  - [ ] File follows PSR-4 autoloading (namespace matches directory structure)
+  - [x] Class is declared as `readonly class Occurrence` in namespace `Icalendar\Recurrence`
+  - [x] Constructor accepts three parameters: `DateTimeImmutable $start`, `?DateTimeImmutable $end = null`, `bool $isRdate = false`
+  - [x] All three constructor parameters are `private readonly`
+  - [x] `getStart()` returns the `DateTimeImmutable` start value
+  - [x] `getEnd()` returns the nullable `DateTimeImmutable` end value
+  - [x] `isRdate()` returns the boolean flag
+  - [x] Class has `declare(strict_types=1)` at the top
+  - [x] File follows PSR-4 autoloading (namespace matches directory structure)
 
 #### RE-1.2: Unit tests for `Occurrence`
 
-- **Status:** Not Started
+- **Status:** Completed
 - **File:** `tests/Recurrence/OccurrenceTest.php` (CREATE)
 - **Depends on:** RE-1.1
 - **Description:** Write PHPUnit tests for the `Occurrence` value object.
 - **Acceptance Criteria:**
-  - [ ] Test construction with only `$start` — `getEnd()` returns `null`, `isRdate()` returns `false`
-  - [ ] Test construction with `$start` and `$end` — both `getStart()` and `getEnd()` return correct values
-  - [ ] Test construction with `$isRdate = true` — `isRdate()` returns `true`
-  - [ ] Test that `getStart()` returns the exact same `DateTimeImmutable` instance passed to constructor
-  - [ ] All tests pass with `vendor/bin/phpunit tests/Recurrence/OccurrenceTest.php`
+  - [x] Test construction with only `$start` — `getEnd()` returns `null`, `isRdate()` returns `false`
+  - [x] Test construction with `$start` and `$end` — both `getStart()` and `getEnd()` return correct values
+  - [x] Test construction with `$isRdate = true` — `isRdate()` returns `true`
+  - [x] Test that `getStart()` returns the exact same `DateTimeImmutable` instance passed to constructor
+  - [x] All tests pass with `vendor/bin/phpunit tests/Recurrence/OccurrenceTest.php`
 - **Validation Checkpoint:** Run `composer test` after RE-1.2 to verify Occurrence class
 
 ---
