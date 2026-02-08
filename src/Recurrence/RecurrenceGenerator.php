@@ -413,6 +413,7 @@ class RecurrenceGenerator
     {
         $current = $start;
         $interval = $rule->getInterval();
+        $timezone = $start->getTimezone();
         
         while ($end === null || $current <= $end) {
             $year = (int) $current->format('Y');
@@ -432,13 +433,13 @@ class RecurrenceGenerator
 
                     if ($ordinal !== null) {
                         // Specific nth occurrence (e.g., 2nd Tuesday)
-                        $date = $this->getNthWeekdayOfMonth($year, $month, $dayName, $ordinal);
+                        $date = $this->getNthWeekdayOfMonth($year, $month, $dayName, $ordinal, $timezone);
                         if ($date !== null) {
                             $monthCandidates[] = $date;
                         }
                     } else {
                         // All occurrences of this day in the month
-                        $dates = $this->getAllWeekdaysInMonth($year, $month, $dayName);
+                        $dates = $this->getAllWeekdaysInMonth($year, $month, $dayName, $timezone);
                         foreach ($dates as $date) {
                             $monthCandidates[] = $date;
                         }
@@ -448,7 +449,7 @@ class RecurrenceGenerator
             // When both BYDAY and BYMONTHDAY are present, use OR logic (union)
             if (!empty($byMonthDay)) {
                 foreach ($byMonthDay as $day) {
-                    $date = $this->getDayOfMonth($year, $month, $day);
+                    $date = $this->getDayOfMonth($year, $month, $day, $timezone);
                     if ($date !== null) {
                         $monthCandidates[] = $date;
                     }
@@ -457,7 +458,7 @@ class RecurrenceGenerator
             if (empty($byDay) && empty($byMonthDay)) {
                 // Default: same day of month as DTSTART
                 $day = (int) $start->format('j');
-                $date = $this->getDayOfMonth($year, $month, $day);
+                $date = $this->getDayOfMonth($year, $month, $day, $timezone);
                 if ($date !== null) {
                     $monthCandidates[] = $date;
                 }
@@ -500,6 +501,7 @@ class RecurrenceGenerator
     {
         $current = $start;
         $interval = $rule->getInterval();
+        $timezone = $start->getTimezone();
         
         while ($end === null || $current <= $end) {
             $year = (int) $current->format('Y');
@@ -512,56 +514,91 @@ class RecurrenceGenerator
             $byMonthDay = $rule->getByMonthDay();
             $byDay = $rule->getByDay();
             
-            // Determine which months to iterate
-            $months = !empty($byMonth) ? $byMonth : [(int) $start->format('n')];
-            
-            foreach ($months as $month) {
-                if ($byYearDay) {
-                    // Generate by year day
-                    foreach ($byYearDay as $yearDay) {
-                        $date = $this->getYearDay($year, $yearDay);
-                        if ($date !== null) {
-                            $yearCandidates[] = $date;
-                        }
+            if ($byYearDay) {
+                // Generate by year day
+                foreach ($byYearDay as $yearDay) {
+                    $date = $this->getYearDay($year, $yearDay, $timezone);
+                    if ($date !== null) {
+                        $yearCandidates[] = $date;
                     }
-                } elseif ($byWeekNo) {
-                    // Generate by week number
-                    foreach ($byWeekNo as $weekNo) {
-                        $dates = $this->getWeekDates($year, $weekNo, $byDay);
-                        foreach ($dates as $date) {
-                            $yearCandidates[] = $date;
-                        }
+                }
+            } elseif ($byWeekNo) {
+                // Generate by week number
+                foreach ($byWeekNo as $weekNo) {
+                    $dates = $this->getWeekDates($year, $weekNo, $byDay, $timezone);
+                    foreach ($dates as $date) {
+                        $yearCandidates[] = $date;
                     }
-                } elseif ($byMonthDay) {
-                    // Generate by month day
-                    foreach ($byMonthDay as $day) {
-                        $date = $this->getDayOfMonth($year, $month, $day);
-                        if ($date !== null) {
-                            $yearCandidates[] = $date;
-                        }
-                    }
-                } elseif ($byDay) {
-                    // Generate by weekday
+                }
+            } elseif ($byDay) {
+                // Generate by weekday
+                // If BYMONTH is NOT present, BYDAY applies to the whole year
+                if (empty($byMonth)) {
                     foreach ($byDay as $dayInfo) {
                         $dayName = $dayInfo['day'];
                         $ordinal = $dayInfo['ordinal'];
                         
                         if ($ordinal !== null) {
-                            $date = $this->getNthWeekdayOfMonth($year, $month, $dayName, $ordinal);
+                            $date = $this->getNthWeekdayOfYear($year, $dayName, $ordinal, $timezone);
                             if ($date !== null) {
                                 $yearCandidates[] = $date;
                             }
                         } else {
-                            $dates = $this->getAllWeekdaysInMonth($year, $month, $dayName);
+                            $dates = $this->getAllWeekdaysInYear($year, $dayName, $timezone);
                             foreach ($dates as $date) {
                                 $yearCandidates[] = $date;
                             }
                         }
                     }
                 } else {
-                    // Default: same month and day as DTSTART
-                    $day = (int) $start->format('j');
-                    $date = $this->getDayOfMonth($year, $month, $day);
+                    // BYMONTH is present, so BYDAY applies within those months
+                    foreach ($byMonth as $month) {
+                        foreach ($byDay as $dayInfo) {
+                            $dayName = $dayInfo['day'];
+                            $ordinal = $dayInfo['ordinal'];
+                            
+                            if ($ordinal !== null) {
+                                $date = $this->getNthWeekdayOfMonth($year, $month, $dayName, $ordinal, $timezone);
+                                if ($date !== null) {
+                                    $yearCandidates[] = $date;
+                                }
+                            } else {
+                                $dates = $this->getAllWeekdaysInMonth($year, $month, $dayName, $timezone);
+                                foreach ($dates as $date) {
+                                    $yearCandidates[] = $date;
+                                }
+                            }
+                        }
+                    }
+                }
+            } elseif ($byMonthDay) {
+                // Generate by month day
+                // If BYMONTH is not present, it defaults to all months? No, RFC says BYMONTH defaults to DTSTART month IF missing.
+                // However, common sense for YEARLY + BYMONTHDAY is that it applies to the months specified in BYMONTH,
+                // or if BYMONTH is missing, it applies to the START month?
+                // RFC 5545: "If some or all of these BYxxx rule parts are not specified, they default to the corresponding values of the DTSTART property."
+                // So if BYMONTH is missing, we use DTSTART's month.
+                
+                $months = !empty($byMonth) ? $byMonth : [(int) $start->format('n')];
+                
+                foreach ($months as $month) {
+                    foreach ($byMonthDay as $day) {
+                        $date = $this->getDayOfMonth($year, $month, $day, $timezone);
+                        if ($date !== null) {
+                            $yearCandidates[] = $date;
+                        }
+                    }
+                }
+            } else {
+                // Default: same month and day as DTSTART
+                // If BYMONTH is specified, we use that month, but same day?
+                // Example: FREQ=YEARLY;BYMONTH=2. DTSTART=19970101. Result: 19970201.
+                
+                $months = !empty($byMonth) ? $byMonth : [(int) $start->format('n')];
+                $day = (int) $start->format('j');
+                
+                foreach ($months as $month) {
+                    $date = $this->getDayOfMonth($year, $month, $day, $timezone);
                     if ($date !== null) {
                         $yearCandidates[] = $date;
                     }
@@ -709,10 +746,10 @@ class RecurrenceGenerator
     /**
      * Get the nth weekday of a month (e.g., 2nd Tuesday)
      */
-    private function getNthWeekdayOfMonth(int $year, int $month, string $dayName, int $n): ?\DateTimeImmutable
+    private function getNthWeekdayOfMonth(int $year, int $month, string $dayName, int $n, \DateTimeZone $timezone): ?\DateTimeImmutable
     {
         $dayOfWeek = self::DAY_MAP[$dayName];
-        $firstOfMonth = new \DateTimeImmutable("{$year}-{$month}-01");
+        $firstOfMonth = new \DateTimeImmutable("{$year}-{$month}-01", $timezone);
         $firstDayOfWeek = (int) $firstOfMonth->format('w');
         
         // Calculate days to first occurrence
@@ -737,17 +774,17 @@ class RecurrenceGenerator
             return null;
         }
         
-        return new \DateTimeImmutable("{$year}-{$month}-{$targetDay}");
+        return new \DateTimeImmutable("{$year}-{$month}-{$targetDay}", $timezone);
     }
 
     /**
      * Get all occurrences of a weekday in a month
      */
-    private function getAllWeekdaysInMonth(int $year, int $month, string $dayName): array
+    private function getAllWeekdaysInMonth(int $year, int $month, string $dayName, \DateTimeZone $timezone): array
     {
         $result = [];
         $dayOfWeek = self::DAY_MAP[$dayName];
-        $firstOfMonth = new \DateTimeImmutable("{$year}-{$month}-01");
+        $firstOfMonth = new \DateTimeImmutable("{$year}-{$month}-01", $timezone);
         $firstDayOfWeek = (int) $firstOfMonth->format('w');
         
         $daysToFirst = ($dayOfWeek - $firstDayOfWeek + 7) % 7;
@@ -755,7 +792,7 @@ class RecurrenceGenerator
         $daysInMonth = (int) $firstOfMonth->format('t');
         
         while ($currentDay <= $daysInMonth) {
-            $result[] = new \DateTimeImmutable("{$year}-{$month}-{$currentDay}");
+            $result[] = new \DateTimeImmutable("{$year}-{$month}-{$currentDay}", $timezone);
             $currentDay += 7;
         }
         
@@ -765,19 +802,19 @@ class RecurrenceGenerator
     /**
      * Get a specific day of month, handling negative values
      */
-    private function getDayOfMonth(int $year, int $month, int $day): ?\DateTimeImmutable
+    private function getDayOfMonth(int $year, int $month, int $day, \DateTimeZone $timezone): ?\DateTimeImmutable
     {
-        $firstOfMonth = new \DateTimeImmutable("{$year}-{$month}-01");
+        $firstOfMonth = new \DateTimeImmutable("{$year}-{$month}-01", $timezone);
         $daysInMonth = (int) $firstOfMonth->format('t');
         
         if ($day > 0 && $day <= $daysInMonth) {
-            return new \DateTimeImmutable("{$year}-{$month}-{$day}");
+            return new \DateTimeImmutable("{$year}-{$month}-{$day}", $timezone);
         }
         
         if ($day < 0) {
             $actualDay = $daysInMonth + $day + 1;
             if ($actualDay >= 1) {
-                return new \DateTimeImmutable("{$year}-{$month}-{$actualDay}");
+                return new \DateTimeImmutable("{$year}-{$month}-{$actualDay}", $timezone);
             }
         }
         
@@ -787,27 +824,27 @@ class RecurrenceGenerator
     /**
      * Get a date from a year day number
      */
-    private function getYearDay(int $year, int $yearDay): ?\DateTimeImmutable
+    private function getYearDay(int $year, int $yearDay, \DateTimeZone $timezone): ?\DateTimeImmutable
     {
         if ($yearDay > 0) {
-            return new \DateTimeImmutable("{$year}-01-01 +" . ($yearDay - 1) . ' days');
+            return new \DateTimeImmutable("{$year}-01-01 +" . ($yearDay - 1) . ' days', $timezone);
         } else {
-            $isLeap = (bool) date('L', strtotime("{$year}-01-01"));
+            $isLeap = (bool) (new \DateTimeImmutable("{$year}-01-01", $timezone))->format('L');
             $daysInYear = $isLeap ? 366 : 365;
             $day = $daysInYear + $yearDay + 1;
-            return new \DateTimeImmutable("{$year}-01-01 +" . ($day - 1) . ' days');
+            return new \DateTimeImmutable("{$year}-01-01 +" . ($day - 1) . ' days', $timezone);
         }
     }
 
     /**
      * Get dates for a specific week number
      */
-    private function getWeekDates(int $year, int $weekNo, array $byDay): array
+    private function getWeekDates(int $year, int $weekNo, array $byDay, \DateTimeZone $timezone): array
     {
         $result = [];
         
         // Get the first day of the first week
-        $jan4 = new \DateTimeImmutable("{$year}-01-04");
+        $jan4 = new \DateTimeImmutable("{$year}-01-04", $timezone);
         $firstWeekStart = $jan4->modify('last monday');
         
         // Calculate target week start
@@ -815,7 +852,7 @@ class RecurrenceGenerator
         
         // Handle negative week numbers
         if ($weekNo < 0) {
-            $dec28 = new \DateTimeImmutable("{$year}-12-28");
+            $dec28 = new \DateTimeImmutable("{$year}-12-28", $timezone);
             $lastWeekStart = $dec28->modify('last monday');
             $targetWeekStart = $lastWeekStart->modify('+' . (($weekNo + 1) * 7) . ' days');
         }
@@ -886,6 +923,73 @@ class RecurrenceGenerator
         }
         
         return null;
+    }
+
+    /**
+     * Get the nth weekday of a year (e.g., 20th Monday)
+     */
+    private function getNthWeekdayOfYear(int $year, string $dayName, int $n, \DateTimeZone $timezone): ?\DateTimeImmutable
+    {
+        $dayOfWeek = self::DAY_MAP[$dayName];
+        $firstOfYear = new \DateTimeImmutable("{$year}-01-01", $timezone);
+        $firstDayOfWeek = (int) $firstOfYear->format('w');
+        
+        // Calculate days to first occurrence
+        $daysToFirst = ($dayOfWeek - $firstDayOfWeek + 7) % 7;
+        $firstOccurrence = 1 + $daysToFirst;
+        
+        // Calculate nth occurrence
+        $targetDayOfYear = $firstOccurrence + (($n - 1) * 7);
+        
+        // Handle negative n (count from end)
+        if ($n < 0) {
+            // Determine days in year
+            $isLeap = (bool) $firstOfYear->format('L');
+            $daysInYear = $isLeap ? 366 : 365;
+            
+            $lastOccurrence = $firstOccurrence;
+            while ($lastOccurrence + 7 <= $daysInYear) {
+                $lastOccurrence += 7;
+            }
+            $targetDayOfYear = $lastOccurrence + (($n + 1) * 7);
+        }
+        
+        // Check if valid day for this year
+        $isLeap = (bool) $firstOfYear->format('L');
+        $daysInYear = $isLeap ? 366 : 365;
+        
+        if ($targetDayOfYear < 1 || $targetDayOfYear > $daysInYear) {
+            return null;
+        }
+        
+        // Convert day of year to date
+        return $firstOfYear->modify("+" . ($targetDayOfYear - 1) . " days");
+    }
+
+    /**
+     * Get all occurrences of a weekday in a year
+     *
+     * @return \DateTimeImmutable[]
+     */
+    private function getAllWeekdaysInYear(int $year, string $dayName, \DateTimeZone $timezone): array
+    {
+        $result = [];
+        $dayOfWeek = self::DAY_MAP[$dayName];
+        $firstOfYear = new \DateTimeImmutable("{$year}-01-01", $timezone);
+        $firstDayOfWeek = (int) $firstOfYear->format('w');
+        
+        $daysToFirst = ($dayOfWeek - $firstDayOfWeek + 7) % 7;
+        $currentDayOfYear = 1 + $daysToFirst;
+        
+        $isLeap = (bool) $firstOfYear->format('L');
+        $daysInYear = $isLeap ? 366 : 365;
+        
+        while ($currentDayOfYear <= $daysInYear) {
+            $result[] = $firstOfYear->modify("+" . ($currentDayOfYear - 1) . " days");
+            $currentDayOfYear += 7;
+        }
+        
+        return $result;
     }
 
     /**

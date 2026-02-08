@@ -126,11 +126,6 @@ parameters:
 			path: src/Recurrence/RecurrenceGenerator.php
 
 		-
-			message: "#^Parameter \\#2 \\$timestamp of function date expects int\\|null, int\\|false given\\.$#"
-			count: 1
-			path: src/Recurrence/RecurrenceGenerator.php
-
-		-
 			message: "#^Cannot access offset int\\<1, 16\\> on array\\|false\\.$#"
 			count: 2
 			path: src/Validation/SecurityValidator.php

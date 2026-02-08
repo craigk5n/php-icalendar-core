@@ -42,11 +42,9 @@ This document outlines the current development status of PHP iCalendar Core.
 
 ## Current Development Focus
 
--   **Recurrence Expansion:** In progress — see Epic RE below.
+-   **Recurrence Expansion:** Complete — see Epic RE below.
 -   **Timezone Handling:** Proper timezone propagation implemented for all occurrence dates.
 -   **Error Resilience:** Graceful handling of malformed RRULE properties.
--   **Incremental Validation:** Intermediate testing checkpoints between major implementation steps.
--   **Rollback Strategy:** Clear plan for reverting changes if tests fail mid-implementation.
 
 ---
 
@@ -411,6 +409,17 @@ This document outlines the current development status of PHP iCalendar Core.
   - [x] Code example shows how to call `getOccurrences()` on a `VEvent`
   - [x] Code example shows how to iterate over `Occurrence` objects and access start/end dates
   - [x] Documentation explains the optional `$rangeEnd` parameter and its requirement for unbounded rules
+
+#### RE-4.3: RFC 5545 Recurrence Examples Verification
+
+- **Status:** Completed
+- **File:** `tests/Conformance/Rfc5545RecurrenceTest.php` (CREATE)
+- **Description:** Verify the recurrence engine against specific complex examples from RFC 5545 Section 3.8.5.3 (e.g., "Yearly on the 20th Monday of the year").
+- **Acceptance Criteria:**
+  - [x] Test cases implemented for daily, weekly, monthly, and yearly examples from RFC 5545
+  - [x] Tests cover edge cases like "Yearly on the 20th Monday" (which requires Year-scope BYDAY logic)
+  - [x] Tests cover timezone handling (e.g., comparing UTC UNTIL against local DTSTART)
+  - [x] Tests cover combined BYxxx rules (e.g., BYMONTHDAY=1,-1)
 - **Validation Checkpoint:** Full system verification - this is the final checkpoint
 - **Rollback Strategy:** If verification fails, revert to previous working state before proceeding
 
@@ -461,9 +470,10 @@ Tasks should be completed in this order (respecting dependencies):
 | CREATE | `tests/Recurrence/OccurrenceTest.php` | RE-1.2 | ~50 |
 | CREATE | `tests/Recurrence/RecurrenceExpanderTest.php` | RE-2.4 | ~200 |
 | CREATE | `tests/Component/RecurrenceTraitTest.php` | RE-3.4 | ~150 |
+| CREATE | `tests/Conformance/Rfc5545RecurrenceTest.php` | RE-4.3 | ~150 |
 
-**Total Estimated New Code:** ~840 lines
-**Total Files:** 10 (6 new, 4 modified)
+**Total Estimated New Code:** ~990 lines
+**Total Files:** 11 (7 new, 4 modified)
 
 ---
 
