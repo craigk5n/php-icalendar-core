@@ -11,6 +11,7 @@ class CalAddressWriterTest extends TestCase
 {
     private CalAddressWriter $writer;
 
+    #[\Override]
     protected function setUp(): void
     {
         $this->writer = new CalAddressWriter();

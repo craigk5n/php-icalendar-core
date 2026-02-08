@@ -21,6 +21,7 @@ class ValidatorTest extends TestCase
 {
     private Validator $validator;
 
+    #[\Override]
     protected function setUp(): void
     {
         $this->validator = new Validator();

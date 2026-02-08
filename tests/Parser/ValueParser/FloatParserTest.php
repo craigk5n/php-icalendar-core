@@ -12,6 +12,7 @@ class FloatParserTest extends TestCase
 {
     private FloatParser $parser;
 
+    #[\Override]
     protected function setUp(): void
     {
         $this->parser = new FloatParser();

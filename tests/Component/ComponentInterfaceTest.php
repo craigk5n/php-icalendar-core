@@ -13,6 +13,7 @@ class ComponentInterfaceTest extends TestCase
 {
     private ComponentInterface|MockObject $component;
 
+    #[\Override]
     protected function setUp(): void
     {
         $this->component = $this->createMock(ComponentInterface::class);

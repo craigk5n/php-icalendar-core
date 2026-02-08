@@ -21,6 +21,7 @@ class SecurityValidatorTest extends TestCase
 {
     private SecurityValidator $validator;
 
+    #[\Override]
     protected function setUp(): void
     {
         $this->validator = new SecurityValidator();

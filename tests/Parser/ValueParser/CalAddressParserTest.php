@@ -12,6 +12,7 @@ class CalAddressParserTest extends TestCase
 {
     private CalAddressParser $parser;
 
+    #[\Override]
     protected function setUp(): void
     {
         $this->parser = new CalAddressParser();

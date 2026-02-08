@@ -11,6 +11,7 @@ class IntegerWriterTest extends TestCase
 {
     private IntegerWriter $writer;
 
+    #[\Override]
     protected function setUp(): void
     {
         $this->writer = new IntegerWriter();

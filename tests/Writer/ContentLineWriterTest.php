@@ -14,6 +14,7 @@ class ContentLineWriterTest extends TestCase
 {
     private ContentLineWriter $writer;
 
+    #[\Override]
     protected function setUp(): void
     {
         $this->writer = new ContentLineWriter();

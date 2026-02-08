@@ -19,6 +19,7 @@ class LineFolderTest extends TestCase
 {
     private LineFolder $folder;
 
+    #[\Override]
     protected function setUp(): void
     {
         $this->folder = new LineFolder();

@@ -8,8 +8,69 @@
 >
     <projectFiles>
         <directory name="src" />
+        <directory name="tests" />
         <ignoreFiles>
             <directory name="vendor" />
         </ignoreFiles>
     </projectFiles>
+
+    <issueHandlers>
+        <PossiblyUnusedMethod errorLevel="info" />
+        <UnusedClass errorLevel="info" />
+        <PossiblyUnusedReturnValue errorLevel="info" />
+        <PossiblyUnusedParam errorLevel="info" />
+        <UnusedForeachValue errorLevel="info" />
+        <RedundantCondition errorLevel="info" />
+        <TypeDoesNotContainType errorLevel="info" />
+        <PossiblyUndefinedMethod>
+            <errorLevel type="info">
+                <directory name="tests" />
+            </errorLevel>
+        </PossiblyUndefinedMethod>
+        <PossiblyNullReference>
+            <errorLevel type="info">
+                <directory name="tests" />
+            </errorLevel>
+        </PossiblyNullReference>
+        <PossiblyInvalidArgument>
+            <errorLevel type="info">
+                <directory name="tests" />
+            </errorLevel>
+        </PossiblyInvalidArgument>
+        <PossiblyFalseArgument>
+            <errorLevel type="info">
+                <directory name="tests" />
+            </errorLevel>
+        </PossiblyFalseArgument>
+        <PossiblyFalseIterator>
+            <errorLevel type="info">
+                <directory name="tests" />
+            </errorLevel>
+        </PossiblyFalseIterator>
+        <PossiblyFalseOperand>
+            <errorLevel type="info">
+                <directory name="tests" />
+            </errorLevel>
+        </PossiblyFalseOperand>
+        <PossiblyFalseReference>
+            <errorLevel type="info">
+                <directory name="tests" />
+            </errorLevel>
+        </PossiblyFalseReference>
+        <UndefinedInterfaceMethod>
+            <errorLevel type="info">
+                <directory name="tests" />
+            </errorLevel>
+        </UndefinedInterfaceMethod>
+        <InaccessibleProperty>
+            <errorLevel type="info">
+                <directory name="tests" />
+            </errorLevel>
+        </InaccessibleProperty>
+        <InvalidArgument>
+            <errorLevel type="info">
+                <directory name="tests" />
+            </errorLevel>
+        </InvalidArgument>
+    </issueHandlers>
 </psalm>

@@ -11,6 +11,7 @@ class BinaryWriterTest extends TestCase
 {
     private BinaryWriter $writer;
 
+    #[\Override]
     protected function setUp(): void
     {
         $this->writer = new BinaryWriter();

@@ -26,6 +26,7 @@ class EdgeCaseTest extends TestCase
     private Writer $writer;
     private SecurityValidator $security;
 
+    #[\Override]
     protected function setUp(): void
     {
         $this->parser = new Parser();

@@ -16,6 +16,7 @@ class RecurrenceGeneratorTest extends TestCase
     private RecurrenceGenerator $generator;
     private RRuleParser $parser;
 
+    #[\Override]
     protected function setUp(): void
     {
         $this->generator = new RecurrenceGenerator();

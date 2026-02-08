@@ -11,6 +11,7 @@ class UriWriterTest extends TestCase
 {
     private UriWriter $writer;
 
+    #[\Override]
     protected function setUp(): void
     {
         $this->writer = new UriWriter();

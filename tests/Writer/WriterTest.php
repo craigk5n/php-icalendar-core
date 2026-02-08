@@ -20,6 +20,7 @@ class WriterTest extends TestCase
 {
     private Writer $writer;
 
+    #[\Override]
     protected function setUp(): void
     {
         $this->writer = new Writer();

@@ -12,6 +12,7 @@ class BooleanParserTest extends TestCase
 {
     private BooleanParser $parser;
 
+    #[\Override]
     protected function setUp(): void
     {
         $this->parser = new BooleanParser();

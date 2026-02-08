@@ -14,6 +14,7 @@ class PeriodWriterTest extends TestCase
 {
     private PeriodWriter $writer;
 
+    #[\Override]
     protected function setUp(): void
     {
         $this->writer = new PeriodWriter();

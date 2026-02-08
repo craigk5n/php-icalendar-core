@@ -16,6 +16,7 @@ class Rfc5545RecurrenceTest extends TestCase
 {
     private RecurrenceExpander $expander;
 
+    #[\Override]
     protected function setUp(): void
     {
         $this->expander = new RecurrenceExpander();

@@ -11,6 +11,7 @@ class FloatWriterTest extends TestCase
 {
     private FloatWriter $writer;
 
+    #[\Override]
     protected function setUp(): void
     {
         $this->writer = new FloatWriter();

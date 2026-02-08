@@ -16,6 +16,7 @@ class RRuleParserTest extends TestCase
 {
     private RRuleParser $parser;
 
+    #[\Override]
     protected function setUp(): void
     {
         $this->parser = new RRuleParser();

@@ -12,6 +12,7 @@ class BinaryParserTest extends TestCase
 {
     private BinaryParser $parser;
 
+    #[\Override]
     protected function setUp(): void
     {
         $this->parser = new BinaryParser();

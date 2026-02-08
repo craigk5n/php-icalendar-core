@@ -29,6 +29,7 @@ class ParserTest extends TestCase
 {
     private Parser $parser;
 
+    #[\Override]
     protected function setUp(): void
     {
         $this->parser = new Parser();

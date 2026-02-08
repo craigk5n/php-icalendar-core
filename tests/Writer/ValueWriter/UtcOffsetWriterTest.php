@@ -11,6 +11,7 @@ class UtcOffsetWriterTest extends TestCase
 {
     private UtcOffsetWriter $writer;
 
+    #[\Override]
     protected function setUp(): void
     {
         $this->writer = new UtcOffsetWriter();

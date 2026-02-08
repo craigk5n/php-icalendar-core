@@ -15,6 +15,7 @@ class AbstractComponentTest extends TestCase
 {
     private TestComponent $component;
 
+    #[\Override]
     protected function setUp(): void
     {
         $this->component = new TestComponent();
@@ -69,6 +70,7 @@ class AbstractComponentTest extends TestCase
         $this->assertCount(3, $all);
     }
     
+    #[\Override]
     public function tearDown(): void
     {
         // Reset component state between tests
@@ -145,6 +147,7 @@ class AbstractComponentTest extends TestCase
  */
 class TestComponent extends AbstractComponent
 {
+    #[\Override]
     public function getName(): string
     {
         return 'TEST';

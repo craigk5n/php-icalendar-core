@@ -12,6 +12,7 @@ class RecurWriterTest extends TestCase
 {
     private RecurWriter $writer;
 
+    #[\Override]
     protected function setUp(): void
     {
         $this->writer = new RecurWriter();

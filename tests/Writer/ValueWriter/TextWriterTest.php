@@ -11,6 +11,7 @@ class TextWriterTest extends TestCase
 {
     private TextWriter $writer;
 
+    #[\Override]
     protected function setUp(): void
     {
         $this->writer = new TextWriter();

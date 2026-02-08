@@ -12,6 +12,7 @@ class PeriodParserTest extends TestCase
 {
     private PeriodParser $parser;
 
+    #[\Override]
     protected function setUp(): void
     {
         $this->parser = new PeriodParser();

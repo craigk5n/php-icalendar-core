@@ -21,6 +21,7 @@ class Rfc5545ExamplesTest extends TestCase
     private Parser $parser;
     private Writer $writer;
 
+    #[\Override]
     protected function setUp(): void
     {
         $this->parser = new Parser();

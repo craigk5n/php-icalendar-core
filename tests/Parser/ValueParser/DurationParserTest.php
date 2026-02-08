@@ -15,6 +15,7 @@ class DurationParserTest extends TestCase
 {
     private DurationParser $parser;
 
+    #[\Override]
     protected function setUp(): void
     {
         $this->parser = new DurationParser();

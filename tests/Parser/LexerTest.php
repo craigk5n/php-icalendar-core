@@ -13,6 +13,7 @@ class LexerTest extends TestCase
 {
     private Lexer $lexer;
 
+    #[\Override]
     protected function setUp(): void
     {
         $this->lexer = new Lexer();
@@ -240,6 +241,7 @@ class LexerTest extends TestCase
         $this->assertEquals(10000, $lineCount);
     }
 
+    #[\Override]
     protected function tearDown(): void
     {
         // Cleanup any temp files that might have been left behind

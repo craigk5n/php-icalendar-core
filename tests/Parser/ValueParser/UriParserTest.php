@@ -12,6 +12,7 @@ class UriParserTest extends TestCase
 {
     private UriParser $parser;
 
+    #[\Override]
     protected function setUp(): void
     {
         $this->parser = new UriParser();

@@ -16,11 +16,13 @@ class ValueParserFactoryTest extends TestCase
 {
     private ValueParserFactory $factory;
 
+    #[\Override]
     protected function setUp(): void
     {
         $this->factory = new ValueParserFactory();
     }
 
+    #[\Override]
     protected function tearDown(): void
     {
         $this->factory->clearCache();
@@ -215,21 +217,25 @@ class ValueParserFactoryTest extends TestCase
     public function testFactoryRegisterCustomParser(): void
     {
         $customParser = new class implements ValueParserInterface {
+            #[\Override]
             public function parse(string $value, array $parameters = []): mixed
             {
                 return 'custom:' . $value;
             }
 
+            #[\Override]
             public function getType(): string
             {
                 return 'CUSTOM';
             }
 
+            #[\Override]
             public function canParse(string $value): bool
             {
                 return true;
             }
 
+            #[\Override]
             public function setStrict(bool $strict): void {}
         };
 

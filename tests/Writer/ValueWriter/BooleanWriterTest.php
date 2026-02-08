@@ -11,6 +11,7 @@ class BooleanWriterTest extends TestCase
 {
     private BooleanWriter $writer;
 
+    #[\Override]
     protected function setUp(): void
     {
         $this->writer = new BooleanWriter();

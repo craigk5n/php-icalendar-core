@@ -15,6 +15,7 @@ class TimeWriterTest extends TestCase
 {
     private TimeWriter $writer;
 
+    #[\Override]
     protected function setUp(): void
     {
         $this->writer = new TimeWriter();

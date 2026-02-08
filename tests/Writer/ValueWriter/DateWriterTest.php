@@ -14,6 +14,7 @@ class DateWriterTest extends TestCase
 {
     private DateWriter $writer;
 
+    #[\Override]
     protected function setUp(): void
     {
         $this->writer = new DateWriter();

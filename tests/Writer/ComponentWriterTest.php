@@ -25,6 +25,7 @@ class ComponentWriterTest extends TestCase
 {
     private ComponentWriter $writer;
 
+    #[\Override]
     protected function setUp(): void
     {
         $this->writer = new ComponentWriter();

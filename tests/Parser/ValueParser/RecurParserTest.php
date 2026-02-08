@@ -13,6 +13,7 @@ class RecurParserTest extends TestCase
 {
     private RecurParser $parser;
 
+    #[\Override]
     protected function setUp(): void
     {
         $this->parser = new RecurParser();

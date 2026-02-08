@@ -13,6 +13,7 @@ class PropertyInterfaceTest extends TestCase
 {
     private PropertyInterface|MockObject $property;
 
+    #[\Override]
     protected function setUp(): void
     {
         $this->property = $this->createMock(PropertyInterface::class);

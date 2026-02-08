@@ -286,16 +286,19 @@ class ValueWriterTest extends TestCase
         $factory = new ValueWriterFactory();
 
         $customWriter = new class implements \Icalendar\Writer\ValueWriter\ValueWriterInterface {
+            #[\Override]
             public function write(mixed $value): string
             {
                 return 'CUSTOM:' . $value;
             }
 
+            #[\Override]
             public function getType(): string
             {
                 return 'CUSTOM';
             }
 
+            #[\Override]
             public function canWrite(mixed $value): bool
             {
                 return is_string($value);

@@ -11,6 +11,7 @@ class AbstractValueTest extends TestCase
 {
     private TestValue $value;
 
+    #[\Override]
     protected function setUp(): void
     {
         $this->value = new TestValue();
@@ -42,16 +43,19 @@ class AbstractValueTest extends TestCase
  */
 class TestValue extends AbstractValue
 {
+    #[\Override]
     public function getType(): string
     {
         return 'TEST';
     }
 
+    #[\Override]
     public function getRawValue(): string
     {
         return 'test-value';
     }
 
+    #[\Override]
     public function serialize(): string
     {
         return 'test-value';

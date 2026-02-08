@@ -12,6 +12,7 @@ class DurationWriterTest extends TestCase
 {
     private DurationWriter $writer;
 
+    #[\Override]
     protected function setUp(): void
     {
         $this->writer = new DurationWriter();

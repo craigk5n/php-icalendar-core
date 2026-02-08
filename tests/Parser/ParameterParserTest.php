@@ -15,6 +15,7 @@ class ParameterParserTest extends TestCase
 {
     private ParameterParser $parser;
 
+    #[\Override]
     protected function setUp(): void
     {
         $this->parser = new ParameterParser();

@@ -13,6 +13,7 @@ class AbstractPropertyTest extends TestCase
 {
     private TestProperty $property;
 
+    #[\Override]
     protected function setUp(): void
     {
         $this->property = new TestProperty();
@@ -131,6 +132,7 @@ class AbstractPropertyTest extends TestCase
  */
 class TestProperty extends AbstractProperty
 {
+    #[\Override]
     public function getName(): string
     {
         return 'TEST';

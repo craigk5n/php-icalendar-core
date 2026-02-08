@@ -12,6 +12,7 @@ class ValueInterfaceTest extends TestCase
 {
     private ValueInterface|MockObject $value;
 
+    #[\Override]
     protected function setUp(): void
     {
         $this->value = $this->createMock(ValueInterface::class);

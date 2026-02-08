@@ -12,6 +12,7 @@ class UtcOffsetParserTest extends TestCase
 {
     private UtcOffsetParser $parser;
 
+    #[\Override]
     protected function setUp(): void
     {
         $this->parser = new UtcOffsetParser();

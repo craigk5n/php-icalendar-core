@@ -88,34 +88,41 @@ class InterfaceContractTest extends TestCase
     {
         // Create a mock property to test interface contract
         $mockProperty = new class implements PropertyInterface {
+            #[\Override]
             public function getName(): string
             {
                 return 'TEST';
             }
 
+            #[\Override]
             public function getValue(): ValueInterface
             {
                 throw new \RuntimeException('Not implemented');
             }
 
+            #[\Override]
             public function setValue(ValueInterface $value): void
             {
             }
 
+            #[\Override]
             public function getParameter(string $name): ?string
             {
                 return null;
             }
 
+            #[\Override]
             public function getParameters(): array
             {
                 return [];
             }
 
+            #[\Override]
             public function setParameter(string $name, string $value): void
             {
             }
 
+            #[\Override]
             public function removeParameter(string $name): void
             {
             }
@@ -133,21 +140,25 @@ class InterfaceContractTest extends TestCase
     {
         // Create a mock value to test interface contract
         $mockValue = new class implements ValueInterface {
+            #[\Override]
             public function getType(): string
             {
                 return 'TEXT';
             }
 
+            #[\Override]
             public function getRawValue(): string
             {
                 return 'test value';
             }
 
+            #[\Override]
             public function serialize(): string
             {
                 return 'test value';
             }
 
+            #[\Override]
             public function isDefault(): bool
             {
                 return true;

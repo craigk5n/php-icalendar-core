@@ -18,6 +18,7 @@ class RecurrenceExpanderTest extends TestCase
 {
     private RecurrenceExpander $expander;
 
+    #[\Override]
     protected function setUp(): void
     {
         $this->expander = new RecurrenceExpander();

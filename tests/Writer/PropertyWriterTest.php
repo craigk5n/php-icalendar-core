@@ -19,6 +19,7 @@ class PropertyWriterTest extends TestCase
 {
     private PropertyWriter $writer;
 
+    #[\Override]
     protected function setUp(): void
     {
         $this->writer = new PropertyWriter();

@@ -12,6 +12,7 @@ class IntegerParserTest extends TestCase
 {
     private IntegerParser $parser;
 
+    #[\Override]
     protected function setUp(): void
     {
         $this->parser = new IntegerParser();
