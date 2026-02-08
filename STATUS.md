@@ -116,7 +116,7 @@ This document outlines the current development status of PHP iCalendar Core.
 
 #### RE-2.1: Create `RecurrenceExpander` class with property extraction
 
-- **Status:** Not Started
+- **Status:** Completed
 - **File:** `src/Recurrence/RecurrenceExpander.php` (CREATE)
 - **Depends on:** RE-1.1
 - **Description:** Create the `RecurrenceExpander` class in namespace `Icalendar\Recurrence`. Implement the constructor and private helper methods for extracting and parsing component properties. The constructor accepts an optional `RecurrenceGenerator` (creates one if not provided) and internally instantiates `DateTimeParser`, `DateParser`, `DurationParser`, and `RRuleParser`.
@@ -127,25 +127,25 @@ This document outlines the current development status of PHP iCalendar Core.
   - `parseExdates(ComponentInterface): DateTimeImmutable[]` — calls `getAllProperties('EXDATE')`, splits each value on commas, checks `VALUE` parameter, parses with appropriate parser. Returns flat array.
   - `parseRdates(ComponentInterface): DateTimeImmutable[]` — same pattern as `parseExdates` but for `RDATE` properties.
 - **Acceptance Criteria:**
-  - [ ] Class is in namespace `Icalendar\Recurrence` with `declare(strict_types=1)`
-  - [ ] Constructor accepts `?RecurrenceGenerator $generator = null` and creates one if null
-  - [ ] Constructor internally creates `DateTimeParser`, `DateParser`, `DurationParser`, `RRuleParser` instances
-  - [ ] `parseDtStart()` correctly handles `VALUE=DATE` properties (uses `DateParser`)
-  - [ ] `parseDtStart()` correctly handles `DATE-TIME` properties with `TZID` parameter
-  - [ ] `parseDtStart()` throws `InvalidArgumentException` when `DTSTART` is missing
-  - [ ] `parseDuration()` returns `DateInterval` from `DTEND`, `DURATION`, or `DUE` (checked in that order)
-  - [ ] `parseDuration()` returns `null` when no end/duration property exists
-  - [ ] `parseRrules()` returns `RRule[]` from all `RRULE` properties on the component
-  - [ ] `parseExdates()` handles comma-separated values within a single `EXDATE` property
-  - [ ] `parseExdates()` handles multiple separate `EXDATE` properties
-  - [ ] `parseExdates()` respects `VALUE=DATE` parameter
-  - [ ] `parseRdates()` follows the same parsing logic as `parseExdates`
+  - [x] Class is in namespace `Icalendar\Recurrence` with `declare(strict_types=1)`
+  - [x] Constructor accepts `?RecurrenceGenerator $generator = null` and creates one if null
+  - [x] Constructor internally creates `DateTimeParser`, `DateParser`, `DurationParser`, `RRuleParser` instances
+  - [x] `parseDtStart()` correctly handles `VALUE=DATE` properties (uses `DateParser`)
+  - [x] `parseDtStart()` correctly handles `DATE-TIME` properties with `TZID` parameter
+  - [x] `parseDtStart()` throws `InvalidArgumentException` when `DTSTART` is missing
+  - [x] `parseDuration()` returns `DateInterval` from `DTEND`, `DURATION`, or `DUE` (checked in that order)
+  - [x] `parseDuration()` returns `null` when no end/duration property exists
+  - [x] `parseRrules()` returns `RRule[]` from all `RRULE` properties on the component
+  - [x] `parseExdates()` handles comma-separated values within a single `EXDATE` property
+  - [x] `parseExdates()` handles multiple separate `EXDATE` properties
+  - [x] `parseExdates()` respects `VALUE=DATE` parameter
+  - [x] `parseRdates()` follows the same parsing logic as `parseExdates`
 - **Validation Checkpoint:** Run unit tests after implementing helper methods
 - **Rollback Strategy:** If tests fail, revert to previous working state before proceeding
 
 #### RE-2.2: Implement `expand()` method — single RRULE path
 
-- **Status:** Not Started
+- **Status:** Completed
 - **File:** `src/Recurrence/RecurrenceExpander.php` (MODIFY)
 - **Depends on:** RE-2.1
 - **Description:** Implement the public `expand()` method for the common single-RRULE case. This is the main public API of the class.
@@ -160,29 +160,29 @@ This document outlines the current development status of PHP iCalendar Core.
   8. Handle the no-RRULE case: recurrence set = `{DTSTART} + RDATEs - EXDATEs`
 - **Also implement:** `expandToArray()` as `iterator_to_array($this->expand(...), false)`
 - **Acceptance Criteria:**
-  - [ ] `expand()` signature: `public function expand(ComponentInterface $component, ?DateTimeInterface $rangeEnd = null): Generator`
-  - [ ] `expandToArray()` signature: `public function expandToArray(ComponentInterface $component, ?DateTimeInterface $rangeEnd = null): array`
-  - [ ] Generator yields `Occurrence` objects (not raw `DateTimeImmutable`)
-  - [ ] Each `Occurrence` has correct `start` from the RRULE expansion
-  - [ ] Each `Occurrence` has correct `end` computed from DTEND/DURATION/DUE (or null)
-  - [ ] EXDATE dates are excluded from the output
-  - [ ] EXDATE is applied *after* RRULE COUNT (COUNT=5 with 1 EXDATE = 4 results, not 5)
-  - [ ] EXDATE with `VALUE=DATE` excludes all occurrences on that calendar date
-  - [ ] RDATE dates appear in the output with `isRdate() === true`
-  - [ ] RDATE that coincides with an RRULE date is deduplicated (appears once, not twice)
-  - [ ] All output is in chronological order
-  - [ ] Throws `InvalidArgumentException` when rule is unbounded and no `$rangeEnd`
-  - [ ] Does NOT throw when rule has `COUNT` or `UNTIL` and no `$rangeEnd`
-  - [ ] No-RRULE case: yields `{DTSTART} + RDATEs - EXDATEs`
-  - [ ] `expandToArray()` returns `Occurrence[]` with integer keys (not preserving generator keys)
-  - [ ] Generator calls `RecurrenceGenerator::generate()` with empty `$exdates` and `$rdates` arrays
+  - [x] `expand()` signature: `public function expand(ComponentInterface $component, ?DateTimeInterface $rangeEnd = null): Generator`
+  - [x] `expandToArray()` signature: `public function expandToArray(ComponentInterface $component, ?DateTimeInterface $rangeEnd = null): array`
+  - [x] Generator yields `Occurrence` objects (not raw `DateTimeImmutable`)
+  - [x] Each `Occurrence` has correct `start` from the RRULE expansion
+  - [x] Each `Occurrence` has correct `end` computed from DTEND/DURATION/DUE (or null)
+  - [x] EXDATE dates are excluded from the output
+  - [x] EXDATE is applied *after* RRULE COUNT (COUNT=5 with 1 EXDATE = 4 results, not 5)
+  - [x] EXDATE with `VALUE=DATE` excludes all occurrences on that calendar date
+  - [x] RDATE dates appear in the output with `isRdate() === true`
+  - [x] RDATE that coincides with an RRULE date is deduplicated (appears once, not twice)
+  - [x] All output is in chronological order
+  - [x] Throws `InvalidArgumentException` when rule is unbounded and no `$rangeEnd`
+  - [x] Does NOT throw when rule has `COUNT` or `UNTIL` and no `$rangeEnd`
+  - [x] No-RRULE case: yields `{DTSTART} + RDATEs - EXDATEs`
+  - [x] `expandToArray()` returns `Occurrence[]` with integer keys (not preserving generator keys)
+  - [x] Generator calls `RecurrenceGenerator::generate()` with empty `$exdates` and `$rdates` arrays
 - **Intermediate Validation:** Run tests after implementing basic RRULE expansion before adding RDATE/EXDATE logic
 - **Validation Checkpoint:** Run unit tests for RE-2.2 to validate single RRULE functionality
 - **Rollback Strategy:** If implementation fails tests, revert to previous working state before proceeding
 
 #### RE-2.3: Implement multi-RRULE merge-sort
 
-- **Status:** Not Started
+- **Status:** Completed
 - **File:** `src/Recurrence/RecurrenceExpander.php` (MODIFY)
 - **Depends on:** RE-2.2
 - **Description:** Add support for multiple `RRULE` properties on a single component. RFC 5545 allows this (though rare in practice). When multiple RRULEs exist, the expander must call `RecurrenceGenerator::generate()` for each RRULE, then merge-sort the results chronologically and deduplicate.
@@ -200,20 +200,20 @@ This document outlines the current development status of PHP iCalendar Core.
   4. Skip duplicates (same timestamp as previous yield)
   5. Continue until all generators are exhausted
 - **Acceptance Criteria:**
-  - [ ] `mergeSortedGenerators()` accepts an array of `Generator` objects
-  - [ ] Output is sorted chronologically (ascending by timestamp)
-  - [ ] Duplicate dates (same timestamp from different RRULEs) appear only once
-  - [ ] The `expand()` method detects `count($rrules) > 1` and uses `mergeSortedGenerators()`
-  - [ ] For `count($rrules) === 1`, the single generator is used directly (no merge overhead)
-  - [ ] A shared EXDATE set is applied to the merged stream (not per-RRULE)
-  - [ ] RDATEs are merged into the combined stream after RRULE merge
+  - [x] `mergeSortedGenerators()` accepts an array of `Generator` objects
+  - [x] Output is sorted chronologically (ascending by timestamp)
+  - [x] Duplicate dates (same timestamp from different RRULEs) appear only once
+  - [x] The `expand()` method detects `count($rrules) > 1` and uses `mergeSortedGenerators()`
+  - [x] For `count($rrules) === 1`, the single generator is used directly (no merge overhead)
+  - [x] A shared EXDATE set is applied to the merged stream (not per-RRULE)
+  - [x] RDATEs are merged into the combined stream after RRULE merge
 - **Intermediate Validation:** Test multi-RRULE functionality after implementing merge-sort before adding EXDATE/RDATE logic
 - **Validation Checkpoint:** Run unit tests for RE-2.3 to validate multi-RRULE functionality
 - **Rollback Strategy:** If implementation fails tests, revert to previous working state before proceeding
 
 #### RE-2.4: Unit tests for `RecurrenceExpander`
 
-- **Status:** Not Started
+- **Status:** Completed
 - **File:** `tests/Recurrence/RecurrenceExpanderTest.php` (CREATE)
 - **Depends on:** RE-2.3
 - **Description:** Comprehensive test coverage for the `RecurrenceExpander` service. Build test components programmatically using `VEvent`, `VTodo`, and `VJournal` with their setter methods. Use `iterator_to_array()` on the generator to collect results for assertions. Follow existing test patterns in `tests/Recurrence/RecurrenceGeneratorTest.php`.
@@ -254,10 +254,10 @@ This document outlines the current development status of PHP iCalendar Core.
   - `testExpandToArray` — Verify `expandToArray()` returns a plain `Occurrence[]` array.
 
 - **Acceptance Criteria:**
-  - [ ] All test cases listed above are implemented and pass
-  - [ ] Tests use programmatic component construction (not parsing raw iCalendar strings)
-  - [ ] Tests follow existing PHPUnit patterns in the project (method naming, assertions)
-  - [ ] `vendor/bin/phpunit tests/Recurrence/RecurrenceExpanderTest.php` passes with 0 failures, 0 errors
+  - [x] All test cases listed above are implemented and pass
+  - [x] Tests use programmatic component construction (not parsing raw iCalendar strings)
+  - [x] Tests follow existing PHPUnit patterns in the project (method naming, assertions)
+  - [x] `vendor/bin/phpunit tests/Recurrence/RecurrenceExpanderTest.php` passes with 0 failures, 0 errors
 - **Intermediate Validation:** Run tests after implementing each major test category (RRULE, EXDATE, RDATE, multi-RRULE)
 - **Validation Checkpoint:** Run full `composer test` after RE-2.4
 - **Rollback Strategy:** If tests fail, revert to previous working state before proceeding
