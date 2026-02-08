@@ -13,6 +13,7 @@ class TimeParser implements ValueParserInterface
 {
     private bool $strict = false;
 
+    #[\Override]
     public function setStrict(bool $strict): void
     {
         $this->strict = $strict;
@@ -20,6 +21,7 @@ class TimeParser implements ValueParserInterface
 
     public const ERR_INVALID_TIME = 'ICAL-TYPE-012';
 
+    #[\Override]
     public function parse(string $value, array $parameters = []): \DateTimeImmutable
     {
         $value = trim($value);
@@ -44,17 +46,20 @@ class TimeParser implements ValueParserInterface
         if ($minutes > 59) throw new ParseException("Invalid TIME: minutes must be 00-59, got: $minutes", self::ERR_INVALID_TIME);
         if ($seconds > 60) throw new ParseException("Invalid TIME: seconds must be 00-60, got: $seconds", self::ERR_INVALID_TIME);
 
+        $tzid = $parameters['TZID'] ?? '';
         $timezone = $isUtc ? new \DateTimeZone('UTC') : 
-                    (isset($parameters['TZID']) ? new \DateTimeZone($parameters['TZID']) : new \DateTimeZone(date_default_timezone_get()));
+                    (($tzid !== '') ? new \DateTimeZone($tzid) : new \DateTimeZone(date_default_timezone_get()));
 
         return new \DateTimeImmutable(sprintf('%02d:%02d:%02d', $hours, $minutes, $seconds), $timezone);
     }
 
+    #[\Override]
     public function getType(): string
     {
         return 'TIME';
     }
 
+    #[\Override]
     public function canParse(string $value): bool
     {
         $value = trim($value);

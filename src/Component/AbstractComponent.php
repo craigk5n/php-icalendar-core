@@ -19,13 +19,16 @@ abstract class AbstractComponent implements ComponentInterface
 
     protected ?ComponentInterface $parent = null;
 
+    #[\Override]
     abstract public function getName(): string;
 
+    #[\Override]
     public function addProperty(PropertyInterface $property): void
     {
         $this->properties[] = $property;
     }
 
+    #[\Override]
     public function getProperty(string $name): ?PropertyInterface
     {
         // Iterate backwards to return the most recently added match (last-write-wins)
@@ -37,11 +40,13 @@ abstract class AbstractComponent implements ComponentInterface
         return null;
     }
 
+    #[\Override]
     public function getProperties(): array
     {
         return $this->properties;
     }
 
+    #[\Override]
     public function removeProperty(string $name): void
     {
         $this->properties = array_values(array_filter(
@@ -66,12 +71,14 @@ abstract class AbstractComponent implements ComponentInterface
         ));
     }
 
+    #[\Override]
     public function addComponent(ComponentInterface $component): void
     {
         $component->setParent($this);
         $this->components[] = $component;
     }
 
+    #[\Override]
     public function getComponents(?string $type = null): array
     {
         if ($type === null) {
@@ -84,6 +91,7 @@ abstract class AbstractComponent implements ComponentInterface
         );
     }
 
+    #[\Override]
     public function removeComponent(ComponentInterface $component): void
     {
         $key = array_search($component, $this->components, true);
@@ -93,11 +101,13 @@ abstract class AbstractComponent implements ComponentInterface
         }
     }
 
+    #[\Override]
     public function getParent(): ?ComponentInterface
     {
         return $this->parent;
     }
 
+    #[\Override]
     public function setParent(?ComponentInterface $parent): void
     {
         $this->parent = $parent;
@@ -106,6 +116,7 @@ abstract class AbstractComponent implements ComponentInterface
     /**
      * @return array<mixed>
      */
+    #[\Override]
     public function toArray(): array
     {
         $name = strtolower($this->getName());

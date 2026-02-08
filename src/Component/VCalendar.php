@@ -18,6 +18,7 @@ class VCalendar extends AbstractComponent
     public const ERR_MISSING_PRODID = 'ICAL-COMP-001';
     public const ERR_MISSING_VERSION = 'ICAL-COMP-002';
 
+    #[\Override]
     public function getName(): string
     {
         return 'VCALENDAR';

@@ -15,11 +15,13 @@ class GenericValue extends AbstractValue
     ) {
     }
 
+    #[\Override]
     public function getType(): string
     {
         return $this->type;
     }
 
+    #[\Override]
     public function getRawValue(): string
     {
         if (is_scalar($this->value)) {
@@ -38,6 +40,7 @@ class GenericValue extends AbstractValue
      * Note: This might not be fully accurate for complex types, 
      * but the main writer uses ValueWriterFactory instead.
      */
+    #[\Override]
     public function serialize(): string
     {
         if (is_scalar($this->value)) {

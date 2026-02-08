@@ -62,6 +62,7 @@ class Parser implements ParserInterface
         $this->valueParserFactory->setStrict($mode); // Pass the mode to the value parser factory
     }
 
+    #[\Override]
     public function parse(string $data): VCalendar
     {
         $this->errors = [];
@@ -99,10 +100,6 @@ class Parser implements ParserInterface
 
             $name = $contentLine->getName();
             $currentComponent = end($componentStack);
-            if ($currentComponent === false) {
-                // This should not happen as $calendar is always pushed first
-                throw new \LogicException('Component stack is empty');
-            }
 
             // Handle BEGIN marker
             if ($name === 'BEGIN') {
@@ -121,7 +118,7 @@ class Parser implements ParserInterface
                     continue;
                 }
 
-                $component = $this->createComponent($componentName, $contentLine->getContentLineNumber());
+                $component = $this->createComponent($componentName);
 
                 if ($component instanceof GenericComponent) {
                     if ($this->mode === self::STRICT) {
@@ -332,7 +329,7 @@ class Parser implements ParserInterface
     /**
      * Create a component from its name
      */
-    private function createComponent(string $componentName, int $lineNumber): ComponentInterface
+    private function createComponent(string $componentName): ComponentInterface
     {
         return match (strtoupper($componentName)) {
             'VCALENDAR' => new VCalendar(),
@@ -410,7 +407,7 @@ class Parser implements ParserInterface
             }
             
             // For other arrays (like BY* rules), join them with commas
-            return implode(',', array_map(fn($v) => (string)$this->formatParsedValue($v), $value));
+            return implode(',', array_map(fn($v) => $this->formatParsedValue($v), $value));
         }
 
         if (is_object($value) && method_exists($value, 'toString')) {
@@ -421,6 +418,7 @@ class Parser implements ParserInterface
         return is_scalar($value) ? (string)$value : 'COMPLEX';
     }
 
+    #[\Override]
     public function parseFile(string $filepath): VCalendar
     {
         $this->validateFilePath($filepath);
@@ -458,6 +456,7 @@ class Parser implements ParserInterface
         }
     }
 
+    #[\Override]
     public function setStrict(bool $strict): void
     {
         $this->mode = $strict;
@@ -479,6 +478,7 @@ class Parser implements ParserInterface
      *
      * @return ValidationError[]
      */
+    #[\Override]
     public function getErrors(): array
     {
         return $this->errors;

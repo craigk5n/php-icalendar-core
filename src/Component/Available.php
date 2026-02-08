@@ -17,6 +17,7 @@ class Available extends AbstractComponent
     public const ERR_MISSING_DTSTAMP = 'ICAL-AVAIL-001';
     public const ERR_MISSING_UID = 'ICAL-AVAIL-002';
 
+    #[\Override]
     public function getName(): string
     {
         return 'AVAILABLE';

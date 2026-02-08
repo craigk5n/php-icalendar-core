@@ -11,6 +11,7 @@ use Icalendar\Recurrence\RRule;
  */
 class RecurWriter implements ValueWriterInterface
 {
+    #[\Override]
     public function write(mixed $value): string
     {
         if (is_string($value)) {
@@ -24,11 +25,13 @@ class RecurWriter implements ValueWriterInterface
         return $value->toString();
     }
 
+    #[\Override]
     public function getType(): string
     {
         return 'RECUR';
     }
 
+    #[\Override]
     public function canWrite(mixed $value): bool
     {
         return $value instanceof RRule || is_string($value);

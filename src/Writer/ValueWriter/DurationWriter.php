@@ -13,6 +13,7 @@ use DateInterval;
  */
 class DurationWriter implements ValueWriterInterface
 {
+    #[\Override]
     public function write(mixed $value): string
     {
         if (is_string($value)) {
@@ -77,11 +78,13 @@ class DurationWriter implements ValueWriterInterface
         return $result;
     }
 
+    #[\Override]
     public function getType(): string
     {
         return 'DURATION';
     }
 
+    #[\Override]
     public function canWrite(mixed $value): bool
     {
         return $value instanceof DateInterval || is_string($value);

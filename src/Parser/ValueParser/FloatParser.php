@@ -13,6 +13,7 @@ class FloatParser implements ValueParserInterface
 {
     private bool $strict = false;
 
+    #[\Override]
     public function setStrict(bool $strict): void
     {
         $this->strict = $strict;
@@ -20,6 +21,7 @@ class FloatParser implements ValueParserInterface
 
     public const ERR_INVALID_FLOAT = 'ICAL-TYPE-007';
 
+    #[\Override]
     public function parse(string $value, array $parameters = []): float
     {
         $value = trim($value);
@@ -40,11 +42,13 @@ class FloatParser implements ValueParserInterface
         return (float) $value;
     }
 
+    #[\Override]
     public function getType(): string
     {
         return 'FLOAT';
     }
 
+    #[\Override]
     public function canParse(string $value): bool
     {
         $value = trim($value);

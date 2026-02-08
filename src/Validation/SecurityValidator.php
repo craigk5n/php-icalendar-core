@@ -108,7 +108,7 @@ class SecurityValidator
         
         if ($isBase64) {
             // Base64 encoded data - approximate size is 3/4 of base64 string
-            $decodedSize = (int) (strlen($data) * 0.75);
+            $decodedSize = (int) (strlen($data) * 3 / 4);
         } else {
             // URL encoded data
             $decodedSize = strlen($data);
@@ -167,8 +167,12 @@ class SecurityValidator
             return $ip === $range;
         }
 
-        list($rangeIp, $netmask) = explode('/', $range, 2);
-        $netmask = (int)$netmask;
+        $parts = explode('/', $range, 2);
+        if (count($parts) < 2) {
+            return $ip === $range;
+        }
+        $rangeIp = $parts[0];
+        $netmask = (int)$parts[1];
         
         // Handle edge cases
         if ($netmask === 0) {
@@ -205,6 +209,10 @@ class SecurityValidator
             $ipBytes = unpack('C*', $ipBin);
             $rangeBytes = unpack('C*', $rangeBin);
             
+            if ($ipBytes === false || $rangeBytes === false) {
+                return false;
+            }
+
             for ($i = 1; $i <= 16 && $maskBits > 0; $i++) {
                 $bits = min(8, $maskBits);
                 $mask = 0xFF << (8 - $bits);

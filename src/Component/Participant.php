@@ -14,6 +14,7 @@ use Icalendar\Property\GenericProperty;
  */
 class Participant extends AbstractComponent
 {
+    #[\Override]
     public function getName(): string
     {
         return 'PARTICIPANT';
@@ -49,7 +50,10 @@ class Participant extends AbstractComponent
     {
         if ($this->getProperty('PARTICIPANT-TYPE') === null) {
             // RFC 9073 says PARTICIPANT-TYPE is required
-            throw new ValidationException('PARTICIPANT component missing required PARTICIPANT-TYPE property');
+            throw new ValidationException(
+                'PARTICIPANT component missing required PARTICIPANT-TYPE property',
+                ValidationException::ERR_PARTICIPANT_MISSING_TYPE
+            );
         }
     }
 }

@@ -13,6 +13,7 @@ class TextParser implements ValueParserInterface
 {
     private bool $strict = false;
 
+    #[\Override]
     public function setStrict(bool $strict): void
     {
         $this->strict = $strict;
@@ -26,16 +27,19 @@ class TextParser implements ValueParserInterface
      * @return string The unescaped text
      * @throws ParseException if the escape sequence is invalid
      */
+    #[\Override]
     public function parse(string $value, array $parameters = []): string
     {
         return $this->unescape($value);
     }
 
+    #[\Override]
     public function getType(): string
     {
         return 'TEXT';
     }
 
+    #[\Override]
     public function canParse(string $value): bool
     {
         if (str_ends_with($value, '\\') && !str_ends_with($value, '\\\\')) {

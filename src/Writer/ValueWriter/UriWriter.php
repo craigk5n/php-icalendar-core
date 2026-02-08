@@ -9,6 +9,7 @@ namespace Icalendar\Writer\ValueWriter;
  */
 class UriWriter implements ValueWriterInterface
 {
+    #[\Override]
     public function write(mixed $value): string
     {
         if (!is_string($value)) {
@@ -18,11 +19,13 @@ class UriWriter implements ValueWriterInterface
         return $value;
     }
 
+    #[\Override]
     public function getType(): string
     {
         return 'URI';
     }
 
+    #[\Override]
     public function canWrite(mixed $value): bool
     {
         return is_string($value);

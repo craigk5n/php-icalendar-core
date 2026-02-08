@@ -30,6 +30,7 @@ class VJournal extends AbstractComponent
     public const CLASS_PRIVATE = 'PRIVATE';
     public const CLASS_CONFIDENTIAL = 'CONFIDENTIAL';
 
+    #[\Override]
     public function getName(): string
     {
         return 'VJOURNAL';
@@ -128,7 +129,7 @@ class VJournal extends AbstractComponent
     public function getDescriptions(): array
     {
         return array_map(
-            fn($prop) => (string)$prop->getValue()->getRawValue(),
+            fn($prop) => $prop->getValue()->getRawValue(),
             $this->getAllProperties('DESCRIPTION')
         );
     }

@@ -16,6 +16,7 @@ class GenericComponent extends AbstractComponent
         $this->name = strtoupper($name);
     }
 
+    #[\Override]
     public function getName(): string
     {
         return $this->name;

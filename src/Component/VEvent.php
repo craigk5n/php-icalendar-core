@@ -27,6 +27,7 @@ class VEvent extends AbstractComponent
     public const STATUS_CONFIRMED = 'CONFIRMED';
     public const STATUS_CANCELLED = 'CANCELLED';
 
+    #[\Override]
     public function getName(): string
     {
         return 'VEVENT';

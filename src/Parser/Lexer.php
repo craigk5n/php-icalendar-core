@@ -184,7 +184,7 @@ class Lexer
         $unfolded = [];
         $currentLine = '';
         
-        foreach ($lines as $index => $line) {
+        foreach ($lines as $line) {
             // Check if this line is a continuation (starts with space or tab)
             if (strlen($line) > 0 && ($line[0] === ' ' || $line[0] === "\t")) {
                 // Valid continuation line

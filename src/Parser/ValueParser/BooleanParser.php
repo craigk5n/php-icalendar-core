@@ -15,6 +15,7 @@ class BooleanParser implements ValueParserInterface
 {
     private bool $strict = false;
 
+    #[\Override]
     public function setStrict(bool $strict): void
     {
         $this->strict = $strict;
@@ -22,6 +23,7 @@ class BooleanParser implements ValueParserInterface
 
     public const ERR_INVALID_BOOLEAN = 'ICAL-TYPE-002';
 
+    #[\Override]
     public function parse(string $value, array $parameters = []): bool
     {
         $value = trim($value);
@@ -53,11 +55,13 @@ class BooleanParser implements ValueParserInterface
         return false;
     }
 
+    #[\Override]
     public function getType(): string
     {
         return 'BOOLEAN';
     }
 
+    #[\Override]
     public function canParse(string $value): bool
     {
         $value = trim($value);

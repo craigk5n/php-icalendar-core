@@ -15,11 +15,13 @@ class DateTimeValue extends AbstractValue
     ) {
     }
 
+    #[\Override]
     public function getType(): string
     {
         return $this->type;
     }
 
+    #[\Override]
     public function getRawValue(): string
     {
         return $this->serialize();
@@ -30,6 +32,7 @@ class DateTimeValue extends AbstractValue
         return $this->value;
     }
 
+    #[\Override]
     public function serialize(): string
     {
         if ($this->type === 'DATE') {
@@ -38,12 +41,13 @@ class DateTimeValue extends AbstractValue
 
         $formatted = $this->value->format('Ymd\THis');
         $tz = $this->value->getTimezone();
-        if ($tz !== null && ($tz->getName() === 'UTC' || $tz->getName() === 'Z')) {
+        if ($tz !== false && ($tz->getName() === 'UTC' || $tz->getName() === 'Z')) {
             $formatted .= 'Z';
         }
         return $formatted;
     }
 
+    #[\Override]
     public function isDefault(): bool
     {
         return $this->type === 'DATE-TIME';

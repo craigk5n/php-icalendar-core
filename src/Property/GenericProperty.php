@@ -33,6 +33,7 @@ use Icalendar\Value\ValueInterface;
      *
      * @return string The property name (e.g., "SUMMARY", "DTSTART")
      */
+    #[\Override]
     public function getName(): string
     {
         return $this->name;
@@ -43,6 +44,7 @@ use Icalendar\Value\ValueInterface;
      *
      * @return ValueInterface The property value object
      */
+    #[\Override]
     public function getValue(): ValueInterface
     {
         return $this->value;
@@ -54,6 +56,7 @@ use Icalendar\Value\ValueInterface;
      * @param ValueInterface $value The new property value object
      * @return void
      */
+    #[\Override]
     public function setValue(ValueInterface $value): void
     {
         $this->value = $value;
@@ -65,6 +68,7 @@ use Icalendar\Value\ValueInterface;
      * @param string $name The parameter name (e.g., "LANGUAGE", "CN")
      * @return string|null The parameter value or null if not set
      */
+    #[\Override]
     public function getParameter(string $name): ?string
     {
         return $this->parameters[$name] ?? null;
@@ -73,8 +77,9 @@ use Icalendar\Value\ValueInterface;
     /**
      * Get all parameters for this property
      *
-     * @return array Associative array of parameter name-value pairs
+     * @return array<string, string> Associative array of parameter name-value pairs
      */
+    #[\Override]
     public function getParameters(): array
     {
         return $this->parameters;
@@ -87,6 +92,7 @@ use Icalendar\Value\ValueInterface;
      * @param string $value The parameter value
      * @return void
      */
+    #[\Override]
     public function setParameter(string $name, string $value): void
     {
         $this->parameters[$name] = $value;
@@ -98,6 +104,7 @@ use Icalendar\Value\ValueInterface;
      * @param string $name The parameter name to remove
      * @return void
      */
+    #[\Override]
     public function removeParameter(string $name): void
     {
         unset($this->parameters[$name]);

@@ -13,6 +13,7 @@ class IntegerParser implements ValueParserInterface
 {
     private bool $strict = false;
 
+    #[\Override]
     public function setStrict(bool $strict): void
     {
         $this->strict = $strict;
@@ -20,6 +21,7 @@ class IntegerParser implements ValueParserInterface
 
     public const ERR_INVALID_INTEGER = 'ICAL-TYPE-008';
 
+    #[\Override]
     public function parse(string $value, array $parameters = []): int
     {
         $value = trim($value);
@@ -40,11 +42,13 @@ class IntegerParser implements ValueParserInterface
         return (int) $value;
     }
 
+    #[\Override]
     public function getType(): string
     {
         return 'INTEGER';
     }
 
+    #[\Override]
     public function canParse(string $value): bool
     {
         $value = trim($value);

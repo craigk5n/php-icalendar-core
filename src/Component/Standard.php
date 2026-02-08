@@ -16,6 +16,8 @@ use Icalendar\Value\DateTimeValue;
 class Standard extends AbstractComponent
 {
     use UtcOffsetFormatterTrait;
+
+    #[\Override]
     public function getName(): string
     {
         return 'STANDARD';

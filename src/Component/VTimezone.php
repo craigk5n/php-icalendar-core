@@ -17,6 +17,7 @@ class VTimezone extends AbstractComponent
     /** @var array<array{time: string, offset: int, name: string}> */
     private array $transitions = [];
 
+    #[\Override]
     public function getName(): string
     {
         return 'VTIMEZONE';
@@ -80,15 +81,11 @@ class VTimezone extends AbstractComponent
             $offsetValue = $tzOffsetTo->getValue();
             $offset = $this->parseUtcOffset($offsetValue->getRawValue());
 
-            $name = $tzName?->getValue()->getRawValue() ?? 'UTC';
+            $name = $tzName !== null ? $tzName->getValue()->getRawValue() : 'UTC';
 
-            $transitionTime = '1970-01-01T00:00:00';
-            if ($dtstartValue instanceof DateTimeValue) {
-                $transitionTime = $dtstartValue->getValue()->format('Y-m-d\TH:i:s');
-            } else {
-                // Fallback for non-DateTimeValue, although DTSTART should be one.
-                $transitionTime = $dtstartValue->getRawValue();
-            }
+            $transitionTime = ($dtstartValue instanceof DateTimeValue) 
+                ? $dtstartValue->getValue()->format('Y-m-d\TH:i:s')
+                : $dtstartValue->getRawValue();
 
             $this->transitions[] = [
                 'time' => $transitionTime,
@@ -158,6 +155,10 @@ class VTimezone extends AbstractComponent
         }
 
         $tzid = $tzidProp->getValue()->getRawValue();
+
+        if ($tzid === '') {
+            return null;
+        }
 
         try {
             return new \DateTimeZone($tzid);

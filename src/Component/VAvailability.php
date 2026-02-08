@@ -17,6 +17,7 @@ class VAvailability extends AbstractComponent
     public const ERR_MISSING_DTSTAMP = 'ICAL-VAVAIL-001';
     public const ERR_MISSING_UID = 'ICAL-VAVAIL-002';
 
+    #[\Override]
     public function getName(): string
     {
         return 'VAVAILABILITY';

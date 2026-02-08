@@ -534,7 +534,7 @@ class Validator
         $percentComplete = $todo->getProperty('PERCENT-COMPLETE');
         if ($percentComplete !== null) {
             $value = $percentComplete->getValue()->getRawValue();
-            if (!ctype_digit((string) $value)) {
+            if (!ctype_digit($value)) {
                 $this->addError(
                     'ICAL-VTODO-VAL-003',
                     'VTODO PERCENT-COMPLETE must be an integer between 0 and 100',
@@ -616,7 +616,11 @@ class Validator
         $parts = explode(';', $rruleValue);
 
         foreach ($parts as $part) {
-            [$key, $value] = explode('=', $part, 2);
+            $kv = explode('=', $part, 2);
+            if (count($kv) < 2) {
+                continue;
+            }
+            [$key, $value] = $kv;
 
             switch ($key) {
                 case 'FREQ':

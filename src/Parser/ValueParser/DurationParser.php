@@ -13,6 +13,7 @@ class DurationParser implements ValueParserInterface
 {
     private bool $strict = false;
 
+    #[\Override]
     public function setStrict(bool $strict): void
     {
         $this->strict = $strict;
@@ -28,6 +29,7 @@ class DurationParser implements ValueParserInterface
      * @return \DateInterval The parsed duration as a DateInterval
      * @throws ParseException if the duration format is invalid
      */
+    #[\Override]
     public function parse(string $value, array $parameters = []): \DateInterval
     {
         $value = trim($value);
@@ -63,7 +65,7 @@ class DurationParser implements ValueParserInterface
         if ($hasTimeComponent) {
             $parts = explode('T', $content, 2);
             $datePart = $parts[0];
-            $timePart = $parts[1];
+            $timePart = $parts[1] ?? '';
         } else {
             $datePart = $content;
             $timePart = '';
@@ -77,11 +79,13 @@ class DurationParser implements ValueParserInterface
             $this->parseTimePart($timePart, $hours, $minutes, $seconds);
         }
 
-        $duration = new \DateInterval('P0D');
-        $duration->d = $days + ($weeks * 7);
-        $duration->h = $hours;
-        $duration->i = $minutes;
-        $duration->s = $seconds;
+        $duration = new \DateInterval(sprintf(
+            'P%dDT%dH%dM%dS',
+            $days + ($weeks * 7),
+            $hours,
+            $minutes,
+            $seconds
+        ));
 
         if ($isNegative) {
             $duration->invert = 1;
@@ -130,11 +134,13 @@ class DurationParser implements ValueParserInterface
         throw new ParseException('Invalid DURATION time component: ' . $timePart, self::ERR_INVALID_DURATION);
     }
 
+    #[\Override]
     public function getType(): string
     {
         return 'DURATION';
     }
 
+    #[\Override]
     public function canParse(string $value): bool
     {
         $value = trim($value);
@@ -148,7 +154,7 @@ class DurationParser implements ValueParserInterface
         if ($hasTimeComponent) {
             $parts = explode('T', $content, 2);
             $datePart = $parts[0];
-            $timePart = $parts[1];
+            $timePart = $parts[1] ?? '';
         } else {
             $datePart = $content;
             $timePart = '';

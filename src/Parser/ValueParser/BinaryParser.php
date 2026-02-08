@@ -16,6 +16,7 @@ class BinaryParser implements ValueParserInterface
 {
     private bool $strict = false;
 
+    #[\Override]
     public function setStrict(bool $strict): void
     {
         $this->strict = $strict;
@@ -23,6 +24,7 @@ class BinaryParser implements ValueParserInterface
 
     public const ERR_INVALID_BINARY = 'ICAL-TYPE-001';
 
+    #[\Override]
     public function parse(string $value, array $parameters = []): string
     {
         $value = trim($value);
@@ -66,11 +68,13 @@ class BinaryParser implements ValueParserInterface
         return $unwrapped;
     }
 
+    #[\Override]
     public function getType(): string
     {
         return 'BINARY';
     }
 
+    #[\Override]
     public function canParse(string $value): bool
     {
         $value = trim($value);

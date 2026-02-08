@@ -13,6 +13,7 @@ class UtcOffsetParser implements ValueParserInterface
 {
     private bool $strict = false;
 
+    #[\Override]
     public function setStrict(bool $strict): void
     {
         $this->strict = $strict;
@@ -20,6 +21,7 @@ class UtcOffsetParser implements ValueParserInterface
 
     public const ERR_INVALID_UTC_OFFSET = 'ICAL-TYPE-014';
 
+    #[\Override]
     public function parse(string $value, array $parameters = []): \DateInterval
     {
         $value = trim($value);
@@ -40,20 +42,19 @@ class UtcOffsetParser implements ValueParserInterface
             if ($seconds > 59) throw new ParseException("Invalid UTC-OFFSET: seconds must be 00-59, got: $seconds", self::ERR_INVALID_UTC_OFFSET);
         }
 
-        $interval = new \DateInterval('PT0S');
-        $interval->h = $hours;
-        $interval->i = $minutes;
-        $interval->s = $seconds;
+        $interval = new \DateInterval(sprintf('PT%dH%dM%dS', $hours, $minutes, $seconds));
         $interval->invert = ($sign === '-') ? 1 : 0;
 
         return $interval;
     }
 
+    #[\Override]
     public function getType(): string
     {
         return 'UTC-OFFSET';
     }
 
+    #[\Override]
     public function canParse(string $value): bool
     {
         $value = trim($value);

@@ -15,6 +15,7 @@ class CalAddressParser implements ValueParserInterface
 {
     private bool $strict = false;
 
+    #[\Override]
     public function setStrict(bool $strict): void
     {
         $this->strict = $strict;
@@ -22,6 +23,7 @@ class CalAddressParser implements ValueParserInterface
 
     public const ERR_INVALID_CAL_ADDRESS = 'ICAL-TYPE-003';
 
+    #[\Override]
     public function parse(string $value, array $parameters = []): string
     {
         $value = trim($value);
@@ -82,11 +84,13 @@ class CalAddressParser implements ValueParserInterface
         return $value;
     }
 
+    #[\Override]
     public function getType(): string
     {
         return 'CAL-ADDRESS';
     }
 
+    #[\Override]
     public function canParse(string $value): bool
     {
         $value = trim($value);

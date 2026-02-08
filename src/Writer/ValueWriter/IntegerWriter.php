@@ -9,6 +9,7 @@ namespace Icalendar\Writer\ValueWriter;
  */
 class IntegerWriter implements ValueWriterInterface
 {
+    #[\Override]
     public function write(mixed $value): string
     {
         if (is_string($value)) {
@@ -22,11 +23,13 @@ class IntegerWriter implements ValueWriterInterface
         return strval($value);
     }
 
+    #[\Override]
     public function getType(): string
     {
         return 'INTEGER';
     }
 
+    #[\Override]
     public function canWrite(mixed $value): bool
     {
         return is_int($value) || is_string($value);

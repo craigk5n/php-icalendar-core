@@ -9,6 +9,7 @@ namespace Icalendar\Writer\ValueWriter;
  */
 class BinaryWriter implements ValueWriterInterface
 {
+    #[\Override]
     public function write(mixed $value): string
     {
         if (!is_string($value)) {
@@ -29,11 +30,13 @@ class BinaryWriter implements ValueWriterInterface
         return base64_encode($data);
     }
 
+    #[\Override]
     public function getType(): string
     {
         return 'BINARY';
     }
 
+    #[\Override]
     public function canWrite(mixed $value): bool
     {
         return is_string($value);

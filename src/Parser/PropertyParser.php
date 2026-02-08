@@ -65,7 +65,7 @@ class PropertyParser
         $value = substr($line, $colonPos + 1);
 
         // Parse property name and parameters
-        $name = $this->parsePropertyName($nameAndParams, $line, $lineNumber, $strict);
+        $name = $this->parsePropertyName($nameAndParams, $line, $lineNumber);
         $parameters = $this->parseParameters($nameAndParams, $line, $lineNumber);
 
         return new ContentLine($line, $name, $parameters, $value, $lineNumber);
@@ -76,7 +76,7 @@ class PropertyParser
      *
      * @throws ParseException if property name is invalid
      */
-    private function parsePropertyName(string $nameAndParams, string $rawLine, int $lineNumber, bool $strict): string
+    private function parsePropertyName(string $nameAndParams, string $rawLine, int $lineNumber): string
     {
         // Find the first semicolon (separator between name and parameters)
         $semicolonPos = strpos($nameAndParams, ';');
@@ -99,7 +99,7 @@ class PropertyParser
         }
 
         // Validate property name format (IANA token or X-name)
-        if (!$this->isValidPropertyName($name, $strict)) {
+        if (!$this->isValidPropertyName($name)) {
             throw new ParseException(
                 "Invalid property name: '{$name}'",
                 ParseException::ERR_INVALID_PROPERTY_NAME,
@@ -119,11 +119,11 @@ class PropertyParser
      * - IANA token: alphanumeric and hyphen, must start with letter
      * - X-name: starts with "X-" or "x-" followed by vendor ID and name
      */
-    private function isValidPropertyName(string $name, bool $strict): bool
+    private function isValidPropertyName(string $name): bool
     {
         // X-names start with X- or x-
         if (str_starts_with($name, 'X-') || str_starts_with($name, 'x-')) {
-            return $this->isValidXName($name, $strict);
+            return $this->isValidXName($name);
         }
 
         // IANA tokens: letters, digits, and hyphens
@@ -141,7 +141,7 @@ class PropertyParser
      * Format: x-vendorid-propname
      * where vendorid is 1-8 alphanumeric characters
      */
-    private function isValidXName(string $name, bool $strict): bool
+    private function isValidXName(string $name): bool
     {
         // Must be at least "X-A" (X- + 1 char name)
         if (strlen($name) < 3) {

@@ -22,6 +22,7 @@ class PeriodWriter implements ValueWriterInterface
         $this->durationWriter = new DurationWriter();
     }
 
+    #[\Override]
     public function write(mixed $value): string
     {
         if (is_string($value)) {
@@ -80,11 +81,13 @@ class PeriodWriter implements ValueWriterInterface
         return implode('/', $parts);
     }
 
+    #[\Override]
     public function getType(): string
     {
         return 'PERIOD';
     }
 
+    #[\Override]
     public function canWrite(mixed $value): bool
     {
         return is_array($value) || is_string($value);

@@ -11,6 +11,7 @@ use DateTimeInterface;
  */
 class TimeWriter implements ValueWriterInterface
 {
+    #[\Override]
     public function write(mixed $value): string
     {
         if (is_string($value)) {
@@ -31,11 +32,13 @@ class TimeWriter implements ValueWriterInterface
         return $value->format('His');
     }
 
+    #[\Override]
     public function getType(): string
     {
         return 'TIME';
     }
 
+    #[\Override]
     public function canWrite(mixed $value): bool
     {
         return $value instanceof DateTimeInterface || is_string($value);

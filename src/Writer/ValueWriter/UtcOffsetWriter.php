@@ -9,6 +9,7 @@ namespace Icalendar\Writer\ValueWriter;
  */
 class UtcOffsetWriter implements ValueWriterInterface
 {
+    #[\Override]
     public function write(mixed $value): string
     {
         if (is_string($value)) {
@@ -49,11 +50,13 @@ class UtcOffsetWriter implements ValueWriterInterface
         return sprintf('%s%02d%02d', $sign, $hours, $minutes);
     }
 
+    #[\Override]
     public function getType(): string
     {
         return 'UTC-OFFSET';
     }
 
+    #[\Override]
     public function canWrite(mixed $value): bool
     {
         return is_int($value) || $value instanceof \DateInterval || is_string($value);

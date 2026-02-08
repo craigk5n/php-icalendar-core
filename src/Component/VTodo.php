@@ -29,6 +29,7 @@ class VTodo extends AbstractComponent
     public const STATUS_IN_PROCESS = 'IN-PROCESS';
     public const STATUS_CANCELLED = 'CANCELLED';
 
+    #[\Override]
     public function getName(): string
     {
         return 'VTODO';

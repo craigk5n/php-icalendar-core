@@ -64,9 +64,7 @@ class LineFolder
         }
 
         // Don't forget the last line
-        if ($hasProcessedLines) {
-            $result[] = $currentLine;
-        }
+        $result[] = $currentLine;
 
         // Reassemble with CRLF
         return implode("\r\n", $result);

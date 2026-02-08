@@ -16,6 +16,8 @@ use Icalendar\Value\DateTimeValue;
 class Daylight extends AbstractComponent
 {
     use UtcOffsetFormatterTrait;
+
+    #[\Override]
     public function getName(): string
     {
         return 'DAYLIGHT';

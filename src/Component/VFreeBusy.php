@@ -24,6 +24,7 @@ class VFreeBusy extends AbstractComponent
     public const FBTYPE_BUSY_UNAVAILABLE = 'BUSY-UNAVAILABLE';
     public const FBTYPE_BUSY_TENTATIVE = 'BUSY-TENTATIVE';
 
+    #[\Override]
     public function getName(): string
     {
         return 'VFREEBUSY';
@@ -236,11 +237,12 @@ class VFreeBusy extends AbstractComponent
      */
     private function isValidPeriod(string $period): bool
     {
-        if (strpos($period, '/') === false) {
+        $parts = explode('/', $period, 2);
+        if (count($parts) < 2) {
             return false;
         }
 
-        [$start, $endOrDuration] = explode('/', $period, 2);
+        [$start, $endOrDuration] = $parts;
 
         // Validate start is a DATE-TIME
         if (!preg_match('/^\d{8}T\d{6}Z?$/', $start)) {

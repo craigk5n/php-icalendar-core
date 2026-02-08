@@ -9,6 +9,7 @@ namespace Icalendar\Writer\ValueWriter;
  */
 class FloatWriter implements ValueWriterInterface
 {
+    #[\Override]
     public function write(mixed $value): string
     {
         if (!is_float($value) && !is_int($value)) {
@@ -77,11 +78,13 @@ class FloatWriter implements ValueWriterInterface
         return $negative ? '-' . $result : $result;
     }
 
+    #[\Override]
     public function getType(): string
     {
         return 'FLOAT';
     }
 
+    #[\Override]
     public function canWrite(mixed $value): bool
     {
         return is_float($value) || is_int($value);

@@ -13,6 +13,7 @@ class PeriodParser implements ValueParserInterface
 {
     private bool $strict = false;
 
+    #[\Override]
     public function setStrict(bool $strict): void
     {
         $this->strict = $strict;
@@ -28,6 +29,7 @@ class PeriodParser implements ValueParserInterface
         $this->dateTimeParser = new DateTimeParser();
     }
 
+    #[\Override]
     public function parse(string $value, array $parameters = []): array
     {
         $value = trim($value);
@@ -88,11 +90,13 @@ class PeriodParser implements ValueParserInterface
         return $this->dateTimeParser->parse($value, $parameters);
     }
 
+    #[\Override]
     public function getType(): string
     {
         return 'PERIOD';
     }
 
+    #[\Override]
     public function canParse(string $value): bool
     {
         $value = trim($value);

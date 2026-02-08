@@ -212,14 +212,12 @@ class RecurrenceExpander
             $allGenerators[] = $rruleGenerator->generate($rule, $dtstart, $rangeEnd, [], []);
         }
 
-        /** @var \Generator<int, DateTimeImmutable> $rruleStream */
         $rruleStream = $this->mergeGenerators($allGenerators);
 
         // Combine and yield
         $yieldedTimestamps = [];
 
         foreach ($rruleStream as $date) {
-            /** @var DateTimeImmutable $date */
             if ($this->isExcluded($date, $exdateSet, $exdateDates)) {
                 continue;
             }

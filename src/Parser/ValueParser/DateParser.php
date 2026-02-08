@@ -15,11 +15,13 @@ class DateParser implements ValueParserInterface
 {
     private bool $strict = false;
 
+    #[\Override]
     public function setStrict(bool $strict): void
     {
         $this->strict = $strict;
     }
 
+    #[\Override]
     public function parse(string $value, array $parameters = []): DateTimeImmutable
     {
         if (!preg_match('/^\d{8}$/', $value)) {
@@ -40,7 +42,8 @@ class DateParser implements ValueParserInterface
             throw new ParseException("Invalid DATE value: '{$value}'", ParseException::ERR_INVALID_DATE);
         }
 
-        $timezone = isset($parameters['TZID']) ? new DateTimeZone($parameters['TZID']) : new DateTimeZone('UTC');
+        $tzid = $parameters['TZID'] ?? '';
+        $timezone = ($tzid !== '') ? new DateTimeZone($tzid) : new DateTimeZone('UTC');
         $dateString = sprintf('%04d-%02d-%02d 00:00:00', $year, $month, $day);
         $date = DateTimeImmutable::createFromFormat('Y-m-d H:i:s', $dateString, $timezone);
 
@@ -51,11 +54,13 @@ class DateParser implements ValueParserInterface
         return $date;
     }
 
+    #[\Override]
     public function getType(): string
     {
         return 'DATE';
     }
 
+    #[\Override]
     public function canParse(string $value): bool
     {
         if (!preg_match('/^\d{8}$/', $value)) {

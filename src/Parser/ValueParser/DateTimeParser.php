@@ -15,11 +15,13 @@ class DateTimeParser implements ValueParserInterface
 {
     private bool $strict = false;
 
+    #[\Override]
     public function setStrict(bool $strict): void
     {
         $this->strict = $strict;
     }
 
+    #[\Override]
     public function parse(string $value, array $parameters = []): DateTimeImmutable
     {
         $formatCheck = $this->checkFormat($value);
@@ -45,11 +47,13 @@ class DateTimeParser implements ValueParserInterface
         return $isUtc ? $this->parseUtc($value) : $this->parseLocal($value);
     }
 
+    #[\Override]
     public function getType(): string
     {
         return 'DATE-TIME';
     }
 
+    #[\Override]
     public function canParse(string $value): bool
     {
         if ($this->checkFormat($value) === 'valid') return true;
@@ -115,6 +119,9 @@ class DateTimeParser implements ValueParserInterface
 
         $dateTimeString = sprintf('%04d-%02d-%02d %02d:%02d:%02d', $year, $month, $day, $hour, $minute, $second);
         try {
+            if ($tzid === '') {
+                throw new \Exception('Empty TZID');
+            }
             $timezone = new DateTimeZone($tzid);
         } catch (\Exception $e) {
             throw new ParseException("Invalid timezone: '{$tzid}'", ParseException::ERR_INVALID_DATE_TIME);

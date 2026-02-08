@@ -78,7 +78,6 @@ class RecurrenceGenerator
         $yielded = [];
 
         foreach ($candidates as $candidate) {
-            /** @var DateTimeImmutable $candidate */
             if ($candidate < $start) continue;
             
             // Yield RDATEs that come before this candidate
@@ -304,7 +303,6 @@ class RecurrenceGenerator
             
             /** @var DateTimeImmutable[] $candidates */
             $candidates = [];
-            /** @var int[] $months */
             $months = !empty($rule->getByMonth()) ? $rule->getByMonth() : [(int)$start->format('n')];
 
             $isExpanding = !empty($rule->getByWeekNo()) || !empty($rule->getByYearDay()) || !empty($rule->getByMonthDay()) || !empty($rule->getByDay()) || !empty($rule->getBySetPos());

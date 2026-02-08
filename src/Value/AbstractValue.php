@@ -9,6 +9,7 @@ namespace Icalendar\Value;
  */
 abstract class AbstractValue implements ValueInterface
 {
+    #[\Override]
     public function isDefault(): bool
     {
         return false;

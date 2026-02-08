@@ -27,6 +27,7 @@ class Writer implements WriterInterface
         $this->contentLineWriter = $contentLineWriter ?? new ContentLineWriter(75, true);
     }
 
+    #[\Override]
     public function write(VCalendar $calendar): string
     {
         $output = $this->writeComponent($calendar);
@@ -56,6 +57,7 @@ class Writer implements WriterInterface
         return implode("\r\n", $lines);
     }
 
+    #[\Override]
     public function writeToFile(VCalendar $calendar, string $filepath): void
     {
         $content = $this->write($calendar);
@@ -69,6 +71,7 @@ class Writer implements WriterInterface
         }
     }
 
+    #[\Override]
     public function setLineFolding(bool $fold, int $maxLength = 75): void
     {
         $this->contentLineWriter->setFoldingEnabled($fold);

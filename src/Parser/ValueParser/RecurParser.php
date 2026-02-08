@@ -15,11 +15,13 @@ class RecurParser implements ValueParserInterface
 {
     private bool $strict = false;
 
+    #[\Override]
     public function setStrict(bool $strict): void
     {
         $this->strict = $strict;
     }
 
+    #[\Override]
     public function parse(string $value, array $parameters = []): RRule
     {
         $parser = new RRuleParser();
@@ -27,11 +29,13 @@ class RecurParser implements ValueParserInterface
         return $parser->parse($value);
     }
 
+    #[\Override]
     public function getType(): string
     {
         return 'RECUR';
     }
 
+    #[\Override]
     public function canParse(string $value): bool
     {
         $parser = new RRuleParser();

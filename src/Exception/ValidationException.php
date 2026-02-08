@@ -38,6 +38,9 @@ class ValidationException extends \Exception
     public const ERR_ALARM_DISPLAY_MISSING_DESC = 'ICAL-ALARM-003';
     public const ERR_ALARM_EMAIL_MISSING_PROPS = 'ICAL-ALARM-004';
 
+    /** PARTICIPANT error codes */
+    public const ERR_PARTICIPANT_MISSING_TYPE = 'ICAL-PART-001';
+
     /** RRULE error codes */
     public const ERR_RRULE_INVALID_FREQ = 'ICAL-RRULE-001';
     public const ERR_RRULE_INVALID_INTERVAL = 'ICAL-RRULE-002';

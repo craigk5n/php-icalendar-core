@@ -60,7 +60,6 @@ trait RecurrenceTrait
     public function getExdates(): array
     {
         $values = [];
-        /** @var \Icalendar\Property\PropertyInterface[] $props */
         $props = $this->getAllProperties('EXDATE');
         foreach ($props as $prop) {
             $values[] = $prop->getValue()->getRawValue();
@@ -106,7 +105,6 @@ trait RecurrenceTrait
     public function getRdates(): array
     {
         $values = [];
-        /** @var \Icalendar\Property\PropertyInterface[] $props */
         $props = $this->getAllProperties('RDATE');
         foreach ($props as $prop) {
             $values[] = $prop->getValue()->getRawValue();

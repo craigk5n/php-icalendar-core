@@ -25,6 +25,7 @@ class VAlarm extends AbstractComponent
     public const ACTION_DISPLAY = 'DISPLAY';
     public const ACTION_EMAIL = 'EMAIL';
 
+    #[\Override]
     public function getName(): string
     {
         return 'VALARM';

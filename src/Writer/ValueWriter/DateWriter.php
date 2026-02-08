@@ -11,6 +11,7 @@ use DateTimeInterface;
  */
 class DateWriter implements ValueWriterInterface
 {
+    #[\Override]
     public function write(mixed $value): string
     {
         if (is_string($value)) {
@@ -24,11 +25,13 @@ class DateWriter implements ValueWriterInterface
         return $value->format('Ymd');
     }
 
+    #[\Override]
     public function getType(): string
     {
         return 'DATE';
     }
 
+    #[\Override]
     public function canWrite(mixed $value): bool
     {
         return $value instanceof DateTimeInterface || is_string($value);

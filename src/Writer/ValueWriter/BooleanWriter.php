@@ -9,6 +9,7 @@ namespace Icalendar\Writer\ValueWriter;
  */
 class BooleanWriter implements ValueWriterInterface
 {
+    #[\Override]
     public function write(mixed $value): string
     {
         if (!is_bool($value)) {
@@ -18,11 +19,13 @@ class BooleanWriter implements ValueWriterInterface
         return $value ? 'TRUE' : 'FALSE';
     }
 
+    #[\Override]
     public function getType(): string
     {
         return 'BOOLEAN';
     }
 
+    #[\Override]
     public function canWrite(mixed $value): bool
     {
         return is_bool($value);
