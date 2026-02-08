@@ -270,7 +270,7 @@ This document outlines the current development status of PHP iCalendar Core.
 
 #### RE-3.1: Add `setRrule` / `getRrule` to VTodo
 
-- **Status:** Not Started
+- **Status:** Completed
 - **File:** `src/Component/VTodo.php` (MODIFY)
 - **Description:** VTodo currently has no RRULE methods, unlike VEvent and VJournal. Add `setRrule(string): self` and `getRrule(): ?string` following the exact same pattern as `VEvent` (see `src/Component/VEvent.php` lines 183-202).
 - **Reference pattern (from VEvent):**
@@ -292,20 +292,20 @@ This document outlines the current development status of PHP iCalendar Core.
   }
   ```
 - **Acceptance Criteria:**
-  - [ ] `VTodo::setRrule(string $rrule)` exists and returns `self` for method chaining
-  - [ ] `VTodo::getRrule(): ?string` exists
-  - [ ] Methods are identical to VEvent pattern
-  - [ ] `setRrule()` removes any existing RRULE before adding the new one (single-value semantics)
-  - [ ] `VTodo::getRrule()` returns `?string` — the raw RRULE string or `null`
-  - [ ] Round-trip works: `$todo->setRrule('FREQ=DAILY;COUNT=3')->getRrule()` returns `'FREQ=DAILY;COUNT=3'`
-  - [ ] Method bodies are identical to the VEvent pattern (use `GenericProperty::create()`)
+  - [x] `VTodo::setRrule(string $rrule)` exists and returns `self` for method chaining
+  - [x] `VTodo::getRrule(): ?string` exists
+  - [x] Methods are identical to VEvent pattern
+  - [x] `setRrule()` removes any existing RRULE before adding the new one (single-value semantics)
+  - [x] `VTodo::getRrule()` returns `?string` — the raw RRULE string or `null`
+  - [x] Round-trip works: `$todo->setRrule('FREQ=DAILY;COUNT=3')->getRrule()` returns `'FREQ=DAILY;COUNT=3'`
+  - [x] Method bodies are identical to the VEvent pattern (use `GenericProperty::create()`)
 - **Validation Checkpoint:** Run unit tests for RE-3.1 to validate VTodo RRULE methods
 - **Rollback Strategy:** If implementation fails tests, revert to previous working state before proceeding
 - **Parallel Task:** Can be done in parallel with RE-2.x tasks (no dependencies between RE-3.1 and RE-2.x)
 
 #### RE-3.2: Create `RecurrenceTrait`
 
-- **Status:** Not Started
+- **Status:** Completed
 - **File:** `src/Component/Traits/RecurrenceTrait.php` (CREATE)
 - **Depends on:** RE-2.2
 - **Description:** Create a shared trait in the `Icalendar\Component\Traits` namespace providing EXDATE/RDATE property management and `getOccurrences()` convenience. This trait follows the existing pattern of `UtcOffsetFormatterTrait.php` in the same directory. Classes using this trait must extend `AbstractComponent` (which provides `addProperty`, `removeProperty`, `getProperty`, `getAllProperties`).
@@ -323,40 +323,40 @@ This document outlines the current development status of PHP iCalendar Core.
   | `getOccurrencesArray(?DateTimeInterface $rangeEnd = null): array` | Returns `iterator_to_array($this->getOccurrences($rangeEnd), false)`. |
 
 - **Acceptance Criteria:**
-  - [ ] Trait is in file `src/Component/Traits/RecurrenceTrait.php`
-  - [ ] Namespace is `Icalendar\Component\Traits`
-  - [ ] File has `declare(strict_types=1)`
-  - [ ] All 8 methods listed above are implemented
-  - [ ] `addExdate()` / `addRdate()` use `new GenericProperty('EXDATE', new TextValue($exdate), $params)` (or equivalent via `GenericProperty::create()` plus parameter setting)
-  - [ ] `addExdate()` does NOT call `removeProperty()` — it accumulates
-  - [ ] `setExdate()` DOES call `removeProperty('EXDATE')` before adding
-  - [ ] `getExdates()` returns `string[]` (raw iCalendar values, not parsed objects)
-  - [ ] `getOccurrences()` creates a fresh `RecurrenceExpander` each call (no caching)
-  - [ ] `getOccurrences()` uses `yield from` to delegate to the expander's generator
-  - [ ] No method name conflicts with existing component methods (`setRrule`/`getRrule` are NOT in the trait)
+  - [x] Trait is in file `src/Component/Traits/RecurrenceTrait.php`
+  - [x] Namespace is `Icalendar\Component\Traits`
+  - [x] File has `declare(strict_types=1)`
+  - [x] All 8 methods listed above are implemented
+  - [x] `addExdate()` / `addRdate()` use `new GenericProperty('EXDATE', new TextValue($exdate), $params)` (or equivalent via `GenericProperty::create()` plus parameter setting)
+  - [x] `addExdate()` does NOT call `removeProperty()` — it accumulates
+  - [x] `setExdate()` DOES call `removeProperty('EXDATE')` before adding
+  - [x] `getExdates()` returns `string[]` (raw iCalendar values, not parsed objects)
+  - [x] `getOccurrences()` creates a fresh `RecurrenceExpander` each call (no caching)
+  - [x] `getOccurrences()` uses `yield from` to delegate to the expander's generator
+  - [x] No method name conflicts with existing component methods (`setRrule`/`getRrule` are NOT in the trait)
 - **Validation Checkpoint:** Run unit tests for RE-3.2 to validate the RecurrenceTrait methods
 - **Rollback Strategy:** If implementation fails tests, revert to previous working state before proceeding
 
 #### RE-3.3: Apply `RecurrenceTrait` to VEvent, VTodo, VJournal
 
-- **Status:** Not Started
+- **Status:** Completed
 - **Files:** `src/Component/VEvent.php`, `src/Component/VTodo.php`, `src/Component/VJournal.php` (MODIFY)
 - **Depends on:** RE-3.1, RE-3.2
 - **Description:** Add `use RecurrenceTrait;` to each of the three component classes. Add the import statement `use Icalendar\Component\Traits\RecurrenceTrait;` at the top of each file.
 - **Acceptance Criteria:**
-  - [ ] `VEvent` class has `use RecurrenceTrait;` inside the class body
-  - [ ] `VTodo` class has `use RecurrenceTrait;` inside the class body
-  - [ ] `VJournal` class has `use RecurrenceTrait;` inside the class body
-  - [ ] Each file has the `use Icalendar\Component\Traits\RecurrenceTrait;` import statement
-  - [ ] No method conflicts — existing `setRrule`/`getRrule` on each component are not duplicated by the trait
-  - [ ] `composer phpstan` passes at level 9 with no new errors
-  - [ ] All existing tests still pass (`composer test`)
+  - [x] `VEvent` class has `use RecurrenceTrait;` inside the class body
+  - [x] `VTodo` class has `use RecurrenceTrait;` inside the class body
+  - [x] `VJournal` class has `use RecurrenceTrait;` inside the class body
+  - [x] Each file has the `use Icalendar\Component\Traits\RecurrenceTrait;` import statement
+  - [x] No method conflicts — existing `setRrule`/`getRrule` on each component are not duplicated by the trait
+  - [x] `composer phpstan` passes at level 9 with no new errors
+  - [x] All existing tests still pass (`composer test`)
 - **Validation Checkpoint:** Run `composer test` after RE-3.3 to test component integration
 - **Rollback Strategy:** If implementation fails tests, revert to previous working state before proceeding
 
 #### RE-3.4: Unit tests for `RecurrenceTrait` on components
 
-- **Status:** Not Started
+- **Status:** Completed
 - **File:** `tests/Component/RecurrenceTraitTest.php` (CREATE)
 - **Depends on:** RE-3.3
 - **Description:** Integration tests verifying the trait methods work correctly when used on actual component classes. Build components programmatically using their setter methods.
@@ -375,11 +375,11 @@ This document outlines the current development status of PHP iCalendar Core.
   - `testVtodoGetOccurrencesWithDue` — VTodo with DTSTART, DUE, RRULE. Assert `getEnd()` is computed correctly.
   - `testVjournalGetOccurrencesEndIsNull` — VJournal with DTSTART, RRULE. Assert every `Occurrence::getEnd()` is null.
 - **Acceptance Criteria:**
-  - [ ] All test cases listed above are implemented and pass
-  - [ ] Tests cover VEvent, VTodo, and VJournal
-  - [ ] Tests verify round-trip property storage (set then get)
-  - [ ] Tests verify `getOccurrences()` integration end-to-end
-  - [ ] `vendor/bin/phpunit tests/Component/RecurrenceTraitTest.php` passes with 0 failures, 0 errors
+  - [x] All test cases listed above are implemented and pass
+  - [x] Tests cover VEvent, VTodo, and VJournal
+  - [x] Tests verify round-trip property storage (set then get)
+  - [x] Tests verify `getOccurrences()` integration end-to-end
+  - [x] `vendor/bin/phpunit tests/Component/RecurrenceTraitTest.php` passes with 0 failures, 0 errors
 - **Validation Checkpoint:** Run `composer test` after RE-3.4
 - **Rollback Strategy:** If tests fail, revert to previous working state before proceeding
 
@@ -391,26 +391,26 @@ This document outlines the current development status of PHP iCalendar Core.
 
 #### RE-4.1: Full test suite and static analysis pass
 
-- **Status:** Not Started
+- **Status:** Completed
 - **Depends on:** RE-2.4, RE-3.4
 - **Description:** Run the full test suite and static analysis to verify nothing is broken and all new code meets quality standards.
 - **Acceptance Criteria:**
-  - [ ] `composer test` passes with 0 failures, 0 errors
-  - [ ] `composer phpstan` passes at level 9 with no new errors
-  - [ ] No new test warnings introduced (existing environment warnings are acceptable)
-  - [ ] All new files follow PSR-4 autoloading conventions
-  - [ ] All new files have `declare(strict_types=1)`
+  - [x] `composer test` passes with 0 failures, 0 errors
+  - [x] `composer phpstan` passes at level 9 with no new errors
+  - [x] No new test warnings introduced (existing environment warnings are acceptable)
+  - [x] All new files follow PSR-4 autoloading conventions
+  - [x] All new files have `declare(strict_types=1)`
 
 #### RE-4.2: Update Documentation
 
-- **Status:** Not Started
+- **Status:** Completed
 - **File:** `docs/USAGE.md` (or `README.md`)
 - **Description:** Document the new Recurrence Expansion features (`getOccurrences`, `Occurrence` object) with code examples.
 - **Acceptance Criteria:**
-  - [ ] `docs/USAGE.md` (or `README.md`) includes a section on "Recurrence Expansion"
-  - [ ] Code example shows how to call `getOccurrences()` on a `VEvent`
-  - [ ] Code example shows how to iterate over `Occurrence` objects and access start/end dates
-  - [ ] Documentation explains the optional `$rangeEnd` parameter and its requirement for unbounded rules
+  - [x] `docs/USAGE.md` (or `README.md`) includes a section on "Recurrence Expansion"
+  - [x] Code example shows how to call `getOccurrences()` on a `VEvent`
+  - [x] Code example shows how to iterate over `Occurrence` objects and access start/end dates
+  - [x] Documentation explains the optional `$rangeEnd` parameter and its requirement for unbounded rules
 - **Validation Checkpoint:** Full system verification - this is the final checkpoint
 - **Rollback Strategy:** If verification fails, revert to previous working state before proceeding
 

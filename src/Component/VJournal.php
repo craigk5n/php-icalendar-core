@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Icalendar\Component;
 
+use Icalendar\Component\Traits\RecurrenceTrait;
 use Icalendar\Exception\ValidationException;
 use Icalendar\Property\GenericProperty;
 
@@ -14,6 +15,8 @@ use Icalendar\Property\GenericProperty;
  */
 class VJournal extends AbstractComponent
 {
+    use RecurrenceTrait;
+
     public const ERR_MISSING_DTSTAMP = 'ICAL-VJOURNAL-001';
     public const ERR_MISSING_UID = 'ICAL-VJOURNAL-002';
     public const ERR_INVALID_STATUS = 'ICAL-VJOURNAL-VAL-001';

@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Icalendar\Component;
 
+use Icalendar\Component\Traits\RecurrenceTrait;
 use Icalendar\Exception\ValidationException;
 use Icalendar\Property\GenericProperty;
 
@@ -14,6 +15,8 @@ use Icalendar\Property\GenericProperty;
  */
 class VTodo extends AbstractComponent
 {
+    use RecurrenceTrait;
+
     public const ERR_MISSING_DTSTAMP = 'ICAL-VTODO-001';
     public const ERR_MISSING_UID = 'ICAL-VTODO-002';
     public const ERR_DUE_DURATION_EXCLUSIVE = 'ICAL-VTODO-VAL-001';
@@ -197,6 +200,33 @@ class VTodo extends AbstractComponent
     public function getDuration(): ?string
     {
         $prop = $this->getProperty('DURATION');
+        if ($prop === null) {
+            return null;
+        }
+        return $prop->getValue()->getRawValue();
+    }
+
+    /**
+     * Set the recurrence rule for this to-do item
+     *
+     * @param string $rrule The recurrence rule in iCalendar format (e.g., "FREQ=DAILY;COUNT=10")
+     * @return self For method chaining
+     */
+    public function setRrule(string $rrule): self
+    {
+        $this->removeProperty('RRULE');
+        $this->addProperty(GenericProperty::create('RRULE', $rrule));
+        return $this;
+    }
+
+    /**
+     * Get the recurrence rule for this to-do item
+     *
+     * @return string|null The recurrence rule or null if not set
+     */
+    public function getRrule(): ?string
+    {
+        $prop = $this->getProperty('RRULE');
         if ($prop === null) {
             return null;
         }

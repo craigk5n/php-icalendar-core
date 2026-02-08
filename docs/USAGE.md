@@ -6,11 +6,12 @@ A comprehensive guide for developers using PHP iCalendar Core.
 
 1. [Parsing Deep Dive](#parsing-deep-dive)
 2. [Writing Deep Dive](#writing-deep-dive)
-3. [Error Handling Guide](#error-handling-guide)
-4. [Extension Guide](#extension-guide)
-5. [Migration Guide](#migration-guide-from-other-libraries)
-6. [Best Practices](#best-practices)
-7. [Troubleshooting](#troubleshooting)
+3. [Recurrence Expansion](#recurrence-expansion)
+4. [Error Handling Guide](#error-handling-guide)
+5. [Extension Guide](#extension-guide)
+6. [Migration Guide](#migration-guide-from-other-libraries)
+7. [Best Practices](#best-practices)
+8. [Troubleshooting](#troubleshooting)
 
 ---
 
@@ -287,6 +288,169 @@ $writer = new Writer();
 foreach ($calendar->getComponents() as $component) {
     $componentOutput = $writer->writeComponent($component);
     // Process component output
+}
+```
+
+---
+
+## Recurrence Expansion
+
+The library provides a high-level API to expand recurrence rules (RRULE), exception dates (EXDATE), and additional dates (RDATE) on components into concrete occurrence dates.
+
+### Using `getOccurrences()` on Components
+
+The simplest way to expand recurrences is to call `getOccurrences()` directly on a `VEvent`, `VTodo`, or `VJournal`:
+
+```php
+<?php
+use Icalendar\Component\VEvent;
+
+$event = new VEvent();
+$event->setDtStart('20260101T090000');
+$event->setDtEnd('20260101T100000');
+$event->setRrule('FREQ=DAILY;COUNT=5');
+
+// Iterate over occurrences (returns a Generator)
+foreach ($event->getOccurrences() as $occurrence) {
+    echo $occurrence->getStart()->format('Y-m-d H:i') . "\n";
+    echo $occurrence->getEnd()->format('Y-m-d H:i') . "\n";
+}
+
+// Or collect all occurrences into an array
+$occurrences = $event->getOccurrencesArray();
+echo count($occurrences); // 5
+```
+
+### The `Occurrence` Object
+
+Each occurrence is an immutable `Occurrence` value object with three accessors:
+
+```php
+<?php
+use Icalendar\Recurrence\Occurrence;
+
+foreach ($event->getOccurrences() as $occurrence) {
+    $occurrence->getStart();  // DateTimeImmutable — the occurrence start time
+    $occurrence->getEnd();    // ?DateTimeImmutable — the computed end time (null for VJournal)
+    $occurrence->isRdate();   // bool — true if this occurrence came from an RDATE
+}
+```
+
+The end time is automatically computed from the component's `DTEND`, `DURATION`, or `DUE` (for VTodo) property, applied as an offset to each occurrence's start time.
+
+### Working with EXDATE and RDATE
+
+Components support adding exception dates (to exclude occurrences) and additional dates (to add extra occurrences):
+
+```php
+<?php
+$event = new VEvent();
+$event->setDtStart('20260101T090000');
+$event->setRrule('FREQ=DAILY;COUNT=5');
+
+// Exclude Jan 3 from the recurrence set
+$event->addExdate('20260103T090000');
+
+// Add an extra occurrence on Jan 10
+$event->addRdate('20260110T090000');
+
+$occurrences = $event->getOccurrencesArray();
+// Results: Jan 1, Jan 2, Jan 4, Jan 5, Jan 10
+// (Jan 3 excluded by EXDATE, Jan 10 added by RDATE)
+```
+
+Multiple EXDATEs and RDATEs accumulate:
+
+```php
+<?php
+$event->addExdate('20260102T090000');
+$event->addExdate('20260104T090000');
+
+// setExdate() replaces all existing EXDATEs:
+$event->setExdate('20260103T090000');
+
+// getExdates() returns all EXDATE values:
+$exdates = $event->getExdates(); // ['20260103T090000']
+```
+
+### Unbounded Rules and `$rangeEnd`
+
+Rules without `COUNT` or `UNTIL` produce infinite recurrence sets. You must provide a `$rangeEnd` parameter to limit expansion:
+
+```php
+<?php
+$event = new VEvent();
+$event->setDtStart('20260101T090000');
+$event->setRrule('FREQ=WEEKLY;BYDAY=MO');
+
+// This throws InvalidArgumentException — no COUNT, no UNTIL, no rangeEnd:
+// $event->getOccurrencesArray();
+
+// Provide a range end to limit expansion:
+$rangeEnd = new DateTimeImmutable('2026-03-31T235959');
+$occurrences = $event->getOccurrencesArray($rangeEnd);
+```
+
+Rules with `COUNT` or `UNTIL` do not require `$rangeEnd`:
+
+```php
+<?php
+$event->setRrule('FREQ=DAILY;COUNT=10');
+$occurrences = $event->getOccurrencesArray(); // No rangeEnd needed
+```
+
+### Using `RecurrenceExpander` Directly
+
+For more control, use the `RecurrenceExpander` service directly:
+
+```php
+<?php
+use Icalendar\Recurrence\RecurrenceExpander;
+
+$expander = new RecurrenceExpander();
+
+// expand() returns a Generator<Occurrence>
+$generator = $expander->expand($event, $rangeEnd);
+
+// expandToArray() returns Occurrence[]
+$occurrences = $expander->expandToArray($event, $rangeEnd);
+```
+
+### VTodo Recurrence
+
+VTodo components use the `DUE` property to compute occurrence end times:
+
+```php
+<?php
+use Icalendar\Component\VTodo;
+
+$todo = new VTodo();
+$todo->setDtStart('20260101T090000');
+$todo->setDue('20260101T170000');
+$todo->setRrule('FREQ=WEEKLY;COUNT=4');
+
+foreach ($todo->getOccurrences() as $occ) {
+    // Each occurrence has an 8-hour duration (09:00 to 17:00)
+    echo $occ->getStart()->format('Y-m-d H:i') . ' - ';
+    echo $occ->getEnd()->format('Y-m-d H:i') . "\n";
+}
+```
+
+### VJournal Recurrence
+
+VJournal has no end time, so `getEnd()` returns `null`:
+
+```php
+<?php
+use Icalendar\Component\VJournal;
+
+$journal = new VJournal();
+$journal->setDtStart('20260101T090000');
+$journal->setRrule('FREQ=MONTHLY;COUNT=3');
+
+foreach ($journal->getOccurrences() as $occ) {
+    echo $occ->getStart()->format('Y-m-d') . "\n";
+    assert($occ->getEnd() === null);
 }
 ```
 
@@ -828,20 +992,19 @@ $event->setStart(new DateTime('2026-02-10T10:00:00', new DateTimeZone('America/N
 
 **Problem:** Recurring events show only first occurrence.
 
-**Solution:** Use the RecurrenceGenerator:
+**Solution:** Use `getOccurrences()` on the component:
 
 ```php
 <?php
-use Icalendar\Recurrence\RecurrenceGenerator;
+// Call getOccurrences() directly on the component
+foreach ($event->getOccurrences() as $occurrence) {
+    echo $occurrence->getStart()->format('Y-m-d H:i:s') . "\n";
+}
 
-$rrule = $event->getProperty('RRULE')->getValue();
-$start = $event->getProperty('DTSTART')->getValue();
-
-$generator = new RecurrenceGenerator();
-$occurrences = $generator->generate($rrule, $start, new DateTime('2026-12-31'));
-
-foreach ($occurrences as $occurrence) {
-    echo $occurrence->format('Y-m-d H:i:s') . "\n";
+// For unbounded rules (no COUNT or UNTIL), provide a range end:
+$rangeEnd = new DateTimeImmutable('2026-12-31T235959');
+foreach ($event->getOccurrences($rangeEnd) as $occurrence) {
+    echo $occurrence->getStart()->format('Y-m-d H:i:s') . "\n";
 }
 ```
 
