@@ -4,6 +4,7 @@
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
 [![PHP Version](https://img.shields.io/badge/php-%3E%3D8.2-8892BF.svg)](https://www.php.net/)
 [![PHPStan Level 9](https://img.shields.io/badge/PHPStan-level%209-brightgreen.svg)](https://phpstan.org/)
+[![Documentation](https://img.shields.io/badge/docs-DeepWiki-blue.svg)](https://deepwiki.com/craigk5n/php-icalendar-core)
 
 This library provides robust parsing and writing capabilities for the iCalendar (RFC 5545) format. It aims for high compatibility with RFC specifications while offering flexible parsing modes and supporting standardized extensions for richer data.
 
@@ -122,6 +123,12 @@ $icsString = $writer->write($calendar);
 
 file_put_contents('output.ics', $icsString);
 ```
+
+## Documentation
+
+- **[Full Documentation (DeepWiki)](https://deepwiki.com/craigk5n/php-icalendar-core)** — Auto-generated wiki covering architecture, parsing, writing, recurrence rules, and API reference.
+- [PRD.md](PRD.md) — Product requirements and RFC 5545 compliance details.
+- [STATUS.md](STATUS.md) — Detailed task tracking and implementation status.
 
 ## Contributing
 
