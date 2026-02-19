@@ -241,6 +241,114 @@ class LexerTest extends TestCase
         $this->assertEquals(10000, $lineCount);
     }
 
+    public function testTokenizeFileWithFoldedLines(): void
+    {
+        // Folded ATTENDEE line that would fail without unfolding in tokenizeFile
+        $data = "BEGIN:VCALENDAR\r\n"
+            . "ATTENDEE;ROLE=REQ-PARTICIPANT;PARTSTAT=ACCEPTED;CN=\"Baloo Knudsen\"\r\n"
+            . " :mailto:baloo@example.com\r\n"
+            . "END:VCALENDAR\r\n";
+
+        $tempFile = tempnam(sys_get_temp_dir(), 'ical_test_');
+        file_put_contents($tempFile, $data);
+
+        $lines = iterator_to_array($this->lexer->tokenizeFile($tempFile));
+        unlink($tempFile);
+
+        $this->assertCount(3, $lines);
+        // The ATTENDEE line should be unfolded with the continuation
+        $attendeeLine = $lines[1];
+        $this->assertEquals('ATTENDEE', $attendeeLine->getName());
+        $this->assertStringContainsString('mailto:baloo@example.com', $attendeeLine->getValue());
+    }
+
+    public function testTokenizeFileWithTabFoldedLines(): void
+    {
+        $data = "BEGIN:VCALENDAR\r\n"
+            . "DESCRIPTION:This is a long description\r\n"
+            . "\tthat continues here\r\n"
+            . "END:VCALENDAR\r\n";
+
+        $tempFile = tempnam(sys_get_temp_dir(), 'ical_test_');
+        file_put_contents($tempFile, $data);
+
+        $lines = iterator_to_array($this->lexer->tokenizeFile($tempFile));
+        unlink($tempFile);
+
+        $this->assertCount(3, $lines);
+        $this->assertEquals('DESCRIPTION', $lines[1]->getName());
+        $this->assertEquals('This is a long descriptionthat continues here', $lines[1]->getValue());
+    }
+
+    public function testTokenizeFileWithMultipleFoldedLines(): void
+    {
+        // Line folded across multiple continuations
+        $data = "BEGIN:VCALENDAR\r\n"
+            . "DESCRIPTION:Line one\r\n"
+            . " line two\r\n"
+            . " line three\r\n"
+            . "VERSION:2.0\r\n"
+            . "END:VCALENDAR\r\n";
+
+        $tempFile = tempnam(sys_get_temp_dir(), 'ical_test_');
+        file_put_contents($tempFile, $data);
+
+        $lines = iterator_to_array($this->lexer->tokenizeFile($tempFile));
+        unlink($tempFile);
+
+        $this->assertCount(4, $lines);
+        $this->assertEquals('DESCRIPTION', $lines[1]->getName());
+        $this->assertEquals('Line oneline twoline three', $lines[1]->getValue());
+        $this->assertEquals('VERSION', $lines[2]->getName());
+    }
+
+    public function testTokenizeLenientSkipsMalformedLines(): void
+    {
+        $this->lexer->setStrict(false);
+
+        $data = "BEGIN:VCALENDAR\r\nMALFORMED_NO_COLON\r\nVERSION:2.0\r\nEND:VCALENDAR\r\n";
+        $lines = iterator_to_array($this->lexer->tokenize($data));
+
+        // Malformed line should be skipped
+        $this->assertCount(3, $lines);
+        $this->assertEquals('BEGIN', $lines[0]->getName());
+        $this->assertEquals('VERSION', $lines[1]->getName());
+        $this->assertEquals('END', $lines[2]->getName());
+
+        // Warning should be collected
+        $warnings = $this->lexer->getWarnings();
+        $this->assertCount(1, $warnings);
+        $this->assertStringContainsString("missing ':' separator", $warnings[0]['message']);
+        $this->assertEquals('MALFORMED_NO_COLON', $warnings[0]['line']);
+    }
+
+    public function testTokenizeFileLenientSkipsMalformedLines(): void
+    {
+        $this->lexer->setStrict(false);
+
+        $data = "BEGIN:VCALENDAR\r\nMALFORMED_NO_COLON\r\nVERSION:2.0\r\nEND:VCALENDAR\r\n";
+        $tempFile = tempnam(sys_get_temp_dir(), 'ical_test_');
+        file_put_contents($tempFile, $data);
+
+        $lines = iterator_to_array($this->lexer->tokenizeFile($tempFile));
+        unlink($tempFile);
+
+        $this->assertCount(3, $lines);
+        $this->assertEquals('BEGIN', $lines[0]->getName());
+        $this->assertEquals('VERSION', $lines[1]->getName());
+        $this->assertEquals('END', $lines[2]->getName());
+
+        $warnings = $this->lexer->getWarnings();
+        $this->assertCount(1, $warnings);
+    }
+
+    public function testTokenizeStrictStillThrowsOnMalformedLine(): void
+    {
+        // Default strict mode should still throw
+        $this->expectException(ParseException::class);
+        iterator_to_array($this->lexer->tokenize("MALFORMED_LINE\r\nVERSION:2.0\r\n"));
+    }
+
     #[\Override]
     protected function tearDown(): void
     {

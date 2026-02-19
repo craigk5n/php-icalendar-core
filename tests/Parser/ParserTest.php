@@ -444,10 +444,81 @@ class ParserTest extends TestCase
         $this->assertEquals('This is a derived plain text description.', $plainDescProp->getValue()->getRawValue());
     }
 
-    // --- Existing tests ---
-    // These tests should remain and be verified to pass after the STYLED-DESCRIPTION changes.
-    // If any fail, they will need to be addressed.
+    public function testParseLenientSkipsMalformedLines(): void
+    {
+        $this->parser->setStrict(false);
 
-    // Example: testParseSimpleEvent(), testParseComplexCalendar(), etc. are omitted here for brevity.
-    // These existing tests would be included in the actual file.
+        // Calendar with a malformed line (no colon) that should be skipped in lenient mode
+        $icalData = "BEGIN:VCALENDAR\r\n"
+            . "VERSION:2.0\r\n"
+            . "PRODID:-//Test//Test//EN\r\n"
+            . "BEGIN:VEVENT\r\n"
+            . "DTSTAMP:20260206T100000Z\r\n"
+            . "UID:malformed-test@example.com\r\n"
+            . "MALFORMED_LINE_WITHOUT_COLON\r\n"
+            . "SUMMARY:Test Event\r\n"
+            . "END:VEVENT\r\n"
+            . "END:VCALENDAR\r\n";
+
+        $calendar = $this->parser->parse($icalData);
+
+        // Parsing should succeed despite the malformed line
+        $this->assertInstanceOf(\Icalendar\Component\VCalendar::class, $calendar);
+        $events = $calendar->getComponents('VEVENT');
+        $this->assertCount(1, $events);
+
+        // The SUMMARY after the malformed line should still be parsed
+        $summary = $events[0]->getProperty('SUMMARY');
+        $this->assertNotNull($summary);
+        $this->assertEquals('Test Event', $summary->getValue()->getRawValue());
+
+        // Warnings should be collected
+        $errors = $this->parser->getErrors();
+        $this->assertNotEmpty($errors);
+        $foundMalformedWarning = false;
+        foreach ($errors as $error) {
+            if (str_contains($error->message, "missing ':' separator")) {
+                $foundMalformedWarning = true;
+                break;
+            }
+        }
+        $this->assertTrue($foundMalformedWarning, 'Expected a warning about the malformed line');
+    }
+
+    public function testParseStrictThrowsOnMalformedLine(): void
+    {
+        $this->parser->setStrict(true);
+
+        $icalData = "BEGIN:VCALENDAR\r\n"
+            . "VERSION:2.0\r\n"
+            . "PRODID:-//Test//Test//EN\r\n"
+            . "MALFORMED_LINE_WITHOUT_COLON\r\n"
+            . "END:VCALENDAR\r\n";
+
+        $this->expectException(ParseException::class);
+        $this->parser->parse($icalData);
+    }
+
+    public function testParseLenientWithFoldedAttendee(): void
+    {
+        $this->parser->setStrict(false);
+
+        // Real-world pattern: ATTENDEE with folded mailto line
+        $icalData = "BEGIN:VCALENDAR\r\n"
+            . "VERSION:2.0\r\n"
+            . "PRODID:-//Test//Test//EN\r\n"
+            . "BEGIN:VEVENT\r\n"
+            . "DTSTAMP:20260206T100000Z\r\n"
+            . "UID:folded-attendee@example.com\r\n"
+            . "SUMMARY:Meeting\r\n"
+            . "ATTENDEE;ROLE=REQ-PARTICIPANT;PARTSTAT=ACCEPTED;CN=\"Baloo Knudsen\"\r\n"
+            . " :mailto:baloo@example.com\r\n"
+            . "END:VEVENT\r\n"
+            . "END:VCALENDAR\r\n";
+
+        $calendar = $this->parser->parse($icalData);
+        $events = $calendar->getComponents('VEVENT');
+        $this->assertCount(1, $events);
+        $this->assertEquals('Meeting', $events[0]->getProperty('SUMMARY')->getValue()->getRawValue());
+    }
 }

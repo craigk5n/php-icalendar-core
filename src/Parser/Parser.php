@@ -69,11 +69,14 @@ class Parser implements ParserInterface
         $this->currentDepth = 0;
 
         $lexer = new Lexer();
+        $lexer->setStrict($this->mode);
         $contentLines = [];
 
         foreach ($lexer->tokenize($data) as $line) {
             $contentLines[] = $line;
         }
+
+        $this->transferLexerWarnings($lexer);
 
         return $this->buildCalendar($contentLines);
     }
@@ -506,6 +509,24 @@ class Parser implements ParserInterface
     ): void {
         if ($this->mode === self::LENIENT || $severity === ErrorSeverity::WARNING) {
             $this->errors[] = new ValidationError($code, $message, $component, $property, $line, $lineNumber, $severity);
+        }
+    }
+
+    /**
+     * Transfer warnings collected by the Lexer into the Parser's error list.
+     */
+    private function transferLexerWarnings(Lexer $lexer): void
+    {
+        foreach ($lexer->getWarnings() as $warning) {
+            $this->errors[] = new ValidationError(
+                'ICAL-PARSE-006',
+                $warning['message'],
+                'VCALENDAR',
+                null,
+                $warning['line'],
+                $warning['lineNumber'],
+                ErrorSeverity::WARNING
+            );
         }
     }
 
