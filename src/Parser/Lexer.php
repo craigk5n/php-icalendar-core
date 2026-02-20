@@ -79,7 +79,19 @@ class Lexer
                 continue;
             }
 
-            yield ContentLine::parse($unfoldedLine, ++$this->lineNumber);
+            $this->lineNumber++;
+            try {
+                yield ContentLine::parse($unfoldedLine, $this->lineNumber);
+            } catch (ParseException $e) {
+                if ($this->strict) {
+                    throw $e;
+                }
+                $this->warnings[] = [
+                    'message' => $e->getMessage(),
+                    'line' => $unfoldedLine,
+                    'lineNumber' => $this->lineNumber,
+                ];
+            }
         }
     }
 
@@ -225,7 +237,20 @@ class Lexer
             return null;
         }
 
-        return ContentLine::parse($line, ++$this->lineNumber);
+        $this->lineNumber++;
+        try {
+            return ContentLine::parse($line, $this->lineNumber);
+        } catch (ParseException $e) {
+            if ($this->strict) {
+                throw $e;
+            }
+            $this->warnings[] = [
+                'message' => $e->getMessage(),
+                'line' => $line,
+                'lineNumber' => $this->lineNumber,
+            ];
+            return null;
+        }
     }
 
     /**

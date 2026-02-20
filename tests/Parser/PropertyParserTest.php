@@ -320,4 +320,77 @@ class PropertyParserTest extends TestCase
 
         $this->assertEquals($rawLine, $line->getRawLine());
     }
+
+    // -------------------------------------------------------
+    // Double quotes in property VALUES (not parameters)
+    // -------------------------------------------------------
+
+    public function testParseDescriptionWithDoubleQuote(): void
+    {
+        $line = $this->parser->parse('DESCRIPTION:We got 16" of snow');
+
+        $this->assertEquals('DESCRIPTION', $line->getName());
+        $this->assertEquals('We got 16" of snow', $line->getValue());
+        $this->assertEmpty($line->getParameters());
+    }
+
+    public function testParseSummaryWithDoubleQuotes(): void
+    {
+        $line = $this->parser->parse('SUMMARY:Watch "The Matrix" tonight');
+
+        $this->assertEquals('SUMMARY', $line->getName());
+        $this->assertEquals('Watch "The Matrix" tonight', $line->getValue());
+    }
+
+    public function testParseDescriptionWithOddNumberOfQuotes(): void
+    {
+        // Odd number of quotes in value should NOT trigger unclosed-quote error
+        $line = $this->parser->parse('DESCRIPTION:He said "hello" and she said "bye');
+
+        $this->assertEquals('DESCRIPTION', $line->getName());
+        $this->assertEquals('He said "hello" and she said "bye', $line->getValue());
+    }
+
+    public function testParseLocationWithDoubleQuotes(): void
+    {
+        $line = $this->parser->parse('LOCATION:Room "A" - Building 5');
+
+        $this->assertEquals('LOCATION', $line->getName());
+        $this->assertEquals('Room "A" - Building 5', $line->getValue());
+    }
+
+    public function testParseCommentWithQuotedMeasurement(): void
+    {
+        $line = $this->parser->parse('COMMENT:The pipe is 3/4" diameter');
+
+        $this->assertEquals('COMMENT', $line->getName());
+        $this->assertEquals('The pipe is 3/4" diameter', $line->getValue());
+    }
+
+    public function testParseValueWithQuotesAndParameters(): void
+    {
+        // Parameters have balanced quotes; value has an unbalanced quote
+        $line = $this->parser->parse('DESCRIPTION;LANGUAGE="en":We got 16" of snow');
+
+        $this->assertEquals('DESCRIPTION', $line->getName());
+        $this->assertEquals('en', $line->getParameter('LANGUAGE'));
+        $this->assertEquals('We got 16" of snow', $line->getValue());
+    }
+
+    public function testParseValueWithMultipleQuotesAndColons(): void
+    {
+        $line = $this->parser->parse('DESCRIPTION:Meeting at 10:00 about "Project X" - bring 2" binder');
+
+        $this->assertEquals('DESCRIPTION', $line->getName());
+        $this->assertEquals('Meeting at 10:00 about "Project X" - bring 2" binder', $line->getValue());
+    }
+
+    public function testParseUnclosedQuoteInParametersStillThrows(): void
+    {
+        // Unclosed quote in PARAMETERS (not value) should still throw
+        $this->expectException(ParseException::class);
+        $this->expectExceptionMessage('unclosed quoted string');
+
+        $this->parser->parse('ATTENDEE;CN="John Doe:mailto:test@example.com');
+    }
 }

@@ -521,4 +521,161 @@ class ParserTest extends TestCase
         $this->assertCount(1, $events);
         $this->assertEquals('Meeting', $events[0]->getProperty('SUMMARY')->getValue()->getRawValue());
     }
+
+    // -------------------------------------------------------
+    // Double quotes in property values (end-to-end)
+    // -------------------------------------------------------
+
+    public function testParseDescriptionWithDoubleQuote(): void
+    {
+        $icalData = "BEGIN:VCALENDAR\r\n"
+            . "VERSION:2.0\r\n"
+            . "PRODID:-//Test//Test//EN\r\n"
+            . "BEGIN:VEVENT\r\n"
+            . "DTSTAMP:20260206T100000Z\r\n"
+            . "UID:snow-day@example.com\r\n"
+            . "SUMMARY:Snow Day\r\n"
+            . "DESCRIPTION:We got 16\" of snow\r\n"
+            . "END:VEVENT\r\n"
+            . "END:VCALENDAR\r\n";
+
+        $this->parser->setStrict(true);
+        $calendar = $this->parser->parse($icalData);
+
+        $events = $calendar->getComponents('VEVENT');
+        $this->assertCount(1, $events);
+        $desc = $events[0]->getProperty('DESCRIPTION');
+        $this->assertNotNull($desc);
+        $this->assertEquals('We got 16" of snow', $desc->getValue()->getRawValue());
+    }
+
+    public function testParseDescriptionWithDoubleQuoteLenient(): void
+    {
+        $icalData = "BEGIN:VCALENDAR\r\n"
+            . "VERSION:2.0\r\n"
+            . "PRODID:-//Test//Test//EN\r\n"
+            . "BEGIN:VEVENT\r\n"
+            . "DTSTAMP:20260206T100000Z\r\n"
+            . "UID:snow-day@example.com\r\n"
+            . "SUMMARY:Snow Day\r\n"
+            . "DESCRIPTION:We got 16\" of snow\r\n"
+            . "END:VEVENT\r\n"
+            . "END:VCALENDAR\r\n";
+
+        $this->parser->setStrict(false);
+        $calendar = $this->parser->parse($icalData);
+
+        $events = $calendar->getComponents('VEVENT');
+        $this->assertCount(1, $events);
+        $desc = $events[0]->getProperty('DESCRIPTION');
+        $this->assertNotNull($desc);
+        $this->assertEquals('We got 16" of snow', $desc->getValue()->getRawValue());
+    }
+
+    public function testParseSummaryWithQuotedTitle(): void
+    {
+        $icalData = "BEGIN:VCALENDAR\r\n"
+            . "VERSION:2.0\r\n"
+            . "PRODID:-//Test//Test//EN\r\n"
+            . "BEGIN:VEVENT\r\n"
+            . "DTSTAMP:20260206T100000Z\r\n"
+            . "UID:movie-night@example.com\r\n"
+            . "SUMMARY:Watch \"The Matrix\" tonight\r\n"
+            . "END:VEVENT\r\n"
+            . "END:VCALENDAR\r\n";
+
+        $this->parser->setStrict(true);
+        $calendar = $this->parser->parse($icalData);
+
+        $events = $calendar->getComponents('VEVENT');
+        $summary = $events[0]->getProperty('SUMMARY');
+        $this->assertNotNull($summary);
+        $this->assertEquals('Watch "The Matrix" tonight', $summary->getValue()->getRawValue());
+    }
+
+    public function testParseLenientContinuesAfterQuoteInDescription(): void
+    {
+        $this->parser->setStrict(false);
+
+        // Two events: one with a quote in DESCRIPTION, one normal
+        $icalData = "BEGIN:VCALENDAR\r\n"
+            . "VERSION:2.0\r\n"
+            . "PRODID:-//Test//Test//EN\r\n"
+            . "BEGIN:VEVENT\r\n"
+            . "DTSTAMP:20260206T100000Z\r\n"
+            . "UID:event1@example.com\r\n"
+            . "SUMMARY:Snow Report\r\n"
+            . "DESCRIPTION:We got 16\" of snow\r\n"
+            . "END:VEVENT\r\n"
+            . "BEGIN:VEVENT\r\n"
+            . "DTSTAMP:20260206T100000Z\r\n"
+            . "UID:event2@example.com\r\n"
+            . "SUMMARY:Normal Event\r\n"
+            . "DESCRIPTION:Just a regular description\r\n"
+            . "END:VEVENT\r\n"
+            . "END:VCALENDAR\r\n";
+
+        $calendar = $this->parser->parse($icalData);
+
+        $events = $calendar->getComponents('VEVENT');
+        // Both events should be parsed
+        $this->assertCount(2, $events);
+        $this->assertEquals('Snow Report', $events[0]->getProperty('SUMMARY')->getValue()->getRawValue());
+        $this->assertEquals('Normal Event', $events[1]->getProperty('SUMMARY')->getValue()->getRawValue());
+    }
+
+    public function testParseLocationWithQuotedText(): void
+    {
+        $icalData = "BEGIN:VCALENDAR\r\n"
+            . "VERSION:2.0\r\n"
+            . "PRODID:-//Test//Test//EN\r\n"
+            . "BEGIN:VEVENT\r\n"
+            . "DTSTAMP:20260206T100000Z\r\n"
+            . "UID:loc-test@example.com\r\n"
+            . "SUMMARY:Meeting\r\n"
+            . "LOCATION:Room \"A\" - Building 5\r\n"
+            . "END:VEVENT\r\n"
+            . "END:VCALENDAR\r\n";
+
+        $this->parser->setStrict(true);
+        $calendar = $this->parser->parse($icalData);
+
+        $events = $calendar->getComponents('VEVENT');
+        $location = $events[0]->getProperty('LOCATION');
+        $this->assertNotNull($location);
+        $this->assertEquals('Room "A" - Building 5', $location->getValue()->getRawValue());
+    }
+
+    public function testParseMultipleEventsWithQuotesInValues(): void
+    {
+        $this->parser->setStrict(true);
+
+        $icalData = "BEGIN:VCALENDAR\r\n"
+            . "VERSION:2.0\r\n"
+            . "PRODID:-//Test//Test//EN\r\n"
+            . "BEGIN:VEVENT\r\n"
+            . "DTSTAMP:20260206T100000Z\r\n"
+            . "UID:event1@example.com\r\n"
+            . "SUMMARY:Buy 2\" screws\r\n"
+            . "END:VEVENT\r\n"
+            . "BEGIN:VEVENT\r\n"
+            . "DTSTAMP:20260206T100000Z\r\n"
+            . "UID:event2@example.com\r\n"
+            . "SUMMARY:Watch \"Frozen\"\r\n"
+            . "END:VEVENT\r\n"
+            . "BEGIN:VEVENT\r\n"
+            . "DTSTAMP:20260206T100000Z\r\n"
+            . "UID:event3@example.com\r\n"
+            . "SUMMARY:Normal event\r\n"
+            . "END:VEVENT\r\n"
+            . "END:VCALENDAR\r\n";
+
+        $calendar = $this->parser->parse($icalData);
+
+        $events = $calendar->getComponents('VEVENT');
+        $this->assertCount(3, $events);
+        $this->assertEquals('Buy 2" screws', $events[0]->getProperty('SUMMARY')->getValue()->getRawValue());
+        $this->assertEquals('Watch "Frozen"', $events[1]->getProperty('SUMMARY')->getValue()->getRawValue());
+        $this->assertEquals('Normal event', $events[2]->getProperty('SUMMARY')->getValue()->getRawValue());
+    }
 }

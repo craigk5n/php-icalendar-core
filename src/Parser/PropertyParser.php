@@ -46,13 +46,22 @@ class PropertyParser
             );
         }
 
-        // Check for unclosed quotes before looking for colon
-        $this->validateQuoteBalance($line, $lineNumber);
-
-        // Find the first colon to separate name/params from value
-        // Note: The value can contain colons, so we only split on the first one
+        // Find the first colon to separate name/params from value.
+        // Note: The value can contain colons, so we only split on the first
+        // unquoted one (colons inside quoted parameter values are skipped).
         $colonPos = $this->findFirstUnquotedColon($line);
         if ($colonPos === false) {
+            // If no unquoted colon was found, check if it's due to unbalanced
+            // quotes (which make all colons appear "quoted"). Give a more
+            // specific error message when that's the case.
+            if ($this->hasUnbalancedQuotes($line)) {
+                throw new ParseException(
+                    'Invalid parameter format: unclosed quoted string',
+                    ParseException::ERR_UNCLOSED_QUOTED_STRING,
+                    $lineNumber,
+                    $line
+                );
+            }
             throw new ParseException(
                 'Invalid property format: unable to find value separator',
                 ParseException::ERR_INVALID_PROPERTY_FORMAT,
@@ -63,6 +72,11 @@ class PropertyParser
 
         $nameAndParams = substr($line, 0, $colonPos);
         $value = substr($line, $colonPos + 1);
+
+        // Validate quote balance only in the name+params portion.
+        // Double quotes in property values are legal text characters and
+        // must NOT be included in this check.
+        $this->validateQuoteBalance($nameAndParams, $lineNumber);
 
         // Parse property name and parameters
         $name = $this->parsePropertyName($nameAndParams, $line, $lineNumber);
@@ -206,6 +220,15 @@ class PropertyParser
         }
 
         return false;
+    }
+
+    /**
+     * Check whether a string has an odd number of double-quote characters.
+     */
+    private function hasUnbalancedQuotes(string $text): bool
+    {
+        $count = substr_count($text, '"');
+        return ($count % 2) !== 0;
     }
 
     /**

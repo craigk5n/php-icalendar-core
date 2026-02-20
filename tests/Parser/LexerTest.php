@@ -349,6 +349,197 @@ class LexerTest extends TestCase
         iterator_to_array($this->lexer->tokenize("MALFORMED_LINE\r\nVERSION:2.0\r\n"));
     }
 
+    public function testTokenizeLenientHandlesAttendeeWithoutValue(): void
+    {
+        $this->lexer->setStrict(false);
+
+        // Real-world malformed ATTENDEE line missing :mailto: value
+        $data = "BEGIN:VEVENT\r\n"
+            . "SUMMARY:Team Meeting\r\n"
+            . "ATTENDEE;ROLE=REQ-PARTICIPANT;PARTSTAT=ACCEPTED;CN=\"Baloo Knudsen\"\r\n"
+            . "ATTENDEE;ROLE=REQ-PARTICIPANT;PARTSTAT=NEEDS-ACTION;CN=\"Craig Knudsen\":mailto:craig@k5n.us\r\n"
+            . "END:VEVENT\r\n";
+
+        $lines = iterator_to_array($this->lexer->tokenize($data));
+
+        // Malformed ATTENDEE (no colon) should be skipped, valid one kept
+        $this->assertCount(4, $lines);
+        $this->assertEquals('BEGIN', $lines[0]->getName());
+        $this->assertEquals('SUMMARY', $lines[1]->getName());
+        $this->assertEquals('ATTENDEE', $lines[2]->getName());
+        $this->assertStringContainsString('mailto:craig@k5n.us', $lines[2]->getValue());
+        $this->assertEquals('END', $lines[3]->getName());
+
+        // Warning should be recorded for the skipped line
+        $warnings = $this->lexer->getWarnings();
+        $this->assertCount(1, $warnings);
+        $this->assertStringContainsString('Baloo Knudsen', $warnings[0]['line']);
+    }
+
+    public function testTokenizeFileLenientHandlesAttendeeWithoutValue(): void
+    {
+        $this->lexer->setStrict(false);
+
+        $data = "BEGIN:VEVENT\r\n"
+            . "SUMMARY:Team Meeting\r\n"
+            . "ATTENDEE;ROLE=REQ-PARTICIPANT;PARTSTAT=ACCEPTED;CN=\"Baloo Knudsen\"\r\n"
+            . "ATTENDEE;ROLE=REQ-PARTICIPANT;PARTSTAT=NEEDS-ACTION;CN=\"Craig Knudsen\":mailto:craig@k5n.us\r\n"
+            . "END:VEVENT\r\n";
+
+        $tempFile = tempnam(sys_get_temp_dir(), 'ical_test_');
+        file_put_contents($tempFile, $data);
+
+        $lines = iterator_to_array($this->lexer->tokenizeFile($tempFile));
+        unlink($tempFile);
+
+        $this->assertCount(4, $lines);
+        $this->assertEquals('ATTENDEE', $lines[2]->getName());
+        $this->assertStringContainsString('mailto:craig@k5n.us', $lines[2]->getValue());
+
+        $warnings = $this->lexer->getWarnings();
+        $this->assertCount(1, $warnings);
+        $this->assertStringContainsString('Baloo Knudsen', $warnings[0]['line']);
+    }
+
+    public function testTokenizeStrictThrowsOnAttendeeWithoutValue(): void
+    {
+        // In strict mode, the same malformed ATTENDEE should throw
+        $this->expectException(ParseException::class);
+        $this->expectExceptionMessage("missing ':' separator");
+
+        $data = "BEGIN:VEVENT\r\n"
+            . "ATTENDEE;ROLE=REQ-PARTICIPANT;PARTSTAT=ACCEPTED;CN=\"Baloo Knudsen\"\r\n"
+            . "END:VEVENT\r\n";
+
+        iterator_to_array($this->lexer->tokenize($data));
+    }
+
+    // -------------------------------------------------------
+    // Double quotes in property values
+    // -------------------------------------------------------
+
+    public function testTokenizeDescriptionWithDoubleQuote(): void
+    {
+        $data = "BEGIN:VCALENDAR\r\nDESCRIPTION:We got 16\" of snow\r\nEND:VCALENDAR\r\n";
+
+        $lines = iterator_to_array($this->lexer->tokenize($data));
+
+        $this->assertCount(3, $lines);
+        $this->assertEquals('DESCRIPTION', $lines[1]->getName());
+        $this->assertEquals('We got 16" of snow', $lines[1]->getValue());
+    }
+
+    public function testTokenizeSummaryWithBalancedQuotes(): void
+    {
+        $data = "SUMMARY:Watch \"The Matrix\" tonight\r\n";
+
+        $lines = iterator_to_array($this->lexer->tokenize($data));
+
+        $this->assertCount(1, $lines);
+        $this->assertEquals('Watch "The Matrix" tonight', $lines[0]->getValue());
+    }
+
+    public function testTokenizeDescriptionWithOddQuotes(): void
+    {
+        // Single (odd) quote in the value must not throw
+        $data = "DESCRIPTION:The board is 3/4\" thick\r\n";
+
+        $lines = iterator_to_array($this->lexer->tokenize($data));
+
+        $this->assertCount(1, $lines);
+        $this->assertEquals('The board is 3/4" thick', $lines[0]->getValue());
+    }
+
+    public function testTokenizeFileDescriptionWithDoubleQuote(): void
+    {
+        $data = "BEGIN:VCALENDAR\r\n"
+            . "BEGIN:VEVENT\r\n"
+            . "SUMMARY:Snow Day\r\n"
+            . "DESCRIPTION:We got 16\" of snow\r\n"
+            . "END:VEVENT\r\n"
+            . "END:VCALENDAR\r\n";
+
+        $tempFile = tempnam(sys_get_temp_dir(), 'ical_test_');
+        file_put_contents($tempFile, $data);
+
+        $lines = iterator_to_array($this->lexer->tokenizeFile($tempFile));
+        unlink($tempFile);
+
+        $this->assertCount(6, $lines);
+        $descLine = $lines[3];
+        $this->assertEquals('DESCRIPTION', $descLine->getName());
+        $this->assertEquals('We got 16" of snow', $descLine->getValue());
+    }
+
+    public function testTokenizeLenientContinuesAfterQuoteInValue(): void
+    {
+        $this->lexer->setStrict(false);
+
+        // Multiple events - one with a quote in the value
+        $data = "BEGIN:VCALENDAR\r\n"
+            . "BEGIN:VEVENT\r\n"
+            . "SUMMARY:Event with 16\" measurement\r\n"
+            . "END:VEVENT\r\n"
+            . "BEGIN:VEVENT\r\n"
+            . "SUMMARY:Normal Event\r\n"
+            . "END:VEVENT\r\n"
+            . "END:VCALENDAR\r\n";
+
+        $lines = iterator_to_array($this->lexer->tokenize($data));
+
+        // All lines should be parsed - the quote in the value is legal
+        $this->assertCount(8, $lines);
+    }
+
+    public function testTokenizeLenientSkipsPropertyParseErrors(): void
+    {
+        $this->lexer->setStrict(false);
+
+        // Invalid property name (starts with digit) - PropertyParser will throw
+        $data = "BEGIN:VCALENDAR\r\n"
+            . "123INVALID:some value\r\n"
+            . "VERSION:2.0\r\n"
+            . "END:VCALENDAR\r\n";
+
+        $lines = iterator_to_array($this->lexer->tokenize($data));
+
+        // The invalid property should be skipped, others remain
+        $this->assertCount(3, $lines);
+        $this->assertEquals('BEGIN', $lines[0]->getName());
+        $this->assertEquals('VERSION', $lines[1]->getName());
+        $this->assertEquals('END', $lines[2]->getName());
+
+        // Warning should be collected
+        $warnings = $this->lexer->getWarnings();
+        $this->assertCount(1, $warnings);
+        $this->assertStringContainsString('Invalid property name', $warnings[0]['message']);
+    }
+
+    public function testTokenizeFileLenientSkipsPropertyParseErrors(): void
+    {
+        $this->lexer->setStrict(false);
+
+        $data = "BEGIN:VCALENDAR\r\n"
+            . "123INVALID:some value\r\n"
+            . "VERSION:2.0\r\n"
+            . "END:VCALENDAR\r\n";
+
+        $tempFile = tempnam(sys_get_temp_dir(), 'ical_test_');
+        file_put_contents($tempFile, $data);
+
+        $lines = iterator_to_array($this->lexer->tokenizeFile($tempFile));
+        unlink($tempFile);
+
+        $this->assertCount(3, $lines);
+        $this->assertEquals('BEGIN', $lines[0]->getName());
+        $this->assertEquals('VERSION', $lines[1]->getName());
+        $this->assertEquals('END', $lines[2]->getName());
+
+        $warnings = $this->lexer->getWarnings();
+        $this->assertCount(1, $warnings);
+        $this->assertStringContainsString('Invalid property name', $warnings[0]['message']);
+    }
+
     #[\Override]
     protected function tearDown(): void
     {
