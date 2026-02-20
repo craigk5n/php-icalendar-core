@@ -50,7 +50,8 @@ class CalAddressParser implements ValueParserInterface
             return $value;
         }
 
-        if ($parsed['scheme'] !== 'mailto') {
+        // URI schemes are case-insensitive per RFC 3986 §3.1
+        if (strtolower($parsed['scheme']) !== 'mailto') {
             if ($this->strict) {
                 throw new ParseException(
                     'Invalid CAL-ADDRESS: scheme must be mailto: ' . $value,
@@ -104,7 +105,7 @@ class CalAddressParser implements ValueParserInterface
 
         $parsed = parse_url($value);
 
-        if ($parsed === false || !isset($parsed['scheme']) || $parsed['scheme'] !== 'mailto') {
+        if ($parsed === false || !isset($parsed['scheme']) || strtolower($parsed['scheme']) !== 'mailto') {
             return false;
         }
 

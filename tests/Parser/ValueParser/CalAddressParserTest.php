@@ -125,4 +125,38 @@ class CalAddressParserTest extends TestCase
     {
         $this->assertFalse($this->parser->canParse('mailto:'));
     }
+
+    // -------------------------------------------------------
+    // Case-insensitive URI scheme (RFC 3986 §3.1)
+    // -------------------------------------------------------
+
+    public function testParseUppercaseMailto(): void
+    {
+        $result = $this->parser->parse('MAILTO:craig@k5n.us');
+        $this->assertEquals('MAILTO:craig@k5n.us', $result);
+    }
+
+    public function testParseUppercaseMailtoStrict(): void
+    {
+        $this->parser->setStrict(true);
+        $result = $this->parser->parse('MAILTO:craig@k5n.us');
+        $this->assertEquals('MAILTO:craig@k5n.us', $result);
+    }
+
+    public function testParseMixedCaseMailto(): void
+    {
+        $this->parser->setStrict(true);
+        $result = $this->parser->parse('Mailto:user@example.com');
+        $this->assertEquals('Mailto:user@example.com', $result);
+    }
+
+    public function testCanParseUppercaseMailto(): void
+    {
+        $this->assertTrue($this->parser->canParse('MAILTO:craig@k5n.us'));
+    }
+
+    public function testCanParseMixedCaseMailto(): void
+    {
+        $this->assertTrue($this->parser->canParse('Mailto:user@example.com'));
+    }
 }
