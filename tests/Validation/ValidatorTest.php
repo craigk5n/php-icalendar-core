@@ -361,4 +361,49 @@ class ValidatorTest extends TestCase
         $this->assertEquals(0, $counts['ERROR']);
         $this->assertEquals(0, $counts['FATAL']);
     }
+
+    // -------------------------------------------------------
+    // VALUE parameter is case-insensitive per RFC 5545 §3.2.20
+    // -------------------------------------------------------
+
+    private function createPropertyWithParams(string $name, string $value, array $params): PropertyInterface
+    {
+        return new GenericProperty($name, new TextValue($value), $params);
+    }
+
+    public function testValidateDtStartDtEndBothDateLowercase(): void
+    {
+        $calendar = new VCalendar();
+        $event = new VEvent();
+        $event->addProperty($this->createProperty('DTSTAMP', '20240101T120000Z'));
+        $event->addProperty($this->createProperty('UID', 'test@example.com'));
+        // Use lowercase "date" for VALUE parameter
+        $event->addProperty($this->createPropertyWithParams('DTSTART', '20240101', ['VALUE' => 'date']));
+        $event->addProperty($this->createPropertyWithParams('DTEND', '20240102', ['VALUE' => 'date']));
+        $calendar->addComponent($event);
+
+        $errors = $this->validator->validate($calendar);
+        $errorCodes = array_map(fn($e) => $e->code, $errors);
+
+        // Should NOT get a DTSTART/DTEND type mismatch error
+        $this->assertNotContains('ICAL-VEVENT-VAL-002', $errorCodes);
+    }
+
+    public function testValidateDtStartDtEndMixedCaseDate(): void
+    {
+        $calendar = new VCalendar();
+        $event = new VEvent();
+        $event->addProperty($this->createProperty('DTSTAMP', '20240101T120000Z'));
+        $event->addProperty($this->createProperty('UID', 'test@example.com'));
+        // Mixed case "Date" on one, uppercase "DATE" on other
+        $event->addProperty($this->createPropertyWithParams('DTSTART', '20240101', ['VALUE' => 'Date']));
+        $event->addProperty($this->createPropertyWithParams('DTEND', '20240102', ['VALUE' => 'DATE']));
+        $calendar->addComponent($event);
+
+        $errors = $this->validator->validate($calendar);
+        $errorCodes = array_map(fn($e) => $e->code, $errors);
+
+        // Both are DATE, just different cases - no mismatch
+        $this->assertNotContains('ICAL-VEVENT-VAL-002', $errorCodes);
+    }
 }

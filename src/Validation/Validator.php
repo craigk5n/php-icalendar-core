@@ -474,8 +474,9 @@ class Validator
             $startParams = $dtStart->getParameters();
             $endParams = $dtEnd->getParameters();
 
-            $startHasTime = !isset($startParams['VALUE']) || $startParams['VALUE'] !== 'DATE';
-            $endHasTime = !isset($endParams['VALUE']) || $endParams['VALUE'] !== 'DATE';
+            // VALUE parameter is case-insensitive per RFC 5545 §3.2.20
+            $startHasTime = !isset($startParams['VALUE']) || strtoupper($startParams['VALUE']) !== 'DATE';
+            $endHasTime = !isset($endParams['VALUE']) || strtoupper($endParams['VALUE']) !== 'DATE';
 
             if ($startHasTime !== $endHasTime) {
                 $this->addError(
