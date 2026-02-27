@@ -107,6 +107,7 @@ class WriterTest extends TestCase
             $this->assertFileExists($filepath);
 
             $content = file_get_contents($filepath);
+            $this->assertIsString($content);
             $this->assertStringContainsString('BEGIN:VCALENDAR', $content);
             $this->assertStringContainsString('SUMMARY:File Test', $content);
         } finally {

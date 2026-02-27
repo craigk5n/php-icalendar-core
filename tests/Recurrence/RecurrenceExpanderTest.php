@@ -332,4 +332,390 @@ class RecurrenceExpanderTest extends TestCase
             $this->assertEquals(5400, $occ->getEnd()->getTimestamp() - $occ->getStart()->getTimestamp()); // 1.5 hours
         }
     }
+
+    // ========== Case sensitivity tests (killing UnwrapStrToUpper mutants) ==========
+
+    public function testDtstartValueDateLowercase(): void
+    {
+        $event = new VEvent();
+        $dtstart = GenericProperty::create('DTSTART', '20260101');
+        $dtstart->setParameter('VALUE', 'date');
+        $event->addProperty($dtstart);
+        $event->addProperty(GenericProperty::create('RRULE', 'FREQ=DAILY;COUNT=3'));
+
+        $occurrences = $this->expander->expandToArray($event);
+
+        $this->assertCount(3, $occurrences);
+        $this->assertEquals('2026-01-01', $occurrences[0]->getStart()->format('Y-m-d'));
+    }
+
+    public function testDtstartValueDateMixedCase(): void
+    {
+        $event = new VEvent();
+        $dtstart = GenericProperty::create('DTSTART', '20260101');
+        $dtstart->setParameter('VALUE', 'DaTe');
+        $event->addProperty($dtstart);
+        $event->addProperty(GenericProperty::create('RRULE', 'FREQ=DAILY;COUNT=3'));
+
+        $occurrences = $this->expander->expandToArray($event);
+
+        $this->assertCount(3, $occurrences);
+    }
+
+    public function testDtendValueDateLowercase(): void
+    {
+        $event = new VEvent();
+        $dtstart = GenericProperty::create('DTSTART', '20260101');
+        $dtstart->setParameter('VALUE', 'DATE');
+        $event->addProperty($dtstart);
+        
+        $dtend = GenericProperty::create('DTEND', '20260102');
+        $dtend->setParameter('VALUE', 'date');
+        $event->addProperty($dtend);
+        
+        $event->addProperty(GenericProperty::create('RRULE', 'FREQ=DAILY;COUNT=2'));
+
+        $occurrences = $this->expander->expandToArray($event);
+
+        $this->assertCount(2, $occurrences);
+        foreach ($occurrences as $occ) {
+            $this->assertEquals(86400, $occ->getEnd()->getTimestamp() - $occ->getStart()->getTimestamp());
+        }
+    }
+
+    public function testDueValueDateLowercase(): void
+    {
+        $todo = new VTodo();
+        $dtstart = GenericProperty::create('DTSTART', '20260101');
+        $dtstart->setParameter('VALUE', 'DATE');
+        $todo->addProperty($dtstart);
+        
+        $due = GenericProperty::create('DUE', '20260103');
+        $due->setParameter('VALUE', 'date');
+        $todo->addProperty($due);
+        
+        $todo->addProperty(GenericProperty::create('RRULE', 'FREQ=DAILY;COUNT=2'));
+
+        $occurrences = $this->expander->expandToArray($todo);
+
+        $this->assertCount(2, $occurrences);
+        foreach ($occurrences as $occ) {
+            $this->assertEquals(172800, $occ->getEnd()->getTimestamp() - $occ->getStart()->getTimestamp());
+        }
+    }
+
+    public function testExdateValueDateLowercase(): void
+    {
+        $event = new VEvent();
+        $dtstart = GenericProperty::create('DTSTART', '20260101');
+        $dtstart->setParameter('VALUE', 'DATE');
+        $event->addProperty($dtstart);
+        $event->addProperty(GenericProperty::create('RRULE', 'FREQ=DAILY;COUNT=5'));
+        
+        $exdate = GenericProperty::create('EXDATE', '20260103');
+        $exdate->setParameter('VALUE', 'date');
+        $event->addProperty($exdate);
+
+        $occurrences = $this->expander->expandToArray($event);
+
+        $this->assertCount(4, $occurrences);
+    }
+
+    public function testRdateValueDateLowercase(): void
+    {
+        $event = new VEvent();
+        $dtstart = GenericProperty::create('DTSTART', '20260101');
+        $dtstart->setParameter('VALUE', 'DATE');
+        $event->addProperty($dtstart);
+        $event->addProperty(GenericProperty::create('RRULE', 'FREQ=DAILY;COUNT=2'));
+        
+        $rdate = GenericProperty::create('RDATE', '20260105');
+        $rdate->setParameter('VALUE', 'date');
+        $event->addProperty($rdate);
+
+        $occurrences = $this->expander->expandToArray($event);
+
+        $this->assertCount(3, $occurrences);
+        $this->assertEquals('2026-01-05', $occurrences[2]->getStart()->format('Y-m-d'));
+    }
+
+    // ========== Generator injection test (killing Coalesce mutant) ==========
+
+    public function testCustomGeneratorInjection(): void
+    {
+        $customGenerator = new \Icalendar\Recurrence\RecurrenceGenerator();
+        $expander = new RecurrenceExpander($customGenerator);
+        
+        $event = new VEvent();
+        $event->addProperty(GenericProperty::create('DTSTART', '20260101T090000'));
+        $event->addProperty(GenericProperty::create('RRULE', 'FREQ=DAILY;COUNT=3'));
+
+        $occurrences = $expander->expandToArray($event);
+
+        $this->assertCount(3, $occurrences);
+    }
+
+    // ========== RDATE sorting tests (killing Spaceship mutant) ==========
+
+    public function testRdateSortedChronologically(): void
+    {
+        $event = new VEvent();
+        $event->addProperty(GenericProperty::create('DTSTART', '20260101T090000'));
+        $event->addProperty(GenericProperty::create('RRULE', 'FREQ=DAILY;COUNT=2'));
+        // Add RDATEs in reverse order
+        $event->addProperty(GenericProperty::create('RDATE', '20260110T090000'));
+        $event->addProperty(GenericProperty::create('RDATE', '20260105T090000'));
+
+        $occurrences = $this->expander->expandToArray($event);
+
+        $this->assertCount(4, $occurrences);
+        // Verify chronological order
+        $this->assertEquals('2026-01-01', $occurrences[0]->getStart()->format('Y-m-d'));
+        $this->assertEquals('2026-01-02', $occurrences[1]->getStart()->format('Y-m-d'));
+        $this->assertEquals('2026-01-05', $occurrences[2]->getStart()->format('Y-m-d'));
+        $this->assertEquals('2026-01-10', $occurrences[3]->getStart()->format('Y-m-d'));
+    }
+
+    // ========== RDATE before RRULE test (killing While_ mutant) ==========
+
+    public function testRdateBeforeRruleDate(): void
+    {
+        $event = new VEvent();
+        $event->addProperty(GenericProperty::create('DTSTART', '20260105T090000')); // Monday
+        $event->addProperty(GenericProperty::create('RRULE', 'FREQ=WEEKLY;COUNT=2')); // Mondays
+        // RDATE on a Wednesday between the two Mondays
+        $event->addProperty(GenericProperty::create('RDATE', '20260108T090000')); // Wednesday
+
+        $occurrences = $this->expander->expandToArray($event);
+
+        $this->assertCount(3, $occurrences);
+        $this->assertEquals('2026-01-05', $occurrences[0]->getStart()->format('Y-m-d')); // Mon
+        $this->assertEquals('2026-01-08', $occurrences[1]->getStart()->format('Y-m-d')); // Wed (RDATE)
+        $this->assertTrue($occurrences[1]->isRdate());
+        $this->assertEquals('2026-01-12', $occurrences[2]->getStart()->format('Y-m-d')); // Mon
+        $this->assertFalse($occurrences[2]->isRdate());
+    }
+
+    // ========== Empty RDATE/EXDATE value tests ==========
+
+    public function testExdateWithEmptyValue(): void
+    {
+        $event = new VEvent();
+        $event->addProperty(GenericProperty::create('DTSTART', '20260101T090000'));
+        $event->addProperty(GenericProperty::create('RRULE', 'FREQ=DAILY;COUNT=3'));
+        $event->addProperty(GenericProperty::create('EXDATE', '20260102T090000,,'));
+
+        $occurrences = $this->expander->expandToArray($event);
+
+        $this->assertCount(2, $occurrences);
+        $this->assertEquals('2026-01-01', $occurrences[0]->getStart()->format('Y-m-d'));
+        $this->assertEquals('2026-01-03', $occurrences[1]->getStart()->format('Y-m-d'));
+    }
+
+    public function testRdateWithEmptyValue(): void
+    {
+        $event = new VEvent();
+        $event->addProperty(GenericProperty::create('DTSTART', '20260101T090000'));
+        $event->addProperty(GenericProperty::create('RRULE', 'FREQ=DAILY;COUNT=2'));
+        $event->addProperty(GenericProperty::create('RDATE', ',20260105T090000,'));
+
+        $occurrences = $this->expander->expandToArray($event);
+
+        $this->assertCount(3, $occurrences);
+    }
+
+    // ========== Missing DTSTART test ==========
+
+    public function testMissingDtstartThrows(): void
+    {
+        $event = new VEvent();
+        $event->addProperty(GenericProperty::create('RRULE', 'FREQ=DAILY;COUNT=3'));
+
+        $this->expectException(\InvalidArgumentException::class);
+        $this->expectExceptionMessage('missing DTSTART');
+        $this->expander->expandToArray($event);
+    }
+
+    // ========== Deduplication tests ==========
+
+    public function testRdateAndRruleSameTimeDeduplicated(): void
+    {
+        $event = new VEvent();
+        $event->addProperty(GenericProperty::create('DTSTART', '20260101T090000'));
+        $event->addProperty(GenericProperty::create('RRULE', 'FREQ=DAILY;COUNT=3'));
+        // RDATE same as one of the RRULE dates
+        $event->addProperty(GenericProperty::create('RDATE', '20260102T090000'));
+
+        $occurrences = $this->expander->expandToArray($event);
+
+        // Should still be 3, not 4 - deduplicated
+        $this->assertCount(3, $occurrences);
+        // The RDATE occurrence should be marked
+        $rdateOccurrence = array_filter($occurrences, fn($o) => $o->getStart()->format('Y-m-d') === '2026-01-02');
+        $this->assertCount(1, $rdateOccurrence);
+    }
+
+    public function testMultiRruleSameDateDeduplicated(): void
+    {
+        $event = new VEvent();
+        $event->addProperty(GenericProperty::create('DTSTART', '20260101T090000'));
+        // Both rules produce Jan 1, 2, 3
+        $event->addProperty(GenericProperty::create('RRULE', 'FREQ=DAILY;COUNT=3'));
+        $event->addProperty(GenericProperty::create('RRULE', 'FREQ=DAILY;COUNT=3'));
+
+        $occurrences = $this->expander->expandToArray($event);
+
+        // Should be 3, not 6 - deduplicated
+        $this->assertCount(3, $occurrences);
+    }
+
+    // ========== Boundary comparison tests (killing LessThan mutants) ==========
+
+    public function testRdateAtExactRruleTimeNotDuplicated(): void
+    {
+        $event = new VEvent();
+        $event->addProperty(GenericProperty::create('DTSTART', '20260101T090000'));
+        $event->addProperty(GenericProperty::create('RRULE', 'FREQ=DAILY;COUNT=3'));
+        $event->addProperty(GenericProperty::create('RDATE', '20260102T090000'));
+
+        $occurrences = $this->expander->expandToArray($event);
+
+        $this->assertCount(3, $occurrences);
+    }
+
+    public function testExdateAtExactTimeExcludes(): void
+    {
+        $event = new VEvent();
+        $event->addProperty(GenericProperty::create('DTSTART', '20260101T090000'));
+        $event->addProperty(GenericProperty::create('RRULE', 'FREQ=DAILY;COUNT=3'));
+        $event->addProperty(GenericProperty::create('EXDATE', '20260102T090000'));
+
+        $occurrences = $this->expander->expandToArray($event);
+
+        $this->assertCount(2, $occurrences);
+        $this->assertEquals('2026-01-01', $occurrences[0]->getStart()->format('Y-m-d'));
+        $this->assertEquals('2026-01-03', $occurrences[1]->getStart()->format('Y-m-d'));
+    }
+
+    // ========== Component without getAllProperties method ==========
+
+    public function testComponentWithoutGetAllPropertiesMethod(): void
+    {
+        // Create a mock component that doesn't have getAllProperties
+        $component = new class implements \Icalendar\Component\ComponentInterface {
+            private array $properties = [];
+            private ?\Icalendar\Component\ComponentInterface $parent = null;
+            
+            public function __construct() {
+                $prop = \Icalendar\Property\GenericProperty::create('DTSTART', '20260101T090000');
+                $this->properties[] = $prop;
+                $prop = \Icalendar\Property\GenericProperty::create('RRULE', 'FREQ=DAILY;COUNT=2');
+                $this->properties[] = $prop;
+            }
+            
+            #[\Override]
+            public function getName(): string { return 'VEVENT'; }
+            #[\Override]
+            public function addProperty(\Icalendar\Property\PropertyInterface $property): void {}
+            #[\Override]
+            public function getProperty(string $name): ?\Icalendar\Property\PropertyInterface {
+                foreach ($this->properties as $p) {
+                    if ($p->getName() === $name) return $p;
+                }
+                return null;
+            }
+            #[\Override]
+            public function getProperties(): array { return $this->properties; }
+            #[\Override]
+            public function getAllProperties(?string $name = null): array {
+                if ($name === null) {
+                    return $this->properties;
+                }
+                return array_filter($this->properties, fn($p) => $p->getName() === $name);
+            }
+            #[\Override]
+            public function removeProperty(string $name): void {}
+            #[\Override]
+            public function addComponent(\Icalendar\Component\ComponentInterface $component): void {}
+            #[\Override]
+            public function getComponents(?string $type = null): array { return []; }
+            #[\Override]
+            public function removeComponent(\Icalendar\Component\ComponentInterface $component): void {}
+            #[\Override]
+            public function getParent(): ?\Icalendar\Component\ComponentInterface { return $this->parent; }
+            #[\Override]
+            public function setParent(?\Icalendar\Component\ComponentInterface $parent): void { $this->parent = $parent; }
+            #[\Override]
+            public function toArray(): array { return []; }
+        };
+
+        $occurrences = $this->expander->expandToArray($component);
+
+        $this->assertCount(2, $occurrences);
+    }
+
+    // ========== Generator behavior tests ==========
+
+    public function testExpandReturnsGenerator(): void
+    {
+        $event = new VEvent();
+        $event->addProperty(GenericProperty::create('DTSTART', '20260101T090000'));
+        $event->addProperty(GenericProperty::create('RRULE', 'FREQ=DAILY;COUNT=3'));
+
+        $generator = $this->expander->expand($event);
+
+        $this->assertInstanceOf(\Generator::class, $generator);
+        
+        $count = 0;
+        foreach ($generator as $occurrence) {
+            $this->assertInstanceOf(Occurrence::class, $occurrence);
+            $count++;
+        }
+        $this->assertEquals(3, $count);
+    }
+
+    // ========== Duration priority tests ==========
+
+    public function testDtendTakesPriorityOverDuration(): void
+    {
+        $event = new VEvent();
+        $event->addProperty(GenericProperty::create('DTSTART', '20260101T090000'));
+        $event->addProperty(GenericProperty::create('DTEND', '20260101T100000')); // 1 hour
+        $event->addProperty(GenericProperty::create('DURATION', 'PT2H')); // Should be ignored
+        $event->addProperty(GenericProperty::create('RRULE', 'FREQ=DAILY;COUNT=2'));
+
+        $occurrences = $this->expander->expandToArray($event);
+
+        foreach ($occurrences as $occ) {
+            $this->assertEquals(3600, $occ->getEnd()->getTimestamp() - $occ->getStart()->getTimestamp());
+        }
+    }
+
+    public function testDurationUsedWhenNoDtend(): void
+    {
+        $event = new VEvent();
+        $event->addProperty(GenericProperty::create('DTSTART', '20260101T090000'));
+        $event->addProperty(GenericProperty::create('DURATION', 'PT2H'));
+        $event->addProperty(GenericProperty::create('RRULE', 'FREQ=DAILY;COUNT=2'));
+
+        $occurrences = $this->expander->expandToArray($event);
+
+        foreach ($occurrences as $occ) {
+            $this->assertEquals(7200, $occ->getEnd()->getTimestamp() - $occ->getStart()->getTimestamp());
+        }
+    }
+
+    public function testDueUsedForVtodoDuration(): void
+    {
+        $todo = new VTodo();
+        $todo->addProperty(GenericProperty::create('DTSTART', '20260101T090000'));
+        $todo->addProperty(GenericProperty::create('DUE', '20260101T120000')); // 3 hours
+        $todo->addProperty(GenericProperty::create('RRULE', 'FREQ=DAILY;COUNT=2'));
+
+        $occurrences = $this->expander->expandToArray($todo);
+
+        foreach ($occurrences as $occ) {
+            $this->assertEquals(10800, $occ->getEnd()->getTimestamp() - $occ->getStart()->getTimestamp());
+        }
+    }
 }

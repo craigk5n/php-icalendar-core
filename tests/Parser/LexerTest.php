@@ -83,6 +83,7 @@ class LexerTest extends TestCase
     public function testTokenizeFileStreaming(): void
     {
         $tempFile = tempnam(sys_get_temp_dir(), 'ical_test_');
+        $this->assertIsString($tempFile);
         file_put_contents($tempFile, "BEGIN:VCALENDAR\r\nVERSION:2.0\r\nEND:VCALENDAR\r\n");
         
         $lineCount = 0;
@@ -99,8 +100,9 @@ class LexerTest extends TestCase
     public function testTokenizeLargeFile(): void
     {
         $tempFile = tempnam(sys_get_temp_dir(), 'ical_large_');
+        $this->assertIsString($tempFile);
         $content = '';
-        
+
         // Create a large amount of data to test memory efficiency
         for ($i = 1; $i <= 1000; $i++) {
             $content .= "PROP{$i}:value{$i}\r\n";
@@ -182,6 +184,7 @@ class LexerTest extends TestCase
     public function testTokenizeFileNotReadable(): void
     {
         $tempFile = tempnam(sys_get_temp_dir(), 'ical_test_');
+        $this->assertIsString($tempFile);
         file_put_contents($tempFile, "BEGIN:VCALENDAR\r\nEND:VCALENDAR");
         chmod($tempFile, 0000); // Make unreadable
 
@@ -250,6 +253,7 @@ class LexerTest extends TestCase
             . "END:VCALENDAR\r\n";
 
         $tempFile = tempnam(sys_get_temp_dir(), 'ical_test_');
+        $this->assertIsString($tempFile);
         file_put_contents($tempFile, $data);
 
         $lines = iterator_to_array($this->lexer->tokenizeFile($tempFile));
@@ -270,6 +274,7 @@ class LexerTest extends TestCase
             . "END:VCALENDAR\r\n";
 
         $tempFile = tempnam(sys_get_temp_dir(), 'ical_test_');
+        $this->assertIsString($tempFile);
         file_put_contents($tempFile, $data);
 
         $lines = iterator_to_array($this->lexer->tokenizeFile($tempFile));
@@ -291,6 +296,7 @@ class LexerTest extends TestCase
             . "END:VCALENDAR\r\n";
 
         $tempFile = tempnam(sys_get_temp_dir(), 'ical_test_');
+        $this->assertIsString($tempFile);
         file_put_contents($tempFile, $data);
 
         $lines = iterator_to_array($this->lexer->tokenizeFile($tempFile));
@@ -328,6 +334,7 @@ class LexerTest extends TestCase
 
         $data = "BEGIN:VCALENDAR\r\nMALFORMED_NO_COLON\r\nVERSION:2.0\r\nEND:VCALENDAR\r\n";
         $tempFile = tempnam(sys_get_temp_dir(), 'ical_test_');
+        $this->assertIsString($tempFile);
         file_put_contents($tempFile, $data);
 
         $lines = iterator_to_array($this->lexer->tokenizeFile($tempFile));
@@ -387,6 +394,7 @@ class LexerTest extends TestCase
             . "END:VEVENT\r\n";
 
         $tempFile = tempnam(sys_get_temp_dir(), 'ical_test_');
+        $this->assertIsString($tempFile);
         file_put_contents($tempFile, $data);
 
         $lines = iterator_to_array($this->lexer->tokenizeFile($tempFile));
@@ -460,6 +468,7 @@ class LexerTest extends TestCase
             . "END:VCALENDAR\r\n";
 
         $tempFile = tempnam(sys_get_temp_dir(), 'ical_test_');
+        $this->assertIsString($tempFile);
         file_put_contents($tempFile, $data);
 
         $lines = iterator_to_array($this->lexer->tokenizeFile($tempFile));
@@ -525,6 +534,7 @@ class LexerTest extends TestCase
             . "END:VCALENDAR\r\n";
 
         $tempFile = tempnam(sys_get_temp_dir(), 'ical_test_');
+        $this->assertIsString($tempFile);
         file_put_contents($tempFile, $data);
 
         $lines = iterator_to_array($this->lexer->tokenizeFile($tempFile));

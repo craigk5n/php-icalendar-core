@@ -60,6 +60,7 @@ abstract class AbstractComponent implements ComponentInterface
      *
      * @return PropertyInterface[]
      */
+    #[\Override]
     public function getAllProperties(?string $name = null): array
     {
         if ($name === null) {

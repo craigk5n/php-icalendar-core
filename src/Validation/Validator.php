@@ -28,7 +28,7 @@ use Icalendar\Exception\ValidationException;
  * - Recurrence rule validation
  * - Cross-component validation
  */
-class Validator
+class Validator implements ValidatorInterface
 {
     /** @var ValidationError[] */
     private array $errors = [];
@@ -36,10 +36,8 @@ class Validator
     /** @var VTimezone[] */
     private array $timezones = [];
 
-    /**
-     * @return ValidationError[]
-     */
-    public function validate(VCalendar $calendar): array
+    #[\Override]
+    public function validate(VCalendar $calendar): ValidationResult
     {
         $this->errors = [];
         $this->timezones = [];
@@ -47,7 +45,16 @@ class Validator
         $this->collectTimezones($calendar);
         $this->validateCalendar($calendar);
 
-        return $this->errors;
+        return ValidationResult::fromArray($this->errors);
+    }
+
+    /**
+     * @deprecated Use validate() which returns ValidationResult instead
+     * @return ValidationError[]
+     */
+    public function validateAsArray(VCalendar $calendar): array
+    {
+        return $this->validate($calendar)->getErrors();
     }
 
     /**
@@ -145,14 +152,24 @@ class Validator
 
     /**
      * Validate a single component and return errors
-     * 
-     * @return ValidationError[]
      */
-    public function validateSingleComponent(ComponentInterface $component): array
+    #[\Override]
+    public function validateSingleComponent(ComponentInterface $component): ValidationResult
     {
         $this->errors = [];
         $this->doValidateComponent($component);
-        return $this->errors;
+        return ValidationResult::fromArray($this->errors);
+    }
+
+    /**
+     * Validate a component (backward compatibility)
+     * 
+     * @deprecated Use validateSingleComponent() which returns ValidationResult instead
+     * @return ValidationError[]
+     */
+    public function validateComponentAsArray(ComponentInterface $component): array
+    {
+        return $this->validateSingleComponent($component)->getErrors();
     }
 
     /**
@@ -162,7 +179,7 @@ class Validator
      */
     public function validateComponent(ComponentInterface $component): array
     {
-        return $this->validateSingleComponent($component);
+        return $this->validateSingleComponent($component)->getErrors();
     }
 
     /**
@@ -749,14 +766,13 @@ class Validator
 
     /**
      * Validate a property value
-     * 
-     * @return ValidationError[]
      */
-    public function validateProperty(PropertyInterface $property): array
+    #[\Override]
+    public function validateProperty(PropertyInterface $property): ValidationResult
     {
         $this->errors = [];
         $this->validatePropertyValue($property);
-        return $this->errors;
+        return ValidationResult::fromArray($this->errors);
     }
 
     /**
@@ -792,29 +808,20 @@ class Validator
     /**
      * Check if validation passed (no errors)
      */
+    #[\Override]
     public function isValid(VCalendar $calendar): bool
     {
-        return empty($this->validate($calendar));
+        return $this->validate($calendar)->isEmpty();
     }
 
     /**
      * Get count of errors by severity
-     * 
+     *
      * @return array{WARNING: int, ERROR: int, FATAL: int}
      */
+    #[\Override]
     public function getErrorCounts(VCalendar $calendar): array
     {
-        $errors = $this->validate($calendar);
-        $counts = [
-            'WARNING' => 0,
-            'ERROR' => 0,
-            'FATAL' => 0,
-        ];
-
-        foreach ($errors as $error) {
-            $counts[$error->severity->value]++;
-        }
-
-        return $counts;
+        return $this->validate($calendar)->getErrorCounts();
     }
 }

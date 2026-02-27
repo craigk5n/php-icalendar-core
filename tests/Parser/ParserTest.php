@@ -519,7 +519,9 @@ class ParserTest extends TestCase
         $calendar = $this->parser->parse($icalData);
         $events = $calendar->getComponents('VEVENT');
         $this->assertCount(1, $events);
-        $this->assertEquals('Meeting', $events[0]->getProperty('SUMMARY')->getValue()->getRawValue());
+        $summary = $events[0]->getProperty('SUMMARY');
+        $this->assertNotNull($summary);
+        $this->assertEquals('Meeting', $summary->getValue()->getRawValue());
     }
 
     // -------------------------------------------------------
@@ -620,8 +622,12 @@ class ParserTest extends TestCase
         $events = $calendar->getComponents('VEVENT');
         // Both events should be parsed
         $this->assertCount(2, $events);
-        $this->assertEquals('Snow Report', $events[0]->getProperty('SUMMARY')->getValue()->getRawValue());
-        $this->assertEquals('Normal Event', $events[1]->getProperty('SUMMARY')->getValue()->getRawValue());
+        $summary0 = $events[0]->getProperty('SUMMARY');
+        $this->assertNotNull($summary0);
+        $this->assertEquals('Snow Report', $summary0->getValue()->getRawValue());
+        $summary1 = $events[1]->getProperty('SUMMARY');
+        $this->assertNotNull($summary1);
+        $this->assertEquals('Normal Event', $summary1->getValue()->getRawValue());
     }
 
     public function testParseLocationWithQuotedText(): void
@@ -674,8 +680,14 @@ class ParserTest extends TestCase
 
         $events = $calendar->getComponents('VEVENT');
         $this->assertCount(3, $events);
-        $this->assertEquals('Buy 2" screws', $events[0]->getProperty('SUMMARY')->getValue()->getRawValue());
-        $this->assertEquals('Watch "Frozen"', $events[1]->getProperty('SUMMARY')->getValue()->getRawValue());
-        $this->assertEquals('Normal event', $events[2]->getProperty('SUMMARY')->getValue()->getRawValue());
+        $summary0 = $events[0]->getProperty('SUMMARY');
+        $this->assertNotNull($summary0);
+        $this->assertEquals('Buy 2" screws', $summary0->getValue()->getRawValue());
+        $summary1 = $events[1]->getProperty('SUMMARY');
+        $this->assertNotNull($summary1);
+        $this->assertEquals('Watch "Frozen"', $summary1->getValue()->getRawValue());
+        $summary2 = $events[2]->getProperty('SUMMARY');
+        $this->assertNotNull($summary2);
+        $this->assertEquals('Normal event', $summary2->getValue()->getRawValue());
     }
 }

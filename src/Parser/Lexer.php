@@ -14,7 +14,7 @@ use Icalendar\Exception\ParseException;
  * 2. Line unfolding - Join continuation lines (CRLF + space/tab)
  * 3. Token generation - Yield ContentLine objects via generator
  */
-class Lexer
+final class Lexer
 {
     private int $lineNumber = 0;
 

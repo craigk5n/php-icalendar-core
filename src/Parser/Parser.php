@@ -25,19 +25,20 @@ use Icalendar\Exception\ValidationException;
 use Icalendar\Validation\SecurityValidator;
 use Icalendar\Validation\ValidationError;
 use Icalendar\Validation\ErrorSeverity;
+use Icalendar\Validation\Validator;
+use Icalendar\Validation\ValidatorInterface;
+use Icalendar\Validation\ValidationResult;
 use Icalendar\Parser\ValueParser\ValueParserFactory;
 
-/**
- * Main parser implementation
- *
- * Parses iCalendar data into component structures.
- */
 class Parser implements ParserInterface
 {
     public const STRICT = true;
     public const LENIENT = false;
 
-    private bool $mode; // true for strict, false for lenient
+    private bool $mode;
+    private bool $enableValidation = false;
+    private ?ValidatorInterface $validator = null;
+    private ?ValidationResult $validationErrors = null;
 
     /** @var ValidationError[] */
     private array $errors = [];
@@ -67,6 +68,7 @@ class Parser implements ParserInterface
     {
         $this->errors = [];
         $this->currentDepth = 0;
+        $this->validationErrors = null;
 
         $lexer = new Lexer();
         $lexer->setStrict($this->mode);
@@ -78,7 +80,41 @@ class Parser implements ParserInterface
 
         $this->transferLexerWarnings($lexer);
 
-        return $this->buildCalendar($contentLines);
+        $calendar = $this->buildCalendar($contentLines);
+
+        if ($this->enableValidation) {
+            $this->runValidation($calendar);
+        }
+
+        return $calendar;
+    }
+
+    public function withValidation(?ValidatorInterface $validator = null): self
+    {
+        $this->enableValidation = true;
+        $this->validator = $validator;
+        return $this;
+    }
+
+    public function getValidationErrors(): ValidationResult
+    {
+        return $this->validationErrors ?? ValidationResult::empty();
+    }
+
+    private function runValidation(VCalendar $calendar): void
+    {
+        $validator = $this->validator ?? new Validator();
+        $this->validationErrors = $validator->validate($calendar);
+
+        if ($this->mode === self::STRICT && $this->validationErrors->hasErrors()) {
+            $firstError = $this->validationErrors->firstError();
+            if ($firstError !== null) {
+                throw new ValidationException(
+                    $firstError->message,
+                    $firstError->code
+                );
+            }
+        }
     }
 
     /**

@@ -369,13 +369,6 @@ class RecurrenceExpander
      */
     private function getAllProperties(ComponentInterface $component, string $name): array
     {
-        if (method_exists($component, 'getAllProperties')) {
-            return $component->getAllProperties($name);
-        }
-
-        return array_values(array_filter(
-            $component->getProperties(),
-            fn($p) => $p->getName() === $name
-        ));
+        return $component->getAllProperties($name);
     }
 }
