@@ -15,6 +15,7 @@ use Icalendar\Property\GenericProperty;
 use Icalendar\Property\PropertyInterface;
 use Icalendar\Value\TextValue;
 use Icalendar\Validation\Validator;
+use Icalendar\Validation\ValidationResult;
 use PHPUnit\Framework\TestCase;
 
 class ValidatorTest extends TestCase
@@ -35,11 +36,11 @@ class ValidatorTest extends TestCase
     public function testValidateEmptyCalendar(): void
     {
         $calendar = new VCalendar();
-        $errors = $this->validator->validate($calendar);
+        $result = $this->validator->validate($calendar);
 
-        $this->assertNotEmpty($errors);
-        $errorCodes = array_map(fn($e) => $e->code, $errors);
-        $this->assertContains('ICAL-COMP-001', $errorCodes);
+        $this->assertInstanceOf(ValidationResult::class, $result);
+        $this->assertTrue($result->hasErrors());
+        $this->assertContains('ICAL-COMP-001', $result->getErrorCodes());
     }
 
     public function testValidateValidCalendar(): void
@@ -50,9 +51,9 @@ class ValidatorTest extends TestCase
         $event->addProperty($this->createProperty('UID', 'test-uid@example.com'));
         $calendar->addComponent($event);
 
-        $errors = $this->validator->validate($calendar);
+        $result = $this->validator->validate($calendar);
 
-        $this->assertEmpty($errors);
+        $this->assertTrue($result->isEmpty());
     }
 
     public function testValidateVEventMissingDtstamp(): void
@@ -60,10 +61,9 @@ class ValidatorTest extends TestCase
         $event = new VEvent();
         $event->addProperty($this->createProperty('UID', 'test-uid@example.com'));
 
-        $errors = $this->validator->validateSingleComponent($event);
+        $result = $this->validator->validateSingleComponent($event);
 
-        $errorCodes = array_map(fn($e) => $e->code, $errors);
-        $this->assertContains('ICAL-VEVENT-001', $errorCodes);
+        $this->assertContains('ICAL-VEVENT-001', $result->getErrorCodes());
     }
 
     public function testValidateVEventMissingUid(): void
@@ -71,10 +71,9 @@ class ValidatorTest extends TestCase
         $event = new VEvent();
         $event->addProperty($this->createProperty('DTSTAMP', '20240101T120000Z'));
 
-        $errors = $this->validator->validateSingleComponent($event);
+        $result = $this->validator->validateSingleComponent($event);
 
-        $errorCodes = array_map(fn($e) => $e->code, $errors);
-        $this->assertContains('ICAL-VEVENT-002', $errorCodes);
+        $this->assertContains('ICAL-VEVENT-002', $result->getErrorCodes());
     }
 
     public function testValidateVEventInvalidStatus(): void
@@ -84,10 +83,9 @@ class ValidatorTest extends TestCase
         $event->addProperty($this->createProperty('UID', 'test-uid@example.com'));
         $event->addProperty($this->createProperty('STATUS', 'INVALID_STATUS'));
 
-        $errors = $this->validator->validateSingleComponent($event);
+        $result = $this->validator->validateSingleComponent($event);
 
-        $errorCodes = array_map(fn($e) => $e->code, $errors);
-        $this->assertContains('ICAL-VEVENT-VAL-003', $errorCodes);
+        $this->assertContains('ICAL-VEVENT-VAL-003', $result->getErrorCodes());
     }
 
     public function testValidateVEventValidStatuses(): void
@@ -100,10 +98,9 @@ class ValidatorTest extends TestCase
             $event->addProperty($this->createProperty('UID', 'test-uid@example.com'));
             $event->addProperty($this->createProperty('STATUS', $status));
 
-            $errors = $this->validator->validateSingleComponent($event);
+            $result = $this->validator->validateSingleComponent($event);
 
-            $errorCodes = array_map(fn($e) => $e->code, $errors);
-            $this->assertNotContains('ICAL-VEVENT-VAL-003', $errorCodes, "Status {$status} should be valid");
+            $this->assertNotContains('ICAL-VEVENT-VAL-003', $result->getErrorCodes(), "Status {$status} should be valid");
         }
     }
 
@@ -115,10 +112,9 @@ class ValidatorTest extends TestCase
         $event->addProperty($this->createProperty('DTEND', '20240101T130000Z'));
         $event->addProperty($this->createProperty('DURATION', 'PT1H'));
 
-        $errors = $this->validator->validateSingleComponent($event);
+        $result = $this->validator->validateSingleComponent($event);
 
-        $errorCodes = array_map(fn($e) => $e->code, $errors);
-        $this->assertContains('ICAL-VEVENT-VAL-001', $errorCodes);
+        $this->assertContains('ICAL-VEVENT-VAL-001', $result->getErrorCodes());
     }
 
     public function testValidateVTodoMissingDtstamp(): void
@@ -126,10 +122,9 @@ class ValidatorTest extends TestCase
         $todo = new VTodo();
         $todo->addProperty($this->createProperty('UID', 'test-uid@example.com'));
 
-        $errors = $this->validator->validateSingleComponent($todo);
+        $result = $this->validator->validateSingleComponent($todo);
 
-        $errorCodes = array_map(fn($e) => $e->code, $errors);
-        $this->assertContains('ICAL-VTODO-001', $errorCodes);
+        $this->assertContains('ICAL-VTODO-001', $result->getErrorCodes());
     }
 
     public function testValidateVTodoMissingUid(): void
@@ -137,10 +132,9 @@ class ValidatorTest extends TestCase
         $todo = new VTodo();
         $todo->addProperty($this->createProperty('DTSTAMP', '20240101T120000Z'));
 
-        $errors = $this->validator->validateSingleComponent($todo);
+        $result = $this->validator->validateSingleComponent($todo);
 
-        $errorCodes = array_map(fn($e) => $e->code, $errors);
-        $this->assertContains('ICAL-VTODO-002', $errorCodes);
+        $this->assertContains('ICAL-VTODO-002', $result->getErrorCodes());
     }
 
     public function testValidateVTodoInvalidStatus(): void
@@ -150,10 +144,9 @@ class ValidatorTest extends TestCase
         $todo->addProperty($this->createProperty('UID', 'test-uid@example.com'));
         $todo->addProperty($this->createProperty('STATUS', 'INVALID_STATUS'));
 
-        $errors = $this->validator->validateSingleComponent($todo);
+        $result = $this->validator->validateSingleComponent($todo);
 
-        $errorCodes = array_map(fn($e) => $e->code, $errors);
-        $this->assertContains('ICAL-VTODO-VAL-002', $errorCodes);
+        $this->assertContains('ICAL-VTODO-VAL-002', $result->getErrorCodes());
     }
 
     public function testValidateVTodoValidStatuses(): void
@@ -166,10 +159,9 @@ class ValidatorTest extends TestCase
             $todo->addProperty($this->createProperty('UID', 'test-uid@example.com'));
             $todo->addProperty($this->createProperty('STATUS', $status));
 
-            $errors = $this->validator->validateSingleComponent($todo);
+            $result = $this->validator->validateSingleComponent($todo);
 
-            $errorCodes = array_map(fn($e) => $e->code, $errors);
-            $this->assertNotContains('ICAL-VTODO-VAL-002', $errorCodes, "Status {$status} should be valid");
+            $this->assertNotContains('ICAL-VTODO-VAL-002', $result->getErrorCodes(), "Status {$status} should be valid");
         }
     }
 
@@ -181,10 +173,9 @@ class ValidatorTest extends TestCase
         $todo->addProperty($this->createProperty('DUE', '20240101T130000Z'));
         $todo->addProperty($this->createProperty('DURATION', 'PT1H'));
 
-        $errors = $this->validator->validateSingleComponent($todo);
+        $result = $this->validator->validateSingleComponent($todo);
 
-        $errorCodes = array_map(fn($e) => $e->code, $errors);
-        $this->assertContains('ICAL-VTODO-VAL-001', $errorCodes);
+        $this->assertContains('ICAL-VTODO-VAL-001', $result->getErrorCodes());
     }
 
     public function testValidateVJournalMissingDtstamp(): void
@@ -192,10 +183,9 @@ class ValidatorTest extends TestCase
         $journal = new VJournal();
         $journal->addProperty($this->createProperty('UID', 'test-uid@example.com'));
 
-        $errors = $this->validator->validateSingleComponent($journal);
+        $result = $this->validator->validateSingleComponent($journal);
 
-        $errorCodes = array_map(fn($e) => $e->code, $errors);
-        $this->assertContains('ICAL-VJOURNAL-001', $errorCodes);
+        $this->assertContains('ICAL-VJOURNAL-001', $result->getErrorCodes());
     }
 
     public function testValidateVJournalInvalidStatus(): void
@@ -205,10 +195,9 @@ class ValidatorTest extends TestCase
         $journal->addProperty($this->createProperty('UID', 'test-uid@example.com'));
         $journal->addProperty($this->createProperty('STATUS', 'INVALID_STATUS'));
 
-        $errors = $this->validator->validateSingleComponent($journal);
+        $result = $this->validator->validateSingleComponent($journal);
 
-        $errorCodes = array_map(fn($e) => $e->code, $errors);
-        $this->assertContains('ICAL-VJOURNAL-VAL-001', $errorCodes);
+        $this->assertContains('ICAL-VJOURNAL-VAL-001', $result->getErrorCodes());
     }
 
     public function testValidateVTimezoneMissingTzid(): void
@@ -220,10 +209,9 @@ class ValidatorTest extends TestCase
         $observance->addProperty($this->createProperty('DTSTART', '19700301T020000Z'));
         $timezone->addComponent($observance);
 
-        $errors = $this->validator->validateSingleComponent($timezone);
+        $result = $this->validator->validateSingleComponent($timezone);
 
-        $errorCodes = array_map(fn($e) => $e->code, $errors);
-        $this->assertContains('ICAL-TZ-001', $errorCodes);
+        $this->assertContains('ICAL-TZ-001', $result->getErrorCodes());
     }
 
     public function testValidateVTimezoneObservanceMissingDtstart(): void
@@ -236,10 +224,9 @@ class ValidatorTest extends TestCase
         $observance->addProperty($this->createProperty('TZOFFSETTO', '+0000'));
         $timezone->addComponent($observance);
 
-        $errors = $this->validator->validateSingleComponent($timezone);
+        $result = $this->validator->validateSingleComponent($timezone);
 
-        $errorCodes = array_map(fn($e) => $e->code, $errors);
-        $this->assertContains('ICAL-TZ-OBS-001', $errorCodes);
+        $this->assertContains('ICAL-TZ-OBS-001', $result->getErrorCodes());
     }
 
     public function testValidateVAlarmMissingAction(): void
@@ -247,10 +234,9 @@ class ValidatorTest extends TestCase
         $alarm = new VAlarm();
         $alarm->addProperty($this->createProperty('TRIGGER', '-PT15M'));
 
-        $errors = $this->validator->validateSingleComponent($alarm);
+        $result = $this->validator->validateSingleComponent($alarm);
 
-        $errorCodes = array_map(fn($e) => $e->code, $errors);
-        $this->assertContains('ICAL-ALARM-001', $errorCodes);
+        $this->assertContains('ICAL-ALARM-001', $result->getErrorCodes());
     }
 
     public function testValidateVAlarmMissingTrigger(): void
@@ -259,10 +245,9 @@ class ValidatorTest extends TestCase
         $alarm->addProperty($this->createProperty('ACTION', 'DISPLAY'));
         $alarm->addProperty($this->createProperty('DESCRIPTION', 'Reminder'));
 
-        $errors = $this->validator->validateSingleComponent($alarm);
+        $result = $this->validator->validateSingleComponent($alarm);
 
-        $errorCodes = array_map(fn($e) => $e->code, $errors);
-        $this->assertContains('ICAL-ALARM-002', $errorCodes);
+        $this->assertContains('ICAL-ALARM-002', $result->getErrorCodes());
     }
 
     public function testValidateRRuleInvalidFormat(): void
@@ -272,10 +257,9 @@ class ValidatorTest extends TestCase
         $event->addProperty($this->createProperty('UID', 'test-uid@example.com'));
         $event->addProperty($this->createProperty('RRULE', 'FREQ=INVALID'));
 
-        $errors = $this->validator->validateSingleComponent($event);
+        $result = $this->validator->validateSingleComponent($event);
 
-        $errorCodes = array_map(fn($e) => $e->code, $errors);
-        $this->assertContains('ICAL-RRULE-001', $errorCodes);
+        $this->assertContains('ICAL-RRULE-001', $result->getErrorCodes());
     }
 
     public function testValidateRRuleUntilAndCountMutuallyExclusive(): void
@@ -285,18 +269,17 @@ class ValidatorTest extends TestCase
         $event->addProperty($this->createProperty('UID', 'test-uid@example.com'));
         $event->addProperty($this->createProperty('RRULE', 'FREQ=DAILY;COUNT=10;UNTIL=20241231T235959Z'));
 
-        $errors = $this->validator->validateSingleComponent($event);
+        $result = $this->validator->validateSingleComponent($event);
 
-        $errorCodes = array_map(fn($e) => $e->code, $errors);
-        $this->assertContains('ICAL-RRULE-003', $errorCodes);
+        $this->assertContains('ICAL-RRULE-003', $result->getErrorCodes());
     }
 
     public function testValidatePropertyMethod(): void
     {
         $property = new GenericProperty('SUMMARY', new TextValue('Test Event'));
-        $errors = $this->validator->validateProperty($property);
+        $result = $this->validator->validateProperty($property);
 
-        $this->assertEmpty($errors);
+        $this->assertTrue($result->isEmpty());
     }
 
     public function testIsValidMethod(): void
@@ -342,9 +325,9 @@ class ValidatorTest extends TestCase
         $event2->addProperty($this->createProperty('UID', 'event-2@example.com'));
         $calendar->addComponent($event2);
 
-        $errors = $this->validator->validate($calendar);
+        $result = $this->validator->validate($calendar);
 
-        $this->assertEmpty($errors);
+        $this->assertTrue($result->isEmpty());
     }
 
     public function testErrorCountsMethod(): void
@@ -382,11 +365,10 @@ class ValidatorTest extends TestCase
         $event->addProperty($this->createPropertyWithParams('DTEND', '20240102', ['VALUE' => 'date']));
         $calendar->addComponent($event);
 
-        $errors = $this->validator->validate($calendar);
-        $errorCodes = array_map(fn($e) => $e->code, $errors);
+        $result = $this->validator->validate($calendar);
 
         // Should NOT get a DTSTART/DTEND type mismatch error
-        $this->assertNotContains('ICAL-VEVENT-VAL-002', $errorCodes);
+        $this->assertNotContains('ICAL-VEVENT-VAL-002', $result->getErrorCodes());
     }
 
     public function testValidateDtStartDtEndMixedCaseDate(): void
@@ -400,10 +382,9 @@ class ValidatorTest extends TestCase
         $event->addProperty($this->createPropertyWithParams('DTEND', '20240102', ['VALUE' => 'DATE']));
         $calendar->addComponent($event);
 
-        $errors = $this->validator->validate($calendar);
-        $errorCodes = array_map(fn($e) => $e->code, $errors);
+        $result = $this->validator->validate($calendar);
 
         // Both are DATE, just different cases - no mismatch
-        $this->assertNotContains('ICAL-VEVENT-VAL-002', $errorCodes);
+        $this->assertNotContains('ICAL-VEVENT-VAL-002', $result->getErrorCodes());
     }
 }

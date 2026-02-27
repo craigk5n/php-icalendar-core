@@ -375,4 +375,171 @@ class RecurParserTest extends TestCase
         $this->assertEquals(2, $result->getByDay()[0]['ordinal']);
         $this->assertEquals('TU', $result->getByDay()[0]['day']);
     }
+
+    // ========== Case sensitivity tests (killing UnwrapStrToUpper mutants) ==========
+
+    public function testParseLowercaseFreq(): void
+    {
+        $result = $this->parser->parse('freq=daily');
+
+        $this->assertEquals('DAILY', $result->getFreq());
+    }
+
+    public function testParseMixedCaseFreq(): void
+    {
+        $result = $this->parser->parse('FReQ=DaIlY');
+
+        $this->assertEquals('DAILY', $result->getFreq());
+    }
+
+    public function testParseLowercaseWkst(): void
+    {
+        $result = $this->parser->parse('FREQ=WEEKLY;wkst=mo');
+
+        $this->assertEquals('MO', $result->getWkst());
+    }
+
+    public function testParseLowercaseByDay(): void
+    {
+        $result = $this->parser->parse('FREQ=WEEKLY;byday=mo,tu,we');
+
+        $byDay = $result->getByDay();
+        $this->assertEquals('MO', $byDay[0]['day']);
+        $this->assertEquals('TU', $byDay[1]['day']);
+        $this->assertEquals('WE', $byDay[2]['day']);
+    }
+
+    public function testParseMixedCaseByDay(): void
+    {
+        $result = $this->parser->parse('FREQ=WEEKLY;BYDAY=Mo,Tu,We');
+
+        $byDay = $result->getByDay();
+        $this->assertEquals('MO', $byDay[0]['day']);
+    }
+
+    // ========== Empty value tests (killing Continue_ mutants in validateRules) ==========
+
+    public function testParseBySecondWithEmptyValueInStrictMode(): void
+    {
+        $this->parser->setStrict(true);
+        $result = $this->parser->parse('FREQ=MINUTELY;BYSECOND=0,,30');
+
+        $this->assertEquals([0, 0, 30], $result->getBySecond());
+    }
+
+    public function testParseByMinuteWithEmptyValueInStrictMode(): void
+    {
+        $this->parser->setStrict(true);
+        $result = $this->parser->parse('FREQ=HOURLY;BYMINUTE=0,,30');
+
+        $this->assertEquals([0, 0, 30], $result->getByMinute());
+    }
+
+    // ========== Boundary condition tests ==========
+
+    public function testParseCountZero(): void
+    {
+        $this->expectException(ParseException::class);
+        $this->expectExceptionMessage('Invalid RECUR COUNT value');
+
+        $this->parser->parse('FREQ=DAILY;COUNT=0');
+    }
+
+    public function testParseIntervalZero(): void
+    {
+        $this->expectException(ParseException::class);
+        $this->expectExceptionMessage('Invalid RECUR INTERVAL value');
+
+        $this->parser->parse('FREQ=DAILY;INTERVAL=0');
+    }
+
+    public function testParseBySecondBoundary(): void
+    {
+        $result = $this->parser->parse('FREQ=MINUTELY;BYSECOND=0,60');
+
+        $this->assertEquals([0, 60], $result->getBySecond());
+    }
+
+    public function testParseByMinuteBoundary(): void
+    {
+        $result = $this->parser->parse('FREQ=HOURLY;BYMINUTE=0,59');
+
+        $this->assertEquals([0, 59], $result->getByMinute());
+    }
+
+    public function testParseByHourBoundary(): void
+    {
+        $result = $this->parser->parse('FREQ=DAILY;BYHOUR=0,23');
+
+        $this->assertEquals([0, 23], $result->getByHour());
+    }
+
+    public function testParseByMonthDayBoundary(): void
+    {
+        $result = $this->parser->parse('FREQ=MONTHLY;BYMONTHDAY=-31,31');
+
+        $this->assertEquals([-31, 31], $result->getByMonthDay());
+    }
+
+    public function testParseByYearDayBoundary(): void
+    {
+        $result = $this->parser->parse('FREQ=YEARLY;BYYEARDAY=-366,366');
+
+        $this->assertEquals([-366, 366], $result->getByYearDay());
+    }
+
+    public function testParseByWeekNoBoundary(): void
+    {
+        $result = $this->parser->parse('FREQ=YEARLY;BYWEEKNO=-53,53');
+
+        $this->assertEquals([-53, 53], $result->getByWeekNo());
+    }
+
+    public function testParseBySetPosBoundary(): void
+    {
+        $result = $this->parser->parse('FREQ=MONTHLY;BYDAY=MO;BYSETPOS=-366,366');
+
+        $this->assertEquals([-366, 366], $result->getBySetPos());
+    }
+
+    public function testParseInvalidIntervalNegative(): void
+    {
+        $this->expectException(ParseException::class);
+        $this->expectExceptionMessage('Invalid RECUR INTERVAL value');
+
+        $this->parser->parse('FREQ=DAILY;INTERVAL=-1');
+    }
+
+    // ========== canParse edge case tests ==========
+
+    public function testCanParseWithEmptyParts(): void
+    {
+        $this->assertTrue($this->parser->canParse('FREQ=DAILY;;'));
+    }
+
+    public function testCanParseWithWhitespace(): void
+    {
+        $this->assertTrue($this->parser->canParse(' FREQ=DAILY '));
+    }
+
+    public function testCanParseInvalidKey(): void
+    {
+        $this->assertFalse($this->parser->canParse('FREQ=DAILY;UNKNOWN=value'));
+    }
+
+    // ========== Non-strict mode tests ==========
+
+    public function testParseNonStrictAllowsUnknownKey(): void
+    {
+        $this->parser->setStrict(false);
+        $result = $this->parser->parse('FREQ=DAILY;X-CUSTOM=value');
+
+        $this->assertEquals('DAILY', $result->getFreq());
+    }
+
+    public function testCanParseNonStrictAllowsUnknownKey(): void
+    {
+        $this->parser->setStrict(false);
+        $this->assertTrue($this->parser->canParse('FREQ=DAILY;X-CUSTOM=value'));
+    }
 }

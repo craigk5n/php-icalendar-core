@@ -1,0 +1,35 @@
+{
+    "$schema": "vendor/infection/infection/resources/schema.json",
+    "source": {
+        "directories": [
+            "src"
+        ]
+    },
+    "logs": {
+        "text": "build/infection/infection.log",
+        "html": "build/infection/infection.html",
+        "summary": "build/infection/summary.log",
+        "debug": "build/infection/debug.log"
+    },
+    "tmpDir": "build/infection/tmp",
+    "phpUnit": {
+        "configDir": "."
+    },
+    "mutators": {
+        "@default": true,
+        "DecrementInteger": {
+            "ignore": [
+                "Icalendar\\Recurrence\\RecurrenceGenerator::generate"
+            ]
+        },
+        "IncrementInteger": {
+            "ignore": [
+                "Icalendar\\Recurrence\\RecurrenceGenerator::generate"
+            ]
+        }
+    },
+    "testFramework": "phpunit",
+    "testFrameworkOptions": "--no-coverage",
+    "minMsi": 0,
+    "minCoveredMsi": 0
+}

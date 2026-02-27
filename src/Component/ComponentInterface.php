@@ -34,6 +34,13 @@ interface ComponentInterface
     public function getProperties(): array;
 
     /**
+     * Get all properties by name
+     *
+     * @return PropertyInterface[]
+     */
+    public function getAllProperties(?string $name = null): array;
+
+    /**
      * Remove a property by name
      */
     public function removeProperty(string $name): void;
