@@ -7,16 +7,16 @@ namespace Icalendar\Validation;
 /**
  * Represents a single validation error
  */
-readonly class ValidationError
+class ValidationError
 {
     public function __construct(
-        public string $code,
-        public string $message,
-        public string $component,
-        public ?string $property,
-        public ?string $line,
-        public int $lineNumber,
-        public ErrorSeverity $severity
+        public readonly string $code,
+        public readonly string $message,
+        public readonly string $component,
+        public readonly ?string $property,
+        public readonly ?string $line,
+        public readonly int $lineNumber,
+        public readonly ErrorSeverity $severity
     ) {
     }
 

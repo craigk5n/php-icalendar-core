@@ -3,7 +3,7 @@
     "description": "RFC 5545 compliant PHP library for iCalendar parsing and writing",
     "license": "MIT",
     "type": "library",
-    "version": "1.1.4",
+    "version": "1.1.5",
     "homepage": "https://github.com/craigk5n/php-icalendar-core",
     "keywords": ["icalendar", "ics", "rfc5545", "calendar", "parser", "writer"],
     "support": {
@@ -11,7 +11,7 @@
         "source": "https://github.com/craigk5n/php-icalendar-core"
     },
     "require": {
-        "php": ">=8.2"
+        "php": ">=8.1"
     },
     "require-dev": {
         "infection/infection": "^0.29",

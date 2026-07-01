@@ -14,7 +14,7 @@ use DateTimeImmutable;
  *
  * @immutable
  */
-readonly class Occurrence
+class Occurrence
 {
     /**
      * @param DateTimeImmutable $start The start date/time of the occurrence
@@ -22,9 +22,9 @@ readonly class Occurrence
      * @param bool $isRdate True if this occurrence originated from an RDATE property
      */
     public function __construct(
-        private DateTimeImmutable $start,
-        private ?DateTimeImmutable $end = null,
-        private bool $isRdate = false
+        private readonly DateTimeImmutable $start,
+        private readonly ?DateTimeImmutable $end = null,
+        private readonly bool $isRdate = false
     ) {
     }
 

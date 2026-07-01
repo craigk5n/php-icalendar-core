@@ -102,8 +102,17 @@ class RRuleTest extends TestCase
 
     public function testClassIsReadonly(): void
     {
+        // Immutability is guaranteed by readonly properties (PHP 8.1 compatible),
+        // rather than a class-level readonly modifier (PHP 8.2+).
         $reflection = new \ReflectionClass(RRule::class);
-        $this->assertTrue($reflection->isReadOnly());
+        $properties = $reflection->getProperties();
+        $this->assertNotEmpty($properties);
+        foreach ($properties as $property) {
+            $this->assertTrue(
+                $property->isReadOnly(),
+                sprintf('Property $%s should be readonly', $property->getName())
+            );
+        }
     }
 
     public function testWithComplexByDayStructure(): void

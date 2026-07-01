@@ -10,10 +10,10 @@ use ArrayIterator;
 use Traversable;
 
 /** @implements IteratorAggregate<int, ValidationError> */
-final readonly class ValidationResult implements IteratorAggregate, Countable
+final class ValidationResult implements IteratorAggregate, Countable
 {
     /** @var list<ValidationError> */
-    private array $errors;
+    private readonly array $errors;
 
     public function __construct(ValidationError ...$errors)
     {
