@@ -12,7 +12,7 @@ namespace Icalendar\Recurrence;
  *
  * @immutable
  */
-readonly class RRule
+class RRule
 {
     /**
      * Valid frequency values
@@ -54,21 +54,21 @@ readonly class RRule
      * @param bool $untilIsDate Whether UNTIL value was originally a DATE (vs DATE-TIME)
      */
     public function __construct(
-        private string $freq,
-        private int $interval = 1,
-        private ?int $count = null,
-        private ?\DateTimeImmutable $until = null,
-        private array $bySecond = [],
-        private array $byMinute = [],
-        private array $byHour = [],
-        private array $byDay = [],
-        private array $byMonthDay = [],
-        private array $byYearDay = [],
-        private array $byWeekNo = [],
-        private array $byMonth = [],
-        private array $bySetPos = [],
-        private string $wkst = 'MO',
-        private bool $untilIsDate = false
+        private readonly string $freq,
+        private readonly int $interval = 1,
+        private readonly ?int $count = null,
+        private readonly ?\DateTimeImmutable $until = null,
+        private readonly array $bySecond = [],
+        private readonly array $byMinute = [],
+        private readonly array $byHour = [],
+        private readonly array $byDay = [],
+        private readonly array $byMonthDay = [],
+        private readonly array $byYearDay = [],
+        private readonly array $byWeekNo = [],
+        private readonly array $byMonth = [],
+        private readonly array $bySetPos = [],
+        private readonly string $wkst = 'MO',
+        private readonly bool $untilIsDate = false
     ) {
     }
 
