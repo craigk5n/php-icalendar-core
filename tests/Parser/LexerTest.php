@@ -183,6 +183,10 @@ class LexerTest extends TestCase
 
     public function testTokenizeFileNotReadable(): void
     {
+        if (function_exists('posix_getuid') && posix_getuid() === 0) {
+            $this->markTestSkipped('Root bypasses filesystem permissions, so an unreadable file cannot be simulated.');
+        }
+
         $tempFile = tempnam(sys_get_temp_dir(), 'ical_test_');
         $this->assertIsString($tempFile);
         file_put_contents($tempFile, "BEGIN:VCALENDAR\r\nEND:VCALENDAR");
