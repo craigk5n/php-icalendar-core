@@ -172,10 +172,13 @@ class FloatWriterTest extends TestCase
 
     public function testWriteInvalidType(): void
     {
+        // '3.14' is now accepted: it is the parser's serialisation, and
+        // ValueInterface::getRawValue() returns string, so PropertyWriter can
+        // pass nothing else. A non-numeric string is the real invalid case.
         $this->expectException(\InvalidArgumentException::class);
         $this->expectExceptionMessage('FloatWriter expects float or int, got string');
-        
-        $this->writer->write('3.14');
+
+        $this->writer->write('not-a-float');
     }
 
     public function testWriteNull(): void
@@ -227,8 +230,13 @@ class FloatWriterTest extends TestCase
         $this->assertTrue($this->writer->canWrite(0));
         $this->assertTrue($this->writer->canWrite(0.0));
         
-        $this->assertFalse($this->writer->canWrite('3.14'));
-        $this->assertFalse($this->writer->canWrite('42'));
+        // Numeric strings are the parser's serialisation and the only form
+        // PropertyWriter can pass in; rejecting them made FLOAT unwritable.
+        $this->assertTrue($this->writer->canWrite('3.14'));
+        $this->assertTrue($this->writer->canWrite('42'));
+
+        // Non-numeric strings stay rejected.
+        $this->assertFalse($this->writer->canWrite('not-a-float'));
         $this->assertFalse($this->writer->canWrite(null));
         $this->assertFalse($this->writer->canWrite([]));
         $this->assertFalse($this->writer->canWrite(new \stdClass()));
