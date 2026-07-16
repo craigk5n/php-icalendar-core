@@ -28,6 +28,28 @@ class ValueParserFactory
         }
     }
 
+    /**
+     * Properties whose VALUE parameter may declare a type other than the default
+     *
+     * Only properties offering a genuine choice are listed. Everything else in
+     * $propertyDefaults permits its default and nothing more, and properties
+     * absent from both are extensions whose types the library cannot know.
+     *
+     * @var array<string, list<string>>
+     */
+    private static array $propertyAlternateTypes = [
+        'DTSTART' => ['DATE-TIME', 'DATE'],          // RFC 5545 §3.8.2.4
+        'DTEND' => ['DATE-TIME', 'DATE'],            // RFC 5545 §3.8.2.2
+        'DUE' => ['DATE-TIME', 'DATE'],              // RFC 5545 §3.8.2.3
+        'RECURRENCE-ID' => ['DATE-TIME', 'DATE'],    // RFC 5545 §3.8.4.4
+        'EXDATE' => ['DATE-TIME', 'DATE'],           // RFC 5545 §3.8.5.1
+        'RDATE' => ['DATE-TIME', 'DATE', 'PERIOD'],  // RFC 5545 §3.8.5.2
+        'TRIGGER' => ['DURATION', 'DATE-TIME'],      // RFC 5545 §3.8.6.3
+        'ATTACH' => ['URI', 'BINARY'],               // RFC 5545 §3.8.1.1
+        'IMAGE' => ['URI', 'BINARY'],                // RFC 7986 §5.10
+        'STYLED-DESCRIPTION' => ['TEXT', 'URI'],     // RFC 9073 §6.5
+    ];
+
     /** @var array<string, string> Default types for common properties */
     private static array $propertyDefaults = [
         // Date/Time properties
@@ -150,7 +172,23 @@ class ValueParserFactory
 
         // Check for VALUE parameter override
         if (isset($parameters['VALUE'])) {
-            return $this->getParser($parameters['VALUE']);
+            $declaredType = strtoupper($parameters['VALUE']);
+            $allowedTypes = self::allowedValueTypes($propertyName);
+
+            // A VALUE parameter may only redeclare a type the property permits.
+            // Trusting it blindly let any property be re-typed to anything --
+            // and VALUE=TEXT disabled validation outright, since TextParser
+            // cannot fail. Unknown properties resolve to null: an extension's
+            // value type is not ours to police.
+            if ($allowedTypes !== null && !in_array($declaredType, $allowedTypes, true)) {
+                throw new ParseException(
+                    "Property {$propertyName} does not permit VALUE={$declaredType}; "
+                    . 'expected one of: ' . implode(', ', $allowedTypes),
+                    ParseException::ERR_TYPE_DECLARATION_MISMATCH
+                );
+            }
+
+            return $this->getParser($declaredType);
         }
 
         // Check for property default
@@ -160,6 +198,29 @@ class ValueParserFactory
 
         // Default to TEXT
         return $this->getParser('TEXT');
+    }
+
+    /**
+     * Value types a property permits in its VALUE parameter
+     *
+     * Returns null for properties the library does not know -- X- and other
+     * extensions -- which may declare any supported type.
+     *
+     * @param string $propertyName Uppercased property name
+     * @return list<string>|null
+     */
+    private static function allowedValueTypes(string $propertyName): ?array
+    {
+        if (isset(self::$propertyAlternateTypes[$propertyName])) {
+            return self::$propertyAlternateTypes[$propertyName];
+        }
+
+        // A known property with no listed alternates permits only its default.
+        if (isset(self::$propertyDefaults[$propertyName])) {
+            return [self::$propertyDefaults[$propertyName]];
+        }
+
+        return null;
     }
 
     /**
