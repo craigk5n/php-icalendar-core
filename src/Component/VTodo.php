@@ -518,6 +518,7 @@ class VTodo extends AbstractComponent
      * @throws ValidationException If both DUE and DURATION properties are present (code: ICAL-VTODO-VAL-001)
      * @return void
      */
+    #[\Override]
     public function validate(): void
     {
         if ($this->getProperty('DTSTAMP') === null) {

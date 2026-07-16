@@ -78,4 +78,19 @@ interface ComponentInterface
      * @return array<mixed>
      */
     public function toArray(): array;
+
+    /**
+     * Validate this component against its RFC 5545 requirements
+     *
+     * Fail-fast and shallow: throws on the first violation of *this* component's
+     * own rules, and does not descend into sub-components. For a full tree walk
+     * that collects every error rather than stopping at the first, use
+     * {@see \Icalendar\Validation\Validator::validate()}.
+     *
+     * AbstractComponent supplies a no-op default, so a component with no rules
+     * of its own (GenericComponent, and any X- extension) is valid by default.
+     *
+     * @throws \Icalendar\Exception\ValidationException if the component is invalid
+     */
+    public function validate(): void;
 }

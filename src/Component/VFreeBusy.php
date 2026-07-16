@@ -262,6 +262,7 @@ class VFreeBusy extends AbstractComponent
         return false;
     }
 
+    #[\Override]
     public function validate(): void
     {
         if ($this->getProperty('DTSTAMP') === null) {
