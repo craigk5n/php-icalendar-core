@@ -13,12 +13,20 @@ use Icalendar\Exception\ParseException;
  */
 class DateTimeParser implements ValueParserInterface
 {
-    private bool $strict = false;
-
+    /**
+     * No-op: what counts as a DATE-TIME does not vary by mode.
+     *
+     * This parser previously fell back to PHP's DateTimeImmutable constructor
+     * when not strict, which accepted relative expressions ('now', 'tomorrow')
+     * and the empty string. Those resolve against the wall clock, so the same
+     * input parsed twice produced different values — with no warning to the
+     * caller. Lenient mode is about how a failure is reported (Parser collects
+     * a warning instead of throwing); it must not change which values are
+     * accepted.
+     */
     #[\Override]
     public function setStrict(bool $strict): void
     {
-        $this->strict = $strict;
     }
 
     /**
@@ -30,11 +38,6 @@ class DateTimeParser implements ValueParserInterface
         $formatCheck = $this->checkFormat($value);
 
         if ($formatCheck === 'invalid_format') {
-            if (!$this->strict) {
-                try {
-                    return new DateTimeImmutable($value);
-                } catch (\Exception $e) {}
-            }
             throw new ParseException("Invalid DATE-TIME format: '{$value}'. Expected YYYYMMDDTHHMMSS[Z].", ParseException::ERR_INVALID_DATE_TIME);
         }
 
@@ -59,14 +62,7 @@ class DateTimeParser implements ValueParserInterface
     #[\Override]
     public function canParse(string $value): bool
     {
-        if ($this->checkFormat($value) === 'valid') return true;
-        if (!$this->strict) {
-            try {
-                new DateTimeImmutable($value);
-                return true;
-            } catch (\Exception $e) { return false; }
-        }
-        return false;
+        return $this->checkFormat($value) === 'valid';
     }
 
     /**

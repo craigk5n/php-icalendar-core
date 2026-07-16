@@ -145,9 +145,21 @@ class DateTimeParserTest extends TestCase
     public function testParseLenientMode(): void
     {
         $this->parser->setStrict(false);
-        // PHP's DateTimeImmutable can parse this format, which is less strict than RFC
-        $dt = $this->parser->parse('2026-02-06 10:00:00'); 
-        $this->assertInstanceOf(DateTimeImmutable::class, $dt); // Ensure it's an immutable DateTime object
+        $dt = $this->parser->parse('20260206T100000Z');
+        $this->assertInstanceOf(DateTimeImmutable::class, $dt);
         $this->assertEquals('2026-02-06 10:00:00', $dt->format('Y-m-d H:i:s'));
+    }
+
+    /**
+     * Lenient mode relaxes how failures are *reported*, not what counts as a
+     * date. It used to fall back to PHP's DateTimeImmutable constructor, which
+     * accepted non-RFC input like '2026-02-06 10:00:00' — and, worse, relative
+     * expressions such as 'now'. See LenientDateFallbackTest for full coverage.
+     */
+    public function testParseLenientModeRejectsNonRfcFormat(): void
+    {
+        $this->parser->setStrict(false);
+        $this->expectException(ParseException::class);
+        $this->parser->parse('2026-02-06 10:00:00');
     }
 }
