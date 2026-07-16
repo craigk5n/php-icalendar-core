@@ -313,9 +313,17 @@ class SecurityValidator
      */
     public function sanitizeText(string $text): string
     {
+        // Fast path: the scan below is byte-wise and runs on every TEXT value
+        // written, so skip it unless there is something to do. Real-world text
+        // almost never carries control characters, and this keeps the cost of
+        // sanitising a clean value to a single scan.
+        if (preg_match('/[\x00-\x08\x0B\x0C\x0E-\x1F]/', $text) !== 1) {
+            return $text;
+        }
+
         // Remove null bytes
         $text = str_replace("\x00", '', $text);
-        
+
         // Escape control characters (except tab, newline, carriage return)
         $result = '';
         for ($i = 0; $i < strlen($text); $i++) {
