@@ -32,7 +32,11 @@ class Writer implements WriterInterface
     {
         $output = $this->writeComponent($calendar);
 
-        return $this->contentLineWriter->write($output);
+        // RFC 5545 §3.4 terminates the final content line too:
+        //   icalobject = "BEGIN" ":" "VCALENDAR" CRLF icalbody "END" ":" "VCALENDAR" CRLF
+        // ContentLineWriter::write() folds a fragment and deliberately strips the
+        // trailing CRLF, so the document terminator belongs here.
+        return $this->contentLineWriter->write($output) . "\r\n";
     }
 
     private function writeComponent(ComponentInterface $component): string
