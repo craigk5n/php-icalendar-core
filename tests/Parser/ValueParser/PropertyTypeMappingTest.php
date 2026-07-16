@@ -78,38 +78,6 @@ class PropertyTypeMappingTest extends TestCase
         ];
     }
 
-    /**
-     * Malformed RRULEs that lenient mode correctly warns on.
-     *
-     * @return array<string, array{string}>
-     */
-    public static function leniallyRejectedRruleProvider(): array
-    {
-        return [
-            'arbitrary text' => ['total garbage here'],
-            'empty' => [''],
-        ];
-    }
-
-    /**
-     * Malformed RRULEs that RRuleParser's lenient branch still accepts.
-     *
-     * Wiring RRULE to RECUR means strict mode now validates it, but RRuleParser
-     * has a separate lenient path (src/Recurrence/RRuleParser.php:165) that
-     * skips the FREQ allowlist and coerces INTERVAL with a bare (int) cast, so
-     * 'INTERVAL=abc' silently becomes 'INTERVAL=0'. Same defect family as the
-     * removed date fallback: lenient mode inventing a value rather than
-     * reporting one. Out of scope here; tracked as follow-up work.
-     *
-     * @return array<string, array{string}>
-     */
-    public static function knownLenientRruleGapProvider(): array
-    {
-        return [
-            'unknown freq' => ['FREQ=NONSENSE'],
-            'non-numeric interval' => ['FREQ=DAILY;INTERVAL=abc'],
-        ];
-    }
 
     private function calendarWithRrule(string $rrule): string
     {
@@ -125,34 +93,13 @@ class PropertyTypeMappingTest extends TestCase
         (new Parser(Parser::STRICT))->parse($this->calendarWithRrule($rrule));
     }
 
-    #[DataProvider('leniallyRejectedRruleProvider')]
+    #[DataProvider('malformedRruleProvider')]
     public function testMalformedRruleWarnsInLenientMode(string $rrule): void
     {
         $parser = new Parser(Parser::LENIENT);
         $parser->parse($this->calendarWithRrule($rrule));
 
         $this->assertNotEmpty($parser->getErrors(), "lenient mode accepted 'RRULE:{$rrule}'");
-    }
-
-    /**
-     * Documents the open RRuleParser lenient gap. Marked incomplete rather than
-     * asserted-true so it stays visible instead of reading as covered.
-     */
-    #[DataProvider('knownLenientRruleGapProvider')]
-    public function testLenientModeStillAcceptsSomeMalformedRrules(string $rrule): void
-    {
-        $parser = new Parser(Parser::LENIENT);
-        $parser->parse($this->calendarWithRrule($rrule));
-
-        if ($parser->getErrors() === []) {
-            $this->markTestIncomplete(
-                "Known gap: RRuleParser's lenient branch accepts 'RRULE:{$rrule}' "
-                . 'without a warning (INTERVAL=abc coerces to 0). See '
-                . 'src/Recurrence/RRuleParser.php:165.'
-            );
-        }
-
-        $this->assertNotEmpty($parser->getErrors());
     }
 
     /** A valid RRULE must survive parse in both modes. */
