@@ -58,15 +58,13 @@ class ValidateContractTest extends TestCase
         $component->addProperty(GenericProperty::create('PRODID', '-//test//test//EN'));
         $component->addProperty(GenericProperty::create('VERSION', '2.0'));
 
-        $component->validate();
-        $this->addToAssertionCount(1);
+        $this->assertNull($component->validate());
     }
 
     /** GenericComponent had no validate() at all; it must inherit the default. */
     public function testGenericComponentValidates(): void
     {
-        $this->interfaceTyped(new GenericComponent('X-CUSTOM'))->validate();
-        $this->addToAssertionCount(1);
+        $this->assertNull($this->interfaceTyped(new GenericComponent('X-CUSTOM'))->validate());
     }
 
     /** @return array<string, array{ComponentInterface}> */
@@ -97,11 +95,10 @@ class ValidateContractTest extends TestCase
     public function testEveryComponentHonoursTheContract(ComponentInterface $component): void
     {
         try {
-            $component->validate();
-            $this->addToAssertionCount(1);
-        } catch (ValidationException) {
+            $this->assertNull($component->validate());
+        } catch (ValidationException $e) {
             // An empty component failing validation is fine; it must not fatal.
-            $this->addToAssertionCount(1);
+            $this->assertNotSame('', $e->getMessage());
         }
     }
 

@@ -136,10 +136,13 @@ class LenientDateFallbackTest extends TestCase
 
         foreach (['now', ''] as $value) {
             try {
-                $parser->parse($value);
-                $this->fail("'{$value}' must not resolve against the wall clock");
-            } catch (ParseException) {
-                $this->addToAssertionCount(1);
+                $parsed = $parser->parse($value);
+                $this->fail(
+                    "'{$value}' must not resolve against the wall clock, got "
+                    . $parsed->format('Ymd\THis')
+                );
+            } catch (ParseException $e) {
+                $this->assertStringContainsString('Invalid DATE-TIME', $e->getMessage());
             }
         }
     }

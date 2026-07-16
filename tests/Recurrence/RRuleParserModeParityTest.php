@@ -95,8 +95,8 @@ class RRuleParserModeParityTest extends TestCase
             $this->fail(
                 'INTERVAL=abc was accepted and coerced to: ' . $rule->toString()
             );
-        } catch (ParseException) {
-            $this->addToAssertionCount(1);
+        } catch (ParseException $e) {
+            $this->assertStringContainsString('Invalid RECUR INTERVAL value: abc', $e->getMessage());
         }
     }
 
@@ -112,8 +112,8 @@ class RRuleParserModeParityTest extends TestCase
         try {
             $rule = $parser->parse('FREQ=WEEKLY;BYDAY=GARBAGE');
             $this->fail('BYDAY=GARBAGE was silently dropped, yielding: ' . $rule->toString());
-        } catch (ParseException) {
-            $this->addToAssertionCount(1);
+        } catch (ParseException $e) {
+            $this->assertStringContainsString('Invalid RECUR BYDAY value: GARBAGE', $e->getMessage());
         }
     }
 

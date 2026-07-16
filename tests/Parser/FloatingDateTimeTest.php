@@ -29,12 +29,14 @@ use PHPUnit\Framework\TestCase;
  */
 class FloatingDateTimeTest extends TestCase
 {
+    /** @var non-empty-string */
     private string $originalTimezone;
 
     #[\Override]
     protected function setUp(): void
     {
-        $this->originalTimezone = date_default_timezone_get();
+        $timezone = date_default_timezone_get();
+        $this->originalTimezone = $timezone !== '' ? $timezone : 'UTC';
     }
 
     #[\Override]
@@ -60,7 +62,7 @@ class FloatingDateTimeTest extends TestCase
             ->getRawValue();
     }
 
-    /** @return array<string, array{string}> */
+    /** @return array<string, array{non-empty-string}> */
     public static function timezoneProvider(): array
     {
         return [
@@ -71,7 +73,11 @@ class FloatingDateTimeTest extends TestCase
         ];
     }
 
-    /** A floating value must stay floating no matter what the host's clock says. */
+    /**
+     * A floating value must stay floating no matter what the host's clock says.
+     *
+     * @param non-empty-string $timezone
+     */
     #[DataProvider('timezoneProvider')]
     public function testFloatingDateTimeStaysFloating(string $timezone): void
     {
@@ -84,7 +90,11 @@ class FloatingDateTimeTest extends TestCase
         );
     }
 
-    /** A UTC value must keep its Z, on every host. */
+    /**
+     * A UTC value must keep its Z, on every host.
+     *
+     * @param non-empty-string $timezone
+     */
     #[DataProvider('timezoneProvider')]
     public function testUtcDateTimeKeepsZ(string $timezone): void
     {
@@ -96,7 +106,11 @@ class FloatingDateTimeTest extends TestCase
         );
     }
 
-    /** A zoned value carries its offset in TZID and must not gain a Z. */
+    /**
+     * A zoned value carries its offset in TZID and must not gain a Z.
+     *
+     * @param non-empty-string $timezone
+     */
     #[DataProvider('timezoneProvider')]
     public function testZonedDateTimeDoesNotGainZ(string $timezone): void
     {
@@ -127,7 +141,11 @@ class FloatingDateTimeTest extends TestCase
         );
     }
 
-    /** The full parse -> write cycle must preserve the floating form. */
+    /**
+     * The full parse -> write cycle must preserve the floating form.
+     *
+     * @param non-empty-string $timezone
+     */
     #[DataProvider('timezoneProvider')]
     public function testFloatingSurvivesRoundTrip(string $timezone): void
     {

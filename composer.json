@@ -32,7 +32,7 @@
     "scripts": {
         "test": "vendor/bin/phpunit",
         "phpstan": "vendor/bin/phpstan analyse src --level=9",
-        "psalm": "vendor/bin/psalm src",
+        "psalm": "vendor/bin/psalm",
         "infection": "vendor/bin/infection --threads=4"
     },
     "config": {
