@@ -266,7 +266,11 @@ class Parser implements ParserInterface
                 $parser = $this->valueParserFactory->getParserForProperty($name, $parameters);
                 $parsedValue = $parser->parse($value, $parameters);
                 $type = $parser->getType();
-                $propertyValue = $this->formatParsedValue($parsedValue, $type);
+                // Take UTC-ness from the source rather than the parsed value's
+                // timezone: only a trailing 'Z' means UTC. PERIOD passes null so
+                // its halves keep using the timezone fallback (§3.3.9 makes them UTC).
+                $sourceIsUtc = $type === 'DATE-TIME' ? str_ends_with($value, 'Z') : null;
+                $propertyValue = $this->formatParsedValue($parsedValue, $type, $sourceIsUtc);
                 $property = new GenericProperty($name, new \Icalendar\Value\GenericValue($propertyValue, $type), $parameters);
                 
                 // Add to the buffer for the current component
@@ -390,22 +394,26 @@ class Parser implements ParserInterface
 
     /**
      * Format parsed values back to string for storage in GenericProperty
+     *
+     * @param bool|null $sourceIsUtc Whether the source value carried a trailing
+     *   'Z'. Pass null when the source form is unknown, to fall back to reading
+     *   the value's timezone. UTC-ness must be recorded, not inferred: a
+     *   floating DATE-TIME (RFC 5545 §3.3.5) is built by
+     *   DateTimeParser::parseLocal() without an explicit zone, so it picks up
+     *   PHP's date.timezone -- and inferring from that name promoted floating
+     *   values to UTC on any host configured as UTC.
      */
-    private function formatParsedValue(mixed $value, ?string $type = null): string
+    private function formatParsedValue(mixed $value, ?string $type = null, ?bool $sourceIsUtc = null): string
     {
         if ($value instanceof \DateTimeInterface) {
             if ($type === 'DATE') {
                 return $value->format('Ymd');
             }
-            
-            // Default DATE-TIME format
-            // Ensure timezone is handled correctly for formatting. UTC should append 'Z'.
-            $timezone = $value->getTimezone();
+
             $formattedDate = $value->format('Ymd\THis');
-            if ($timezone->getName() === 'UTC' || $timezone->getName() === 'Z') {
-                $formattedDate .= 'Z';
-            }
-            return $formattedDate;
+            $isUtc = $sourceIsUtc ?? in_array($value->getTimezone()->getName(), ['UTC', 'Z'], true);
+
+            return $isUtc ? $formattedDate . 'Z' : $formattedDate;
         }
 
         if ($value instanceof \DateInterval) {

@@ -101,6 +101,7 @@ class Available extends AbstractComponent
         return $prop?->getValue()->getRawValue();
     }
 
+    #[\Override]
     public function validate(): void
     {
         if ($this->getProperty('DTSTAMP') === null) {

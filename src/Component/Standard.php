@@ -53,6 +53,7 @@ class Standard extends AbstractComponent
         return $this;
     }
 
+    #[\Override]
     public function validate(): void
     {
         $dtstart = $this->getProperty('DTSTART');

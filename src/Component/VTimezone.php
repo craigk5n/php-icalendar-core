@@ -167,6 +167,7 @@ class VTimezone extends AbstractComponent
         }
     }
 
+    #[\Override]
     public function validate(): void
     {
         $tzid = $this->getProperty('TZID');

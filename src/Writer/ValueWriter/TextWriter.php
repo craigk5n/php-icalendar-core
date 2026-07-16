@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace Icalendar\Writer\ValueWriter;
 
+use Icalendar\Validation\SecurityValidator;
+
 /**
  * Writer for TEXT values with proper escaping
  *
@@ -15,6 +17,13 @@ namespace Icalendar\Writer\ValueWriter;
  */
 class TextWriter implements ValueWriterInterface
 {
+    private SecurityValidator $securityValidator;
+
+    public function __construct(?SecurityValidator $securityValidator = null)
+    {
+        $this->securityValidator = $securityValidator ?? new SecurityValidator();
+    }
+
     #[\Override]
     public function write(mixed $value): string
     {
@@ -22,7 +31,11 @@ class TextWriter implements ValueWriterInterface
             throw new \InvalidArgumentException('TextWriter expects string, got ' . gettype($value));
         }
 
-        return $this->escape($value);
+        // The TEXT ABNF excludes CONTROL characters, so strip them before
+        // escaping. Order matters: sanitizeText() emits a backslash ('\x01') and
+        // escape() must be what doubles it. Reversed, the output would carry a
+        // bare '\x', which is not a defined escape and reparses lossily.
+        return $this->escape($this->securityValidator->sanitizeText($value));
     }
 
     /**

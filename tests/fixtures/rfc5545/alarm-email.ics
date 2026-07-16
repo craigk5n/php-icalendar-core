@@ -11,6 +11,7 @@ ATTENDEE;ROLE=REQ-PARTICIPANT;PARTSTAT=ACCEPTED:mailto:john.doe@example.com
 BEGIN:VALARM
 ACTION:EMAIL
 TRIGGER:-PT15M
+ATTENDEE:mailto:john.doe@example.com
 SUMMARY:Meeting Reminder
 DESCRIPTION:This is an email reminder for the meeting
 END:VALARM

@@ -283,6 +283,7 @@ class VAlarm extends AbstractComponent
      * @throws ValidationException If REPEAT and DURATION don't match (code: ICAL-ALARM-VAL-001)
      * @return void
      */
+    #[\Override]
     public function validate(): void
     {
         // Check required ACTION property

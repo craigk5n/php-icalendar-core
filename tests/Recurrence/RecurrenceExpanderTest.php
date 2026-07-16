@@ -647,6 +647,8 @@ class RecurrenceExpanderTest extends TestCase
             public function setParent(?\Icalendar\Component\ComponentInterface $parent): void { $this->parent = $parent; }
             #[\Override]
             public function toArray(): array { return []; }
+            #[\Override]
+            public function validate(): void {}
         };
 
         $occurrences = $this->expander->expandToArray($component);

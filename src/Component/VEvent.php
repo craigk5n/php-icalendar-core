@@ -555,6 +555,7 @@ class VEvent extends AbstractComponent
      * @throws ValidationException If both DTEND and DURATION properties are present (code: ICAL-VEVENT-VAL-001)
      * @return void
      */
+    #[\Override]
     public function validate(): void
     {
         if ($this->getProperty('DTSTAMP') === null) {

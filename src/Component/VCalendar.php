@@ -235,6 +235,7 @@ class VCalendar extends AbstractComponent
      * @throws ValidationException If VERSION property is missing (code: ICAL-COMP-002)
      * @return void
      */
+    #[\Override]
     public function validate(): void
     {
         if ($this->getProperty('PRODID') === null) {

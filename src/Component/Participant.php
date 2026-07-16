@@ -46,6 +46,7 @@ class Participant extends AbstractComponent
         return $prop?->getValue()->getRawValue();
     }
 
+    #[\Override]
     public function validate(): void
     {
         if ($this->getProperty('PARTICIPANT-TYPE') === null) {

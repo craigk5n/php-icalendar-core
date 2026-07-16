@@ -108,6 +108,7 @@ class VAvailability extends AbstractComponent
         return $this->getComponents('AVAILABLE');
     }
 
+    #[\Override]
     public function validate(): void
     {
         if ($this->getProperty('DTSTAMP') === null) {

@@ -157,10 +157,13 @@ class RecurParserTest extends TestCase
 
     public function testParseInvalidByDay(): void
     {
-        // RRuleParser might just skip invalid BYDAY parts instead of throwing
-        // Let's check how it behaves.
-        $result = $this->parser->parse('FREQ=DAILY;BYDAY=XYZ');
-        $this->assertEmpty($result->getByDay());
+        // Previously BYDAY had no validation, so an unreadable part was silently
+        // discarded and this asserted the resulting empty list. Dropping it is
+        // not harmless: 'FREQ=WEEKLY;BYDAY=GARBAGE' collapsed to 'FREQ=WEEKLY',
+        // widening the rule to every day. Now rejected, like BYMONTH below.
+        $this->expectException(ParseException::class);
+        $this->expectExceptionMessage('Invalid RECUR BYDAY value');
+        $this->parser->parse('FREQ=DAILY;BYDAY=XYZ');
     }
 
     public function testParseInvalidByMonth(): void

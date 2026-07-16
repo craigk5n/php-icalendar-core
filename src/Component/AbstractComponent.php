@@ -143,4 +143,22 @@ abstract class AbstractComponent implements ComponentInterface
 
         return [$name, $properties, $components];
     }
+
+    /**
+     * Validate this component against its RFC 5545 requirements
+     *
+     * No-op by default: a component with no rules of its own -- GenericComponent,
+     * and any X- extension -- is valid. Concrete components override this.
+     *
+     * Deliberately does not recurse into sub-components. Doing so here would
+     * make a tree walk out of a method that throws on the first error, reporting
+     * one problem per run; Validator::validate() already walks the tree and
+     * collects every error at once.
+     *
+     * @throws \Icalendar\Exception\ValidationException if the component is invalid
+     */
+    #[\Override]
+    public function validate(): void
+    {
+    }
 }

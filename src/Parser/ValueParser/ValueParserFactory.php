@@ -43,6 +43,10 @@ class ValueParserFactory
         'RDATE' => 'DATE-TIME',
         'TRIGGER' => 'DURATION',
 
+        // Recurrence properties (RFC 5545 §3.8.5.3, §3.3.10)
+        'RRULE' => 'RECUR',
+        'EXRULE' => 'RECUR',
+
         // Duration properties
         'DURATION' => 'DURATION',
 
@@ -57,6 +61,8 @@ class ValueParserFactory
 
         // URI properties
         'URL' => 'URI',
+        // RFC 5545 §3.8.1.1: default type is URI; binary payloads declare VALUE=BINARY
+        'ATTACH' => 'URI',
 
         // Text properties (default)
         'UID' => 'TEXT',

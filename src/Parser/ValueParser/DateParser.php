@@ -13,12 +13,15 @@ use Icalendar\Exception\ParseException;
  */
 class DateParser implements ValueParserInterface
 {
-    private bool $strict = false;
-
+    /**
+     * No-op: what counts as a DATE does not vary by mode.
+     *
+     * See DateTimeParser::setStrict() — this parser had the same
+     * DateTimeImmutable fallback, with the same wall-clock dependency.
+     */
     #[\Override]
     public function setStrict(bool $strict): void
     {
-        $this->strict = $strict;
     }
 
     /**
@@ -28,12 +31,6 @@ class DateParser implements ValueParserInterface
     public function parse(string $value, array $parameters = []): DateTimeImmutable
     {
         if (!preg_match('/^\d{8}$/', $value)) {
-            if (!$this->strict) {
-                try {
-                    $date = new DateTimeImmutable($value);
-                    return $date->setTime(0, 0, 0);
-                } catch (\Exception $e) {}
-            }
             throw new ParseException("Invalid DATE format: '{$value}'. Expected YYYYMMDD.", ParseException::ERR_INVALID_DATE);
         }
 
@@ -67,12 +64,6 @@ class DateParser implements ValueParserInterface
     public function canParse(string $value): bool
     {
         if (!preg_match('/^\d{8}$/', $value)) {
-            if (!$this->strict) {
-                try {
-                    new DateTimeImmutable($value);
-                    return true;
-                } catch (\Exception $e) { return false; }
-            }
             return false;
         }
 

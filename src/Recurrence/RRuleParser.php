@@ -53,9 +53,11 @@ class RRuleParser
             $rules[$key] = $value;
         }
 
-        if ($this->strict) {
-            $this->validateRules($rules);
-        }
+        // Always validated: mode controls how a failure is reported (Parser
+        // collects a warning instead of throwing), not which rules are valid.
+        // Running this only when strict let buildRRule() coerce bad input
+        // instead -- INTERVAL=abc silently became INTERVAL=0.
+        $this->validateRules($rules);
 
         return $this->buildRRule($rules);
     }
@@ -155,6 +157,25 @@ class RRuleParser
                 throw new ParseException("Invalid RECUR WKST value: {$rules['WKST']}", ParseException::ERR_RRULE_INVALID_FORMAT);
             }
         }
+
+        // BYDAY had no validation here, so buildRRule() silently discarded any
+        // part its regex could not read: 'FREQ=WEEKLY;BYDAY=GARBAGE' collapsed
+        // to a bare 'FREQ=WEEKLY', widening "weekly on given days" to every day.
+        if (isset($rules['BYDAY'])) {
+            foreach (explode(',', $rules['BYDAY']) as $v) {
+                if ($v === '') {
+                    continue;
+                }
+                if (!preg_match('/^([+-]?\d+)?(MO|TU|WE|TH|FR|SA|SU)$/i', $v, $matches)) {
+                    throw new ParseException("Invalid RECUR BYDAY value: {$v}", ParseException::ERR_RRULE_INVALID_FORMAT);
+                }
+                // RFC 5545 §3.3.10: the ordinal is a non-zero week number.
+                $ordinal = $matches[1];
+                if ($ordinal !== '' && $ordinal !== '+' && $ordinal !== '-' && (int) $ordinal === 0) {
+                    throw new ParseException("Invalid BYDAY ordinal: {$v}", ParseException::ERR_RRULE_INVALID_FORMAT);
+                }
+            }
+        }
     }
 
     /**
@@ -191,12 +212,11 @@ class RRuleParser
         if (isset($rules['BYDAY']) && !empty($rules['BYDAY'])) {
             $parts = explode(',', $rules['BYDAY']);
             foreach ($parts as $part) {
+                // validateRules() has already rejected anything unparseable or
+                // with a zero ordinal, in both modes.
                 if (preg_match('/^([+-]?\d+)?(MO|TU|WE|TH|FR|SA|SU)$/i', $part, $matches)) {
                     $ordinalMatch = $matches[1];
                     $ordinal = ($ordinalMatch !== '' && $ordinalMatch !== '+' && $ordinalMatch !== '-') ? (int) $ordinalMatch : null;
-                    if ($this->strict && $ordinal === 0) {
-                        throw new ParseException("Invalid BYDAY ordinal: {$part}", ParseException::ERR_RRULE_INVALID_FORMAT);
-                    }
                     $byDay[] = [
                         'day' => strtoupper($matches[2]),
                         'ordinal' => $ordinal,
