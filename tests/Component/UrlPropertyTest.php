@@ -29,46 +29,56 @@ use PHPUnit\Framework\TestCase;
  */
 class UrlPropertyTest extends TestCase
 {
-    /** @return array<string, array{class-string<ComponentInterface>}> */
+    /**
+     * Factories rather than class strings: `new $class()` cannot be verified by
+     * static analysis, and each call here also yields a fresh component, so a
+     * mutating test cannot leak state into another data set.
+     *
+     * @return array<string, array{callable(): (VEvent|VTodo|VJournal|VFreeBusy)}>
+     */
     public static function urlCapableComponentProvider(): array
     {
         return [
-            'VEVENT' => [VEvent::class],
-            'VTODO' => [VTodo::class],
-            'VJOURNAL' => [VJournal::class],
-            'VFREEBUSY' => [VFreeBusy::class],
+            'VEVENT' => [static fn (): VEvent => new VEvent()],
+            'VTODO' => [static fn (): VTodo => new VTodo()],
+            'VJOURNAL' => [static fn (): VJournal => new VJournal()],
+            'VFREEBUSY' => [static fn (): VFreeBusy => new VFreeBusy()],
         ];
     }
 
+    /** @param callable(): (VEvent|VTodo|VJournal|VFreeBusy) $make */
     #[DataProvider('urlCapableComponentProvider')]
-    public function testSetUrlAndGetUrl(string $class): void
+    public function testSetUrlAndGetUrl(callable $make): void
     {
-        $component = new $class();
+        $component = $make();
         $component->setUrl('https://example.com/thing');
 
         $this->assertSame('https://example.com/thing', $component->getUrl());
     }
 
+    /** @param callable(): (VEvent|VTodo|VJournal|VFreeBusy) $make */
     #[DataProvider('urlCapableComponentProvider')]
-    public function testGetUrlIsNullWhenUnset(string $class): void
+    public function testGetUrlIsNullWhenUnset(callable $make): void
     {
-        $this->assertNull((new $class())->getUrl());
+        $this->assertNull($make()->getUrl());
     }
 
     /** Matches the fluent style of the other setters. */
+    /** @param callable(): (VEvent|VTodo|VJournal|VFreeBusy) $make */
     #[DataProvider('urlCapableComponentProvider')]
-    public function testSetUrlIsFluent(string $class): void
+    public function testSetUrlIsFluent(callable $make): void
     {
-        $component = new $class();
+        $component = $make();
 
         $this->assertSame($component, $component->setUrl('https://example.com/'));
     }
 
     /** URL is single-occurrence (§3.8.4.6): setting twice must replace, not append. */
+    /** @param callable(): (VEvent|VTodo|VJournal|VFreeBusy) $make */
     #[DataProvider('urlCapableComponentProvider')]
-    public function testSetUrlReplacesRatherThanAppends(string $class): void
+    public function testSetUrlReplacesRatherThanAppends(callable $make): void
     {
-        $component = new $class();
+        $component = $make();
         $component->setUrl('https://example.com/first');
         $component->setUrl('https://example.com/second');
 
@@ -77,10 +87,11 @@ class UrlPropertyTest extends TestCase
     }
 
     /** The setter must produce a real URL property, not just prime the getter. */
+    /** @param callable(): (VEvent|VTodo|VJournal|VFreeBusy) $make */
     #[DataProvider('urlCapableComponentProvider')]
-    public function testSetUrlAddsTheProperty(string $class): void
+    public function testSetUrlAddsTheProperty(callable $make): void
     {
-        $component = new $class();
+        $component = $make();
         $component->setUrl('https://example.com/thing');
 
         $property = $component->getProperty('URL');
