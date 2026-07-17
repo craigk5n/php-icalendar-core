@@ -145,20 +145,41 @@ abstract class AbstractComponent implements ComponentInterface
     }
 
     /**
-     * Validate this component against its RFC 5545 requirements
+     * Validate this component and its sub-components against RFC 5545
+     *
+     * Template method: runs this component's own checks via validateSelf(), then
+     * descends into every child. Concrete components override validateSelf(), not
+     * this, so the recursion cannot be forgotten or bypassed -- which is why it is
+     * final. It is deliberately fail-fast: the first violation in document order
+     * (self before children) is thrown.
+     *
+     * To collect every error in one pass instead of stopping at the first, use
+     * {@see \Icalendar\Validation\Validator::validate()}.
+     *
+     * @throws \Icalendar\Exception\ValidationException if the component or any
+     *   descendant is invalid
+     */
+    #[\Override]
+    final public function validate(): void
+    {
+        $this->validateSelf();
+
+        foreach ($this->getComponents() as $component) {
+            $component->validate();
+        }
+    }
+
+    /**
+     * Validate this component's own RFC 5545 requirements, ignoring children
      *
      * No-op by default: a component with no rules of its own -- GenericComponent,
-     * and any X- extension -- is valid. Concrete components override this.
-     *
-     * Deliberately does not recurse into sub-components. Doing so here would
-     * make a tree walk out of a method that throws on the first error, reporting
-     * one problem per run; Validator::validate() already walks the tree and
-     * collects every error at once.
+     * and any X- extension -- is valid. Concrete components override this with
+     * their required-property and consistency checks. validate() supplies the
+     * recursion around it.
      *
      * @throws \Icalendar\Exception\ValidationException if the component is invalid
      */
-    #[\Override]
-    public function validate(): void
+    protected function validateSelf(): void
     {
     }
 }

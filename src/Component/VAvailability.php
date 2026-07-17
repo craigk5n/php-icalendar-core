@@ -109,7 +109,7 @@ class VAvailability extends AbstractComponent
     }
 
     #[\Override]
-    public function validate(): void
+    protected function validateSelf(): void
     {
         if ($this->getProperty('DTSTAMP') === null) {
             throw new ValidationException(
@@ -125,8 +125,6 @@ class VAvailability extends AbstractComponent
             );
         }
 
-        foreach ($this->getAvailable() as $available) {
-            $available->validate();
-        }
+        // Each AVAILABLE child is validated by AbstractComponent::validate()'s descent.
     }
 }
