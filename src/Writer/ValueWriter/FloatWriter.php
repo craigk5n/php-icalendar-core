@@ -12,6 +12,13 @@ class FloatWriter implements ValueWriterInterface
     #[\Override]
     public function write(mixed $value): string
     {
+        // The write path is stringly typed (see BooleanWriter): PropertyWriter can
+        // only hand us the parser's serialisation, so accept a numeric string as
+        // IntegerWriter does. Non-numeric strings stay rejected.
+        if (is_string($value) && is_numeric($value)) {
+            return $value;
+        }
+
         if (!is_float($value) && !is_int($value)) {
             throw new \InvalidArgumentException('FloatWriter expects float or int, got ' . gettype($value));
         }
@@ -87,6 +94,6 @@ class FloatWriter implements ValueWriterInterface
     #[\Override]
     public function canWrite(mixed $value): bool
     {
-        return is_float($value) || is_int($value);
+        return is_float($value) || is_int($value) || (is_string($value) && is_numeric($value));
     }
 }

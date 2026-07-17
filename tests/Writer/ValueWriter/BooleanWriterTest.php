@@ -119,10 +119,15 @@ class BooleanWriterTest extends TestCase
         $this->assertTrue($this->writer->canWrite(true));
         $this->assertTrue($this->writer->canWrite(false));
         
+        // The canonical serialisation is writable: ValueInterface::getRawValue()
+        // returns string, so PropertyWriter can hand the writer nothing else.
+        // Rejecting these made parse->write impossible for any BOOLEAN property.
+        $this->assertTrue($this->writer->canWrite('TRUE'));
+        $this->assertTrue($this->writer->canWrite('FALSE'));
+
+        // Loose spellings stay rejected -- only 'TRUE'/'FALSE' verbatim.
         $this->assertFalse($this->writer->canWrite('true'));
         $this->assertFalse($this->writer->canWrite('false'));
-        $this->assertFalse($this->writer->canWrite('TRUE'));
-        $this->assertFalse($this->writer->canWrite('FALSE'));
         $this->assertFalse($this->writer->canWrite(1));
         $this->assertFalse($this->writer->canWrite(0));
         $this->assertFalse($this->writer->canWrite(null));
@@ -194,15 +199,19 @@ class BooleanWriterTest extends TestCase
 
     public function testWriteEdgeCases(): void
     {
-        // Test with different boolean-like values that should fail
+        // Boolean-like values that must NOT be coerced. 'TRUE'/'FALSE' were once
+        // listed here too, but that is the parser's canonical serialisation and
+        // the only form PropertyWriter can pass in -- rejecting it meant no
+        // BOOLEAN property could be written back after parsing. Everything below
+        // remains rejected, which is what the strict-bool guard is actually for.
         $edgeCases = [
-            'TRUE', 'FALSE', 'true', 'false', 'True', 'False',
+            'true', 'false', 'True', 'False',
             '1', '0', 'yes', 'no', 'on', 'off',
             1, 0, -1, 1.0, 0.0,
         ];
-        
+
         foreach ($edgeCases as $case) {
-            $this->assertFalse($this->writer->canWrite($case), 
+            $this->assertFalse($this->writer->canWrite($case),
                 "Edge case '$case' should not be writable");
         }
     }

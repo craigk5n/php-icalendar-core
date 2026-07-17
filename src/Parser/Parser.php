@@ -463,6 +463,12 @@ class Parser implements ParserInterface
             return (string)$str;
         }
 
+        // RFC 5545 §3.3.2 spells booleans TRUE and FALSE. The (string) cast below
+        // renders them '1' and '' -- the latter destroying the value entirely.
+        if (is_bool($value)) {
+            return $value ? 'TRUE' : 'FALSE';
+        }
+
         return is_scalar($value) ? (string)$value : 'COMPLEX';
     }
 
