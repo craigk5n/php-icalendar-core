@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Icalendar\Component;
 
 use Icalendar\Component\Traits\RecurrenceTrait;
+use Icalendar\Component\Traits\UrlTrait;
 use Icalendar\Exception\ValidationException;
 use Icalendar\Property\GenericProperty;
 
@@ -16,6 +17,7 @@ use Icalendar\Property\GenericProperty;
 class VTodo extends AbstractComponent
 {
     use RecurrenceTrait;
+    use UrlTrait;
 
     public const ERR_MISSING_DTSTAMP = 'ICAL-VTODO-001';
     public const ERR_MISSING_UID = 'ICAL-VTODO-002';
@@ -379,33 +381,6 @@ class VTodo extends AbstractComponent
     public function getLocation(): ?string
     {
         $prop = $this->getProperty('LOCATION');
-        if ($prop === null) {
-            return null;
-        }
-        return $prop->getValue()->getRawValue();
-    }
-
-    /**
-     * Set the URL associated with this to-do item
-     *
-     * @param string $url The URL that provides more information about the to-do item
-     * @return self For method chaining
-     */
-    public function setUrl(string $url): self
-    {
-        $this->removeProperty('URL');
-        $this->addProperty(GenericProperty::create('URL', $url));
-        return $this;
-    }
-
-    /**
-     * Get the URL associated with this to-do item
-     *
-     * @return string|null The to-do item URL or null if not set
-     */
-    public function getUrl(): ?string
-    {
-        $prop = $this->getProperty('URL');
         if ($prop === null) {
             return null;
         }

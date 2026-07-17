@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Icalendar\Component;
 
+use Icalendar\Component\Traits\UrlTrait;
 use Icalendar\Exception\ValidationException;
 use Icalendar\Property\GenericProperty;
 
@@ -14,6 +15,8 @@ use Icalendar\Property\GenericProperty;
  */
 class VFreeBusy extends AbstractComponent
 {
+    use UrlTrait;
+
     public const ERR_MISSING_DTSTAMP = 'ICAL-VFB-001';
     public const ERR_MISSING_UID = 'ICAL-VFB-002';
     public const ERR_INVALID_PERIOD = 'ICAL-VFB-VAL-001';

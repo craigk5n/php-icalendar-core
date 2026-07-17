@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Icalendar\Component;
 
 use Icalendar\Component\Traits\RecurrenceTrait;
+use Icalendar\Component\Traits\UrlTrait;
 use Icalendar\Exception\ValidationException;
 use Icalendar\Property\GenericProperty;
 
@@ -16,6 +17,7 @@ use Icalendar\Property\GenericProperty;
 class VEvent extends AbstractComponent
 {
     use RecurrenceTrait;
+    use UrlTrait;
 
     public const ERR_MISSING_DTSTAMP = 'ICAL-VEVENT-001';
     public const ERR_MISSING_UID = 'ICAL-VEVENT-002';
@@ -351,33 +353,6 @@ class VEvent extends AbstractComponent
             return [];
         }
         return explode(',', $value);
-    }
-
-    /**
-     * Set the URL associated with this event
-     *
-     * @param string $url The URL that provides more information about the event
-     * @return self For method chaining
-     */
-    public function setUrl(string $url): self
-    {
-        $this->removeProperty('URL');
-        $this->addProperty(GenericProperty::create('URL', $url));
-        return $this;
-    }
-
-    /**
-     * Get the URL associated with this event
-     *
-     * @return string|null The event URL or null if not set
-     */
-    public function getUrl(): ?string
-    {
-        $prop = $this->getProperty('URL');
-        if ($prop === null) {
-            return null;
-        }
-        return $prop->getValue()->getRawValue();
     }
 
     /**
