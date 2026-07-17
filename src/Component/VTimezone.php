@@ -168,7 +168,7 @@ class VTimezone extends AbstractComponent
     }
 
     #[\Override]
-    public function validate(): void
+    protected function validateSelf(): void
     {
         $tzid = $this->getProperty('TZID');
         if ($tzid === null) {
@@ -184,12 +184,7 @@ class VTimezone extends AbstractComponent
             throw new ValidationException('VTIMEZONE component requires at least one STANDARD or DAYLIGHT sub-component', ValidationException::ERR_TIMEZONE_MISSING_OBSERVANCE);
         }
 
-        // Validate each observance
-        foreach ($observances as $observance) {
-            if ($observance instanceof Standard || $observance instanceof Daylight) {
-                $observance->validate();
-            }
-        }
+        // Each observance is validated by AbstractComponent::validate()'s descent.
     }
 
     private function parseUtcOffset(string $offset): int

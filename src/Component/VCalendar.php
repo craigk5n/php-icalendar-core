@@ -236,7 +236,7 @@ class VCalendar extends AbstractComponent
      * @return void
      */
     #[\Override]
-    public function validate(): void
+    protected function validateSelf(): void
     {
         if ($this->getProperty('PRODID') === null) {
             throw new ValidationException(

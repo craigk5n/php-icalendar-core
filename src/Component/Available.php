@@ -102,7 +102,7 @@ class Available extends AbstractComponent
     }
 
     #[\Override]
-    public function validate(): void
+    protected function validateSelf(): void
     {
         if ($this->getProperty('DTSTAMP') === null) {
             throw new ValidationException(

@@ -54,7 +54,7 @@ class Standard extends AbstractComponent
     }
 
     #[\Override]
-    public function validate(): void
+    protected function validateSelf(): void
     {
         $dtstart = $this->getProperty('DTSTART');
         if ($dtstart === null) {

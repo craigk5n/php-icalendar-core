@@ -284,7 +284,7 @@ class VAlarm extends AbstractComponent
      * @return void
      */
     #[\Override]
-    public function validate(): void
+    protected function validateSelf(): void
     {
         // Check required ACTION property
         if ($this->getProperty('ACTION') === null) {

@@ -47,7 +47,7 @@ class Participant extends AbstractComponent
     }
 
     #[\Override]
-    public function validate(): void
+    protected function validateSelf(): void
     {
         if ($this->getProperty('PARTICIPANT-TYPE') === null) {
             // RFC 9073 says PARTICIPANT-TYPE is required
