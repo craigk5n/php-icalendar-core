@@ -316,28 +316,33 @@ class SecurityValidator
         // Fast path: the scan below is byte-wise and runs on every TEXT value
         // written, so skip it unless there is something to do. Real-world text
         // almost never carries control characters, and this keeps the cost of
-        // sanitising a clean value to a single scan.
-        if (preg_match('/[\x00-\x08\x0B\x0C\x0E-\x1F]/', $text) !== 1) {
+        // sanitising a clean value to a single scan. The class must match the
+        // loop below exactly, DEL (0x7F) included, or a DEL-only value would slip
+        // past unescaped.
+        if (preg_match('/[\x00-\x08\x0B\x0C\x0E-\x1F\x7F]/', $text) !== 1) {
             return $text;
         }
 
         // Remove null bytes
         $text = str_replace("\x00", '', $text);
 
-        // Escape control characters (except tab, newline, carriage return)
+        // Escape the CONTROL set of RFC 5545 §3.3.11 (%x00-08, %x0A-1F, %x7F),
+        // leaving HTAB/LF/CR -- which the ABNF permits -- untouched.
         $result = '';
         for ($i = 0; $i < strlen($text); $i++) {
             $char = $text[$i];
             $ord = ord($char);
-            
-            if ($ord >= 0x01 && $ord <= 0x1F && $ord !== 0x09 && $ord !== 0x0A && $ord !== 0x0D) {
+
+            $isC0Control = $ord >= 0x01 && $ord <= 0x1F && $ord !== 0x09 && $ord !== 0x0A && $ord !== 0x0D;
+
+            if ($isC0Control || $ord === 0x7F) {
                 // Control character - escape it as \xNN
                 $result .= sprintf('\\x%02x', $ord);
             } else {
                 $result .= $char;
             }
         }
-        
+
         return $result;
     }
 }

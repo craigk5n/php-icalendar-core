@@ -30,9 +30,8 @@ use PHPUnit\Framework\TestCase;
  * doubles it. Reversed, the output carries a bare '\x' -- not a defined escape
  * in §3.3.11 -- and reparses lossily to 'x01'.
  *
- * Known limitation: sanitizeText() covers 0x00-0x1F only, so DEL (0x7F) is still
- * emitted raw despite the ABNF excluding it. Pre-existing and left alone here;
- * testDelIsStillEmittedRaw pins the current behaviour so the gap stays visible.
+ * The ABNF's CONTROL set includes DEL (%x7F), not just the C0 range, so
+ * sanitizeText() escapes it too; testDelIsEscaped covers that.
  */
 class TextControlCharTest extends TestCase
 {
@@ -55,6 +54,7 @@ class TextControlCharTest extends TestCase
             'FF 0x0C' => ["\x0C"],
             'ESC 0x1B' => ["\x1B"],
             'US 0x1F' => ["\x1F"],
+            'DEL 0x7F' => ["\x7F"],
         ];
     }
 
@@ -76,13 +76,16 @@ class TextControlCharTest extends TestCase
     }
 
     /**
-     * Characterises the remaining gap rather than asserting it is correct: DEL
-     * is excluded by the TEXT ABNF but sanitizeText() only scans 0x00-0x1F, so
-     * it still reaches the output. Change this test when that is fixed.
+     * DEL (0x7F) is in the ABNF's CONTROL set and must not reach the output.
+     * A DEL-only value (no C0 byte) must still trigger the scan, i.e. the
+     * fast-path filter has to include 0x7F.
      */
-    public function testDelIsStillEmittedRaw(): void
+    public function testDelIsEscaped(): void
     {
-        $this->assertStringContainsString("\x7F", $this->writer->write("a\x7Fb"));
+        $output = $this->writer->write("a\x7Fb");
+
+        $this->assertStringNotContainsString("\x7F", $output);
+        $this->assertSame('a\\\\x7fb', $output);
     }
 
     /** HTAB is explicitly permitted by the TEXT ABNF and must survive. */
