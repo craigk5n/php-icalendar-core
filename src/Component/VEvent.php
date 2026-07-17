@@ -41,13 +41,13 @@ class VEvent extends AbstractComponent
      * The DTSTAMP property indicates the date/time that the instance of the iCalendar
      * object was created. This is a required property for VEVENT components.
      *
-     * @param string $dtStamp The date-time stamp in iCalendar format (e.g., "20231231T235959Z")
+     * @param string|\DateTimeInterface $dtStamp The date-time stamp in iCalendar format (e.g., "20231231T235959Z")
+     * @param array<string, string> $params Parameters to attach, e.g. ['TZID' => 'America/New_York'] or ['VALUE' => 'DATE']
      * @return self For method chaining
      */
-    public function setDtStamp(string $dtStamp): self
+    public function setDtStamp(string|\DateTimeInterface $dtStamp, array $params = []): self
     {
-        $this->removeProperty('DTSTAMP');
-        $this->addProperty(GenericProperty::create('DTSTAMP', $dtStamp));
+        $this->setDateProperty('DTSTAMP', $dtStamp, $params);
         return $this;
     }
 
@@ -98,13 +98,13 @@ class VEvent extends AbstractComponent
     /**
      * Set the start date and time for this event
      *
-     * @param string $dtStart The start date-time in iCalendar format (e.g., "20231231T100000")
+     * @param string|\DateTimeInterface $dtStart The start date-time in iCalendar format (e.g., "20231231T100000")
+     * @param array<string, string> $params Parameters to attach, e.g. ['TZID' => 'America/New_York'] or ['VALUE' => 'DATE']
      * @return self For method chaining
      */
-    public function setDtStart(string $dtStart): self
+    public function setDtStart(string|\DateTimeInterface $dtStart, array $params = []): self
     {
-        $this->removeProperty('DTSTART');
-        $this->addProperty(GenericProperty::create('DTSTART', $dtStart));
+        $this->setDateProperty('DTSTART', $dtStart, $params);
         return $this;
     }
 
@@ -127,13 +127,13 @@ class VEvent extends AbstractComponent
      *
      * Note: Cannot be used together with setDuration() - either DTEND or DURATION should be set, not both.
      *
-     * @param string $dtEnd The end date-time in iCalendar format (e.g., "20231231T110000")
+     * @param string|\DateTimeInterface $dtEnd The end date-time in iCalendar format (e.g., "20231231T110000")
+     * @param array<string, string> $params Parameters to attach, e.g. ['TZID' => 'America/New_York'] or ['VALUE' => 'DATE']
      * @return self For method chaining
      */
-    public function setDtEnd(string $dtEnd): self
+    public function setDtEnd(string|\DateTimeInterface $dtEnd, array $params = []): self
     {
-        $this->removeProperty('DTEND');
-        $this->addProperty(GenericProperty::create('DTEND', $dtEnd));
+        $this->setDateProperty('DTEND', $dtEnd, $params);
         return $this;
     }
 
