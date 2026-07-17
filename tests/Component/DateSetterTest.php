@@ -35,7 +35,9 @@ class DateSetterTest extends TestCase
 {
     private function dtStartValue(ComponentInterface $c): ?string
     {
-        return $c->getProperty('DTSTART')?->getValue()->getRawValue();
+        $property = $c->getProperty('DTSTART');
+
+        return $property === null ? null : $property->getValue()->getRawValue();
     }
 
     /** @return array<string, array{callable(): ComponentInterface}> */
@@ -186,5 +188,36 @@ class DateSetterTest extends TestCase
 
         $event->setDtStamp(new \DateTimeImmutable('2024-01-01 00:00:00', new \DateTimeZone('UTC')));
         $this->assertSame('20240101T000000Z', $event->getProperty('DTSTAMP')?->getValue()->getRawValue());
+    }
+
+    /**
+     * setDtEnd across every component that declares it, with concrete types.
+     *
+     * These setters existed before this PR without a single caller (Psalm's
+     * PossiblyUnusedMethod, pre-existing on main). This PR widened them, so they
+     * are exactly what should now be exercised -- both string and
+     * DateTimeInterface, on VEvent, VFreeBusy, VAvailability and Available.
+     */
+    public function testSetDtEndOnEveryComponent(): void
+    {
+        $event = new VEvent();
+        $event->setDtEnd('20240101T110000Z');
+        $this->assertSame('20240101T110000Z', $event->getProperty('DTEND')?->getValue()->getRawValue());
+
+        $freebusy = new VFreeBusy();
+        $freebusy->setDtEnd(new \DateTimeImmutable('2024-01-01 11:00:00', new \DateTimeZone('UTC')));
+        $this->assertSame('20240101T110000Z', $freebusy->getProperty('DTEND')?->getValue()->getRawValue());
+
+        $availability = new VAvailability();
+        $availability->setDtStart('20240101T090000Z');
+        $availability->setDtEnd(new \DateTimeImmutable('2024-01-01 17:00:00', new \DateTimeZone('UTC')));
+        $this->assertSame('20240101T090000Z', $availability->getProperty('DTSTART')?->getValue()->getRawValue());
+        $this->assertSame('20240101T170000Z', $availability->getProperty('DTEND')?->getValue()->getRawValue());
+
+        $available = new Available();
+        $available->setDtStart('20240101T090000Z');
+        $available->setDtEnd(new \DateTimeImmutable('2024-01-01 17:00:00', new \DateTimeZone('UTC')));
+        $this->assertSame('20240101T090000Z', $available->getProperty('DTSTART')?->getValue()->getRawValue());
+        $this->assertSame('20240101T170000Z', $available->getProperty('DTEND')?->getValue()->getRawValue());
     }
 }
