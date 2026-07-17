@@ -37,7 +37,7 @@ This document outlines the current development status of PHP iCalendar Core.
 
 ## Dependencies
 
--   PHP 8.2+
+-   PHP 8.1+
 -   No external production dependencies.
 
 ## Current Development Focus
@@ -81,7 +81,7 @@ This document outlines the current development status of PHP iCalendar Core.
 
 - **Status:** Completed
 - **File:** `src/Recurrence/Occurrence.php` (CREATE)
-- **Description:** Create an immutable PHP 8.2 `readonly class` in the `Icalendar\Recurrence` namespace representing a single occurrence in a recurrence set. Follow the same pattern as the existing `RRule` class (`src/Recurrence/RRule.php`).
+- **Description:** Create an immutable class in the `Icalendar\Recurrence` namespace representing a single occurrence in a recurrence set, using `readonly` promoted properties (PHP 8.1). Follow the same pattern as the existing `RRule` class (`src/Recurrence/RRule.php`).
 - **Acceptance Criteria:**
   - [x] Class is declared as `readonly class Occurrence` in namespace `Icalendar\Recurrence`
   - [x] Constructor accepts three parameters: `DateTimeImmutable $start`, `?DateTimeImmutable $end = null`, `bool $isRdate = false`

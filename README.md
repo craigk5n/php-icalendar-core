@@ -2,7 +2,7 @@
 
 [![CI](https://github.com/craigk5n/php-icalendar-core/actions/workflows/ci.yml/badge.svg)](https://github.com/craigk5n/php-icalendar-core/actions/workflows/ci.yml)
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
-[![PHP Version](https://img.shields.io/badge/php-%3E%3D8.2-8892BF.svg)](https://www.php.net/)
+[![PHP Version](https://img.shields.io/badge/php-%3E%3D8.1-8892BF.svg)](https://www.php.net/)
 [![PHPStan Level 9](https://img.shields.io/badge/PHPStan-level%209-brightgreen.svg)](https://phpstan.org/)
 [![Documentation](https://img.shields.io/badge/docs-DeepWiki-blue.svg)](https://deepwiki.com/craigk5n/php-icalendar-core)
 
@@ -57,7 +57,7 @@ $warnings = $parserLenient->getWarnings(); // Note: getErrors() is an alias for 
 
 ## Installation
 
-Requires PHP 8.2+ and no external production dependencies.
+Requires PHP 8.1+ and no external production dependencies.
 
 ```bash
 # Assuming you have Composer installed
