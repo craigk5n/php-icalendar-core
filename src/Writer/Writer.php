@@ -39,6 +39,18 @@ class Writer implements WriterInterface
         return $this->contentLineWriter->write($output) . "\r\n";
     }
 
+    #[\Override]
+    public function writeValidated(VCalendar $calendar): string
+    {
+        // Fail-fast validation of the whole tree before serialising. validate()
+        // recurses and throws on the first violation, so nothing is written for
+        // a non-conformant calendar. To collect every error instead of stopping
+        // at the first, run Validator::validate() before calling write().
+        $calendar->validate();
+
+        return $this->write($calendar);
+    }
+
     private function writeComponent(ComponentInterface $component): string
     {
         $lines = [];
