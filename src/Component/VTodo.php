@@ -43,13 +43,13 @@ class VTodo extends AbstractComponent
      * The DTSTAMP property indicates the date/time that the instance of the iCalendar
      * object was created. This is a required property for VTODO components.
      *
-     * @param string $dtStamp The date-time stamp in iCalendar format (e.g., "20231231T235959Z")
+     * @param string|\DateTimeInterface $dtStamp The date-time stamp in iCalendar format (e.g., "20231231T235959Z")
+     * @param array<string, string> $params Parameters to attach, e.g. ['TZID' => 'America/New_York'] or ['VALUE' => 'DATE']
      * @return self For method chaining
      */
-    public function setDtStamp(string $dtStamp): self
+    public function setDtStamp(string|\DateTimeInterface $dtStamp, array $params = []): self
     {
-        $this->removeProperty('DTSTAMP');
-        $this->addProperty(GenericProperty::create('DTSTAMP', $dtStamp));
+        $this->setDateProperty('DTSTAMP', $dtStamp, $params);
         return $this;
     }
 
@@ -100,13 +100,13 @@ class VTodo extends AbstractComponent
     /**
      * Set the start date and time for this to-do item
      *
-     * @param string $dtStart The start date-time in iCalendar format (e.g., "20231231T100000")
+     * @param string|\DateTimeInterface $dtStart The start date-time in iCalendar format (e.g., "20231231T100000")
+     * @param array<string, string> $params Parameters to attach, e.g. ['TZID' => 'America/New_York'] or ['VALUE' => 'DATE']
      * @return self For method chaining
      */
-    public function setDtStart(string $dtStart): self
+    public function setDtStart(string|\DateTimeInterface $dtStart, array $params = []): self
     {
-        $this->removeProperty('DTSTART');
-        $this->addProperty(GenericProperty::create('DTSTART', $dtStart));
+        $this->setDateProperty('DTSTART', $dtStart, $params);
         return $this;
     }
 
@@ -129,13 +129,13 @@ class VTodo extends AbstractComponent
      *
      * Note: Cannot be used together with setDuration() - either DUE or DURATION should be set, not both.
      *
-     * @param string $due The due date-time in iCalendar format (e.g., "20240101T170000")
+     * @param string|\DateTimeInterface $due The due date-time in iCalendar format (e.g., "20240101T170000")
+     * @param array<string, string> $params Parameters to attach, e.g. ['TZID' => 'America/New_York'] or ['VALUE' => 'DATE']
      * @return self For method chaining
      */
-    public function setDue(string $due): self
+    public function setDue(string|\DateTimeInterface $due, array $params = []): self
     {
-        $this->removeProperty('DUE');
-        $this->addProperty(GenericProperty::create('DUE', $due));
+        $this->setDateProperty('DUE', $due, $params);
         return $this;
     }
 
@@ -156,13 +156,13 @@ class VTodo extends AbstractComponent
     /**
      * Set the completion date and time for this to-do item
      *
-     * @param string $completed The completion date-time in iCalendar format (e.g., "20240101T150000Z")
+     * @param string|\DateTimeInterface $completed The completion date-time in iCalendar format (e.g., "20240101T150000Z")
+     * @param array<string, string> $params Parameters to attach, e.g. ['TZID' => 'America/New_York'] or ['VALUE' => 'DATE']
      * @return self For method chaining
      */
-    public function setCompleted(string $completed): self
+    public function setCompleted(string|\DateTimeInterface $completed, array $params = []): self
     {
-        $this->removeProperty('COMPLETED');
-        $this->addProperty(GenericProperty::create('COMPLETED', $completed));
+        $this->setDateProperty('COMPLETED', $completed, $params);
         return $this;
     }
 

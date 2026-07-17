@@ -36,10 +36,16 @@ class Available extends AbstractComponent
         return $prop?->getValue()->getRawValue();
     }
 
-    public function setDtStamp(string $dtStamp): self
+    /**
+     * Set the dtStamp property
+     *
+     * @param string|\DateTimeInterface $dtStamp A value string, or a date object to format
+     * @param array<string, string> $params Parameters to attach, e.g. ['TZID' => 'America/New_York'] or ['VALUE' => 'DATE']
+     * @return self For method chaining
+     */
+    public function setDtStamp(string|\DateTimeInterface $dtStamp, array $params = []): self
     {
-        $this->removeProperty('DTSTAMP');
-        $this->addProperty(GenericProperty::create('DTSTAMP', $dtStamp));
+        $this->setDateProperty('DTSTAMP', $dtStamp, $params);
         return $this;
     }
 
@@ -49,10 +55,16 @@ class Available extends AbstractComponent
         return $prop?->getValue()->getRawValue();
     }
 
-    public function setDtStart(string $dtStart): self
+    /**
+     * Set the dtStart property
+     *
+     * @param string|\DateTimeInterface $dtStart A value string, or a date object to format
+     * @param array<string, string> $params Parameters to attach, e.g. ['TZID' => 'America/New_York'] or ['VALUE' => 'DATE']
+     * @return self For method chaining
+     */
+    public function setDtStart(string|\DateTimeInterface $dtStart, array $params = []): self
     {
-        $this->removeProperty('DTSTART');
-        $this->addProperty(GenericProperty::create('DTSTART', $dtStart));
+        $this->setDateProperty('DTSTART', $dtStart, $params);
         return $this;
     }
 
@@ -62,10 +74,16 @@ class Available extends AbstractComponent
         return $prop?->getValue()->getRawValue();
     }
 
-    public function setDtEnd(string $dtEnd): self
+    /**
+     * Set the dtEnd property
+     *
+     * @param string|\DateTimeInterface $dtEnd A value string, or a date object to format
+     * @param array<string, string> $params Parameters to attach, e.g. ['TZID' => 'America/New_York'] or ['VALUE' => 'DATE']
+     * @return self For method chaining
+     */
+    public function setDtEnd(string|\DateTimeInterface $dtEnd, array $params = []): self
     {
-        $this->removeProperty('DTEND');
-        $this->addProperty(GenericProperty::create('DTEND', $dtEnd));
+        $this->setDateProperty('DTEND', $dtEnd, $params);
         return $this;
     }
 
