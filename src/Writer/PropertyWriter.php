@@ -6,6 +6,7 @@ namespace Icalendar\Writer;
 
 use Icalendar\Parser\ContentLine;
 use Icalendar\Property\PropertyInterface;
+use Icalendar\Value\TextListValue;
 use Icalendar\Writer\ValueWriter\ValueWriterFactory;
 
 /**
@@ -56,9 +57,13 @@ class PropertyWriter
         $parameters = $property->getParameters();
         $value = $property->getValue();
 
-        // Serialize the value using its type
+        // Serialize the value using its type. A list value carries its items as
+        // an array so the writer can escape each and join with literal commas;
+        // passing getRawValue() (a pre-joined string) would lose the separator
+        // vs. literal-comma distinction.
         $valueType = $value->getType();
-        $valueString = $this->valueWriterFactory->write($value->getRawValue(), $valueType);
+        $rawForWriter = $value instanceof TextListValue ? $value->getItems() : $value->getRawValue();
+        $valueString = $this->valueWriterFactory->write($rawForWriter, $valueType);
 
         return $this->buildPropertyLine($name, $parameters, $valueString);
     }

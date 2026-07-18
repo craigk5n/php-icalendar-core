@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Icalendar\Component;
 
+use Icalendar\Component\Traits\CategoriesTrait;
 use Icalendar\Component\Traits\RecurrenceTrait;
 use Icalendar\Component\Traits\UrlTrait;
 use Icalendar\Exception\ValidationException;
@@ -16,6 +17,7 @@ use Icalendar\Property\GenericProperty;
  */
 class VTodo extends AbstractComponent
 {
+    use CategoriesTrait;
     use RecurrenceTrait;
     use UrlTrait;
 
@@ -425,38 +427,6 @@ class VTodo extends AbstractComponent
             return null;
         }
         return $prop->getValue()->getRawValue();
-    }
-
-    /**
-     * Set the categories for this to-do item
-     *
-     * @param string ...$categories One or more category names to classify the to-do item
-     * @return self For method chaining
-     */
-    public function setCategories(string ...$categories): self
-    {
-        $this->removeProperty('CATEGORIES');
-        $categoriesValue = implode(',', $categories);
-        $this->addProperty(GenericProperty::create('CATEGORIES', $categoriesValue));
-        return $this;
-    }
-
-    /**
-     * Get the categories for this to-do item
-     *
-     * @return array<string> Array of category names, empty if not set
-     */
-    public function getCategories(): array
-    {
-        $prop = $this->getProperty('CATEGORIES');
-        if ($prop === null) {
-            return [];
-        }
-        $value = $prop->getValue()->getRawValue();
-        if ($value === '') {
-            return [];
-        }
-        return explode(',', $value);
     }
 
     /**
