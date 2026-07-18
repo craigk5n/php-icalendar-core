@@ -21,6 +21,7 @@ class ValueWriterFactory
         'DATE' => DateWriter::class,
         'DATE-TIME' => DateTimeWriter::class,
         'TEXT' => TextWriter::class,
+        'TEXT-LIST' => TextListWriter::class,
         'DURATION' => DurationWriter::class,
         'BINARY' => BinaryWriter::class,
         'INTEGER' => IntegerWriter::class,

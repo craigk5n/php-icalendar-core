@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Icalendar\Component;
 
+use Icalendar\Component\Traits\CategoriesTrait;
 use Icalendar\Component\Traits\RecurrenceTrait;
 use Icalendar\Component\Traits\UrlTrait;
 use Icalendar\Exception\ValidationException;
@@ -16,6 +17,7 @@ use Icalendar\Property\GenericProperty;
  */
 class VJournal extends AbstractComponent
 {
+    use CategoriesTrait;
     use RecurrenceTrait;
     use UrlTrait;
 
@@ -158,30 +160,6 @@ class VJournal extends AbstractComponent
             return null;
         }
         return $descriptions[0]->getValue()->getRawValue();
-    }
-
-    public function setCategories(string ...$categories): self
-    {
-        $this->removeProperty('CATEGORIES');
-        $categoriesValue = implode(',', $categories);
-        $this->addProperty(GenericProperty::create('CATEGORIES', $categoriesValue));
-        return $this;
-    }
-
-    /**
-     * @return array<string>
-     */
-    public function getCategories(): array
-    {
-        $prop = $this->getProperty('CATEGORIES');
-        if ($prop === null) {
-            return [];
-        }
-        $value = $prop->getValue()->getRawValue();
-        if ($value === '') {
-            return [];
-        }
-        return explode(',', $value);
     }
 
     public function setClass(string $class): self

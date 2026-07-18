@@ -263,16 +263,28 @@ class Parser implements ParserInterface
 
             // Temporarily store property in the current component's buffer
             try {
-                $parser = $this->valueParserFactory->getParserForProperty($name, $parameters);
-                $parsedValue = $parser->parse($value, $parameters);
-                $type = $parser->getType();
-                // Take UTC-ness from the source rather than the parsed value's
-                // timezone: only a trailing 'Z' means UTC. PERIOD passes null so
-                // its halves keep using the timezone fallback (§3.3.9 makes them UTC).
-                $sourceIsUtc = $type === 'DATE-TIME' ? str_ends_with($value, 'Z') : null;
-                $propertyValue = $this->formatParsedValue($parsedValue, $type, $sourceIsUtc);
-                $property = new GenericProperty($name, new \Icalendar\Value\GenericValue($propertyValue, $type), $parameters);
-                
+                if ($this->isTextListProperty($name)) {
+                    // A comma-separated list of TEXT (RFC 5545 §3.8.1.2). Split on
+                    // the unescaped separators before unescaping each item, so a
+                    // literal comma inside a value (\,) is not mistaken for a list
+                    // separator -- the whole-value unescape below would lose that.
+                    $property = new GenericProperty(
+                        $name,
+                        \Icalendar\Value\TextListValue::fromRawValue($value),
+                        $parameters
+                    );
+                } else {
+                    $parser = $this->valueParserFactory->getParserForProperty($name, $parameters);
+                    $parsedValue = $parser->parse($value, $parameters);
+                    $type = $parser->getType();
+                    // Take UTC-ness from the source rather than the parsed value's
+                    // timezone: only a trailing 'Z' means UTC. PERIOD passes null so
+                    // its halves keep using the timezone fallback (§3.3.9 makes them UTC).
+                    $sourceIsUtc = $type === 'DATE-TIME' ? str_ends_with($value, 'Z') : null;
+                    $propertyValue = $this->formatParsedValue($parsedValue, $type, $sourceIsUtc);
+                    $property = new GenericProperty($name, new \Icalendar\Value\GenericValue($propertyValue, $type), $parameters);
+                }
+
                 // Add to the buffer for the current component
                 $propertyBuffers[count($propertyBuffers) - 1][] = $property;
             } catch (\Exception $e) {
@@ -390,6 +402,18 @@ class Parser implements ParserInterface
             'PARTICIPANT' => new Participant(),
             default => new GenericComponent($componentName),
         };
+    }
+
+    /**
+     * Whether a property's value is a comma-separated list of TEXT values that
+     * must preserve its list structure through parsing (RFC 5545 §3.8.1.2).
+     *
+     * Only CATEGORIES is handled here -- the property with a list-aware setter
+     * and getter; RESOURCES shares the grammar and can join the set later.
+     */
+    private function isTextListProperty(string $name): bool
+    {
+        return strtoupper($name) === 'CATEGORIES';
     }
 
     /**
