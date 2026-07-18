@@ -6,8 +6,19 @@
          cacheDirectory=".phpunit.cache"
          testdox="true"
          executionOrder="default"
-         failOnWarning="false"
+         failOnWarning="true"
+         failOnRisky="true"
+         failOnIncomplete="true"
          failOnSkipped="false">
+    <!--
+        failOnSkipped stays false on purpose. The two skips in this suite are
+        environmental, not placeholders: LexerTest skips an unreadable-file case
+        when running as root (root bypasses permissions), and TimeWriterTest
+        skips a leap-second case PHP normalises away. Failing on those would
+        break CI for the environment it happens to run in rather than for any
+        drop in quality. failOnIncomplete and failOnRisky are enabled instead,
+        since those do mark placeholder work.
+    -->
     <testsuites>
         <testsuite name="Unit">
             <directory suffix="Test.php">tests</directory>

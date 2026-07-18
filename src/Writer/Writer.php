@@ -77,11 +77,17 @@ class Writer implements WriterInterface
     public function writeToFile(VCalendar $calendar, string $filepath): void
     {
         $content = $this->write($calendar);
-        $result = file_put_contents($filepath, $content, LOCK_EX);
+
+        // The failure is handled explicitly below, so the diagnostic is
+        // suppressed rather than emitted as a raw PHP warning alongside the
+        // exception. Its text is recovered via error_get_last() so the caller
+        // is told *why* the write failed instead of just that it did.
+        $result = @file_put_contents($filepath, $content, LOCK_EX);
 
         if ($result === false) {
+            $reason = error_get_last()['message'] ?? 'unknown error';
             throw new \RuntimeException(
-                "Failed to write to file: {$filepath}",
+                "Failed to write to file: {$filepath} ({$reason})",
                 0
             );
         }
