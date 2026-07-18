@@ -73,11 +73,6 @@ class EdgeCaseTest extends TestCase
         $this->assertEquals($value, $event->getProperty('SUMMARY')->getValue()->getRawValue());
     }
 
-    public function test76OctetsLineMustFold(): void
-    {
-        // Skip this test for now - line length validation may not be implemented
-        $this->assertTrue(true);
-    }
 
     public function testVeryLongLineFoldsCorrectly(): void
     {
@@ -185,25 +180,10 @@ class EdgeCaseTest extends TestCase
         $this->parser->parse($ical);
     }
 
-    public function testProperFoldingWithSpace(): void
-    {
-        // Skip folding tests for now - need to check parser behavior
-        $this->assertTrue(true);
-    }
 
-    public function testProperFoldingWithTab(): void
-    {
-        // Skip folding tests for now - need to check parser behavior
-        $this->assertTrue(true);
-    }
 
     // === Invalid Dates/Times Tests ===
 
-    public function testLeapYearInvalidDate(): void
-    {
-        // Skip date validation tests for now
-        $this->assertTrue(true);
-    }
 
     public function testValidLeapYearDate(): void
     {
@@ -258,11 +238,6 @@ class EdgeCaseTest extends TestCase
         $this->assertLessThan(2.0, $parseEndTime - $parseStartTime, 'Parsing events should take < 2 seconds');
     }
 
-    public function testComplexTimezones(): void
-    {
-        // Skip complex timezone tests for now
-        $this->assertTrue(true);
-    }
 
     public function testLongText(): void
     {
@@ -352,10 +327,37 @@ class EdgeCaseTest extends TestCase
 
     // === Boundary and Error Tests ===
 
-    public function testEmptyAttendeesList(): void
+    /**
+     * An ATTENDEE with an empty value is not a CAL-ADDRESS. Strict mode must
+     * reject it; lenient mode must record a warning and drop the property
+     * rather than invent an empty attendee -- the same divergence
+     * MalformedValueModeTest pins for date properties.
+     */
+    public function testEmptyAttendeeValueIsRejectedInStrictAndWarnedInLenient(): void
     {
-        // Skip validation tests for now
-        $this->assertTrue(true);
+        $ics = "BEGIN:VCALENDAR\r\nVERSION:2.0\r\nPRODID:-//Test//Test//EN\r\n"
+            . "BEGIN:VEVENT\r\nUID:a@example.com\r\nDTSTAMP:20260101T000000Z\r\n"
+            . "DTSTART:20260101T000000Z\r\nATTENDEE:\r\n"
+            . "END:VEVENT\r\nEND:VCALENDAR\r\n";
+
+        $strict = new Parser(Parser::STRICT);
+        try {
+            $strict->parse($ics);
+            $this->fail('strict mode must reject an empty CAL-ADDRESS');
+        } catch (ParseException $e) {
+            $this->assertStringContainsStringIgnoringCase('cal-address', $e->getMessage());
+        }
+
+        $lenient = new Parser(Parser::LENIENT);
+        $calendar = $lenient->parse($ics);
+
+        $events = $calendar->getComponents('VEVENT');
+        $this->assertNotEmpty($events, 'lenient mode still yields the event');
+        $this->assertNull(
+            $events[0]->getProperty('ATTENDEE'),
+            'the unusable ATTENDEE is dropped, not stored as an empty value'
+        );
+        $this->assertNotEmpty($lenient->getWarnings(), 'lenient mode records a diagnostic');
     }
 
     public function testMalformedFoldingNoTab(): void
@@ -366,67 +368,17 @@ class EdgeCaseTest extends TestCase
         $this->parser->parse($ical);
     }
 
-    public function testInvalidDateMonth(): void
-    {
-        // Skip date validation tests for now
-        $this->assertTrue(true);
-    }
 
-    public function testInvalidDateDay(): void
-    {
-        // Skip date validation tests for now
-        $this->assertTrue(true);
-    }
 
-    public function testInvalidDateTimeHour(): void
-    {
-        // Skip date validation tests for now
-        $this->assertTrue(true);
-    }
 
-    public function testInvalidDateTimeMinute(): void
-    {
-        // Skip date validation tests for now
-        $this->assertTrue(true);
-    }
 
-    public function testInvalidDateTimeSecond(): void
-    {
-        // Skip date validation tests for now
-        $this->assertTrue(true);
-    }
 
     // === Maximum Nesting Depth Tests ===
 
-    public function testMaximumNestingDepth(): void
-    {
-        // Skip depth limit tests for now - may not be implemented
-        $this->assertTrue(true);
-    }
 
-    public function testDepthExceedsLimit(): void
-    {
-        // Skip depth limit tests for now - may not be implemented
-        $this->assertTrue(true);
-    }
 
-    public function testConfigurableDepthLimit(): void
-    {
-        // Skip depth limit tests for now - may not be implemented
-        $this->assertTrue(true);
-    }
 
     // === Security Tests ===
 
-    public function testXxePrevention(): void
-    {
-        // Skip security tests for now - may not be implemented
-        $this->assertTrue(true);
-    }
 
-    public function testSsrfPrevention(): void
-    {
-        // Skip security tests for now - may not be implemented
-        $this->assertTrue(true);
-    }
 }

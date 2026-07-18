@@ -39,6 +39,10 @@ class MalformedValueModeTest extends TestCase
             'bad month' => ['DTSTART:20241345T100000Z'],
             'feb 30' => ['DTSTART:20240230T100000Z'],
             'bad hour' => ['DTSTART:20260206T990000Z'],
+            // DateTimeParser rejects minute > 59 and second > 60, but nothing
+            // exercised either branch: the hour case above was the only one.
+            'bad minute' => ['DTSTART:20260206T106000Z'],
+            'bad second' => ['DTSTART:20260206T100061Z'],
             'dtend relative' => ['DTEND:tomorrow'],
             'dtstamp relative' => ['DTSTAMP:now'],
         ];
