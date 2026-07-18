@@ -9,6 +9,7 @@ use Icalendar\Component\Traits\RecurrenceTrait;
 use Icalendar\Component\Traits\UrlTrait;
 use Icalendar\Exception\ValidationException;
 use Icalendar\Property\GenericProperty;
+use Icalendar\Value\GenericValue;
 
 /**
  * VEVENT component for calendar events
@@ -334,9 +335,12 @@ class VEvent extends AbstractComponent
      */
     public function setGeo(float $latitude, float $longitude): self
     {
+        // Store as a GEO-typed value, not TEXT: the semicolon between the two
+        // floats is structural and must reach the output literally, whereas the
+        // TEXT writer would escape it to '\;'.
         $geoString = sprintf('%F;%F', $latitude, $longitude);
         $this->removeProperty('GEO');
-        $this->addProperty(GenericProperty::create('GEO', $geoString));
+        $this->addProperty(new GenericProperty('GEO', new GenericValue($geoString, 'GEO')));
         return $this;
     }
 

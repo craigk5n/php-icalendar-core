@@ -38,6 +38,8 @@ class ParseException extends \Exception
     public const ERR_INVALID_TIME = 'ICAL-TYPE-012';
     public const ERR_INVALID_URI = 'ICAL-TYPE-013';
     public const ERR_INVALID_UTC_OFFSET = 'ICAL-TYPE-014';
+    // ICAL-TYPE-015 is InvalidDataException::ERR_UNSUPPORTED_TYPE.
+    public const ERR_INVALID_GEO = 'ICAL-TYPE-016';
 
     /** IO error codes */
     public const ERR_FILE_NOT_FOUND = 'ICAL-IO-001';

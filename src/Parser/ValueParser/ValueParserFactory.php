@@ -119,6 +119,10 @@ class ValueParserFactory
         // Period properties
         'FREEBUSY' => 'PERIOD',
 
+        // Geographic position: a structured pair of FLOATs (RFC 5545 §3.8.1.6),
+        // not a single FLOAT, so it needs its own parser rather than the FLOAT map.
+        'GEO' => 'GEO',
+
         // RFC 9073: Event Publishing Extensions
         // STYLED-DESCRIPTION can contain rich text (HTML) or URIs.
         // TEXT parser is suitable for capturing raw HTML/rich text.
@@ -265,6 +269,7 @@ class ValueParserFactory
             'DATE-TIME',
             'DURATION',
             'FLOAT',
+            'GEO',
             'INTEGER',
             'PERIOD',
             'RECUR',
@@ -318,6 +323,7 @@ class ValueParserFactory
             'TIME' => new TimeParser(),
             'UTC-OFFSET' => new UtcOffsetParser(),
             'RECUR' => new RecurParser(),
+            'GEO' => new GeoParser(),
             default => throw new ParseException(
                 "Unknown data type: '{$type}'",
                 ParseException::ERR_TYPE_DECLARATION_MISMATCH,
