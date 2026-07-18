@@ -153,9 +153,12 @@ class VTimezoneTest extends TestCase
         
         $timezone->buildTransitions();
         
-        // Before any transition - should be 0 (default)
+        // Before any transition the zone is in standard time, which the earliest
+        // observance records as its TZOFFSETFROM (-05:00 here). This previously
+        // asserted 0, pinning a fallback that claimed UTC for every date before
+        // the first onset.
         $marchDt = new \DateTime('2026-03-01T12:00:00');
-        $this->assertEquals(0, $timezone->getOffsetAt($marchDt));
+        $this->assertEquals(-18000, $timezone->getOffsetAt($marchDt));
         
         // After daylight time starts - should be EDT (-04:00)
         $aprilDt = new \DateTime('2026-04-01T12:00:00');
@@ -190,9 +193,11 @@ class VTimezoneTest extends TestCase
         
         $timezone->buildTransitions();
         
-        // Before any transition - should be UTC (default)
+        // Before any transition the zone is in standard time. The name is taken
+        // from the observance that switches *to* the earliest TZOFFSETFROM, i.e.
+        // STANDARD/EST here. This previously asserted 'UTC'.
         $marchDt = new \DateTime('2026-03-01T12:00:00');
-        $this->assertEquals('UTC', $timezone->getAbbreviationAt($marchDt));
+        $this->assertEquals('EST', $timezone->getAbbreviationAt($marchDt));
         
         // After daylight time starts - should be EDT
         $aprilDt = new \DateTime('2026-04-01T12:00:00');
