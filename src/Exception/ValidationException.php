@@ -15,6 +15,7 @@ class ValidationException extends \Exception
     public const ERR_INVALID_CALSCALE = 'ICAL-COMP-003';
     public const ERR_INVALID_METHOD = 'ICAL-COMP-004';
     public const ERR_INVALID_X_PROPERTY = 'ICAL-COMP-005';
+    public const ERR_DUPLICATE_SINGLE_PROPERTY = 'ICAL-COMP-006';
 
     /** VEVENT error codes */
     public const ERR_VEVENT_MISSING_DTSTAMP = 'ICAL-VEVENT-001';
