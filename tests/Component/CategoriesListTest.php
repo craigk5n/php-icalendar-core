@@ -7,7 +7,6 @@ namespace Icalendar\Tests\Component;
 use Icalendar\Component\VEvent;
 use Icalendar\Component\VJournal;
 use Icalendar\Component\VTodo;
-use Icalendar\Component\ComponentInterface;
 use Icalendar\Parser\Parser;
 use Icalendar\Writer\PropertyWriter;
 use Icalendar\Writer\Writer;
@@ -30,18 +29,18 @@ use PHPUnit\Framework\TestCase;
 class CategoriesListTest extends TestCase
 {
     /**
-     * @return array<string, array{callable(): ComponentInterface}>
+     * @return array<string, array{callable(): (VEvent|VTodo|VJournal)}>
      */
     public static function componentProvider(): array
     {
         return [
-            'VEVENT' => [static fn (): ComponentInterface => new VEvent()],
-            'VTODO' => [static fn (): ComponentInterface => new VTodo()],
-            'VJOURNAL' => [static fn (): ComponentInterface => new VJournal()],
+            'VEVENT' => [static fn (): VEvent|VTodo|VJournal => new VEvent()],
+            'VTODO' => [static fn (): VEvent|VTodo|VJournal => new VTodo()],
+            'VJOURNAL' => [static fn (): VEvent|VTodo|VJournal => new VJournal()],
         ];
     }
 
-    private function writeCategories(ComponentInterface $component): string
+    private function writeCategories(VEvent|VTodo|VJournal $component): string
     {
         $prop = $component->getProperty('CATEGORIES');
         self::assertNotNull($prop);
@@ -50,7 +49,7 @@ class CategoriesListTest extends TestCase
     }
 
     /**
-     * @param callable(): ComponentInterface $factory
+     * @param callable(): (VEvent|VTodo|VJournal) $factory
      */
     #[DataProvider('componentProvider')]
     public function testSeparatorCommasAreLiteral(callable $factory): void
@@ -66,7 +65,7 @@ class CategoriesListTest extends TestCase
      * survives as one value -- the case the old code could not distinguish from
      * a two-item list.
      *
-     * @param callable(): ComponentInterface $factory
+     * @param callable(): (VEvent|VTodo|VJournal) $factory
      */
     #[DataProvider('componentProvider')]
     public function testCommaInsideACategoryIsEscaped(callable $factory): void
@@ -82,7 +81,7 @@ class CategoriesListTest extends TestCase
      * Semicolons and backslashes inside a category are TEXT specials and must be
      * escaped per §3.3.11, while the list separator stays literal.
      *
-     * @param callable(): ComponentInterface $factory
+     * @param callable(): (VEvent|VTodo|VJournal) $factory
      */
     #[DataProvider('componentProvider')]
     public function testSemicolonAndBackslashInsideACategoryAreEscaped(callable $factory): void
@@ -97,7 +96,7 @@ class CategoriesListTest extends TestCase
      * The reported round-trip masking: a genuine two-item list must reparse as
      * two categories, not one.
      *
-     * @param callable(): ComponentInterface $factory
+     * @param callable(): (VEvent|VTodo|VJournal) $factory
      */
     #[DataProvider('componentProvider')]
     public function testMultiValueListRoundTripsAsTwoCategories(callable $factory): void
@@ -113,7 +112,7 @@ class CategoriesListTest extends TestCase
      * The counterpart: a single category containing a literal comma must reparse
      * as exactly one category, proving the two cases are no longer conflated.
      *
-     * @param callable(): ComponentInterface $factory
+     * @param callable(): (VEvent|VTodo|VJournal) $factory
      */
     #[DataProvider('componentProvider')]
     public function testCommaCategoryRoundTripsAsOneCategory(callable $factory): void
@@ -128,7 +127,7 @@ class CategoriesListTest extends TestCase
     /**
      * Existing single-value behaviour must be unchanged.
      *
-     * @param callable(): ComponentInterface $factory
+     * @param callable(): (VEvent|VTodo|VJournal) $factory
      */
     #[DataProvider('componentProvider')]
     public function testSingleCategoryIsUnescaped(callable $factory): void
@@ -142,7 +141,7 @@ class CategoriesListTest extends TestCase
     /**
      * @param list<string> $categories
      */
-    private function buildCalendarWith(ComponentInterface $component, array $categories): ComponentInterface
+    private function buildCalendarWith(VEvent|VTodo|VJournal $component, array $categories): VEvent|VTodo|VJournal
     {
         $component->setUid('cat@example.com');
         $component->setDtStamp('20260101T000000Z');
@@ -155,7 +154,7 @@ class CategoriesListTest extends TestCase
         return $component;
     }
 
-    private function roundTrip(ComponentInterface $component): ComponentInterface
+    private function roundTrip(VEvent|VTodo|VJournal $component): VEvent|VTodo|VJournal
     {
         $calendar = new \Icalendar\Component\VCalendar();
         $calendar->setProductId('-//test//test//EN')->setVersion('2.0');
@@ -167,7 +166,9 @@ class CategoriesListTest extends TestCase
         $components = $parsed->getComponents($component->getName());
         self::assertNotEmpty($components);
         $first = $components[0];
-        self::assertInstanceOf(ComponentInterface::class, $first);
+        if (!$first instanceof VEvent && !$first instanceof VTodo && !$first instanceof VJournal) {
+            self::fail('round-trip produced an unexpected component type');
+        }
 
         return $first;
     }
