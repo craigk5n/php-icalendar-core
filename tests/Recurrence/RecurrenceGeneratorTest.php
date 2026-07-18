@@ -53,11 +53,16 @@ class RecurrenceGeneratorTest extends TestCase
     /** @test */
     public function testGenerateDailyWithUntil(): void
     {
+        // UNTIL is UTC, so DTSTART must be UTC too (RFC 5545 §3.3.10). A bare
+        // floating DTSTART compared local wall-clock occurrences against a UTC
+        // UNTIL, which admitted an extra instance on far-east hosts such as
+        // Pacific/Chatham (+13:45). Anchoring DTSTART to UTC makes the count
+        // host-independent.
         $rrule = $this->parser->parse('FREQ=DAILY;UNTIL=20260110T235959Z');
-        $dtstart = new \DateTimeImmutable('2026-01-01T09:00:00');
-        
+        $dtstart = new \DateTimeImmutable('2026-01-01T09:00:00', new \DateTimeZone('UTC'));
+
         $instances = iterator_to_array($this->generator->generate($rrule, $dtstart));
-        
+
         $this->assertCount(10, $instances);
         $this->assertEquals('2026-01-01', $instances[0]->format('Y-m-d'));
         $this->assertEquals('2026-01-10', $instances[9]->format('Y-m-d'));
