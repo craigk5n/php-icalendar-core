@@ -26,6 +26,7 @@ class ValueWriterFactory
         'BINARY' => BinaryWriter::class,
         'INTEGER' => IntegerWriter::class,
         'FLOAT' => FloatWriter::class,
+        'GEO' => GeoWriter::class,
         'BOOLEAN' => BooleanWriter::class,
         'URI' => UriWriter::class,
         'CAL-ADDRESS' => CalAddressWriter::class,
