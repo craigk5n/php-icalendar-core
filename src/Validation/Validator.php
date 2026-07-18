@@ -30,11 +30,78 @@ use Icalendar\Exception\ValidationException;
  */
 class Validator implements ValidatorInterface
 {
+    /** Report RFC violations at their RFC-correct severity. */
+    public const STRICT = true;
+
+    /** Downgrade violations that still yield usable data to WARNING. */
+    public const LENIENT = false;
+
     /** @var ValidationError[] */
     private array $errors = [];
 
     /** @var VTimezone[] */
     private array $timezones = [];
+
+    /**
+     * Properties RFC 5545 marks "MUST NOT occur more than once", per component.
+     *
+     * Deliberately conservative: it lists only properties the RFC constrains to
+     * a single occurrence, never those it merely discourages repeating. Note
+     * DESCRIPTION, which is single-occurrence on VEVENT and VTODO but MAY repeat
+     * on VJOURNAL (§3.6.3), so it is absent from the VJOURNAL set.
+     *
+     * @var array<string, list<string>>
+     */
+    private const SINGLE_OCCURRENCE_PROPERTIES = [
+        // §3.6
+        'VCALENDAR' => ['PRODID', 'VERSION', 'CALSCALE', 'METHOD'],
+        // §3.6.1
+        'VEVENT' => [
+            'CLASS', 'CREATED', 'DESCRIPTION', 'DTSTAMP', 'DTSTART', 'GEO',
+            'LAST-MODIFIED', 'LOCATION', 'ORGANIZER', 'PRIORITY', 'RECURRENCE-ID',
+            'SEQUENCE', 'STATUS', 'SUMMARY', 'TRANSP', 'UID', 'URL',
+            'DTEND', 'DURATION',
+        ],
+        // §3.6.2
+        'VTODO' => [
+            'CLASS', 'COMPLETED', 'CREATED', 'DESCRIPTION', 'DTSTAMP', 'DTSTART',
+            'GEO', 'LAST-MODIFIED', 'LOCATION', 'ORGANIZER', 'PERCENT-COMPLETE',
+            'PRIORITY', 'RECURRENCE-ID', 'SEQUENCE', 'STATUS', 'SUMMARY', 'UID',
+            'URL', 'DUE', 'DURATION',
+        ],
+        // §3.6.3 -- DESCRIPTION omitted on purpose: it MAY occur more than once.
+        'VJOURNAL' => [
+            'CLASS', 'CREATED', 'DTSTAMP', 'DTSTART', 'LAST-MODIFIED', 'ORGANIZER',
+            'RECURRENCE-ID', 'SEQUENCE', 'STATUS', 'SUMMARY', 'UID', 'URL',
+        ],
+        // §3.6.4
+        'VFREEBUSY' => ['CONTACT', 'DTSTAMP', 'DTSTART', 'DTEND', 'ORGANIZER', 'UID', 'URL'],
+        // §3.6.5
+        'VTIMEZONE' => ['TZID', 'LAST-MODIFIED', 'TZURL'],
+        'STANDARD' => ['DTSTART', 'TZOFFSETTO', 'TZOFFSETFROM'],
+        'DAYLIGHT' => ['DTSTART', 'TZOFFSETTO', 'TZOFFSETFROM'],
+        // §3.6.6
+        'VALARM' => ['ACTION', 'TRIGGER', 'DESCRIPTION', 'SUMMARY', 'DURATION', 'REPEAT'],
+    ];
+
+    /** @var bool One of self::STRICT or self::LENIENT */
+    private bool $mode;
+
+    public function __construct(bool $mode = self::STRICT)
+    {
+        $this->mode = $mode;
+    }
+
+    /**
+     * Severity for a violation that still leaves the value usable.
+     *
+     * Lenient mode is for importing feeds that must yield data rather than be
+     * rejected, so such violations are reported as WARNING instead of ERROR.
+     */
+    private function violationSeverity(): ErrorSeverity
+    {
+        return $this->mode === self::LENIENT ? ErrorSeverity::WARNING : ErrorSeverity::ERROR;
+    }
 
     #[\Override]
     public function validate(VCalendar $calendar): ValidationResult
@@ -78,6 +145,9 @@ class Validator implements ValidatorInterface
     private function validateCalendar(VCalendar $calendar): void
     {
         $this->validateVCalendarRequiredProperties($calendar);
+        // VCALENDAR does not go through doValidateComponent(), so its own
+        // single-occurrence properties are checked here.
+        $this->validateSingleOccurrenceProperties($calendar);
         $this->validateCalendarComponents($calendar);
     }
 
@@ -127,6 +197,10 @@ class Validator implements ValidatorInterface
     private function doValidateComponent(ComponentInterface $component): void
     {
         $name = $component->getName();
+
+        // Runs ahead of the type-specific checks so it covers every component,
+        // including those with no case below.
+        $this->validateSingleOccurrenceProperties($component);
 
         switch ($name) {
             case 'VEVENT':
@@ -322,6 +396,10 @@ class Validator implements ValidatorInterface
     {
         $name = $observance->getName();
 
+        // Observances are validated straight from validateVTimezone() rather
+        // than through doValidateComponent(), so the check is invoked here too.
+        $this->validateSingleOccurrenceProperties($observance);
+
         if ($observance->getProperty('DTSTART') === null) {
             $this->addError(
                 'ICAL-TZ-OBS-001',
@@ -457,6 +535,43 @@ class Validator implements ValidatorInterface
                 null,
                 0,
                 ErrorSeverity::ERROR
+            );
+        }
+    }
+
+    /**
+     * Report properties that RFC 5545 permits only once but which appear more
+     * than once on this component.
+     *
+     * Duplicates were silently accepted on parse and re-emitted on write, so a
+     * non-conformant calendar round-tripped intact; a consumer reading "the" UID
+     * gets whichever copy getProperty() returns first, hiding the ambiguity
+     * rather than surfacing it.
+     */
+    private function validateSingleOccurrenceProperties(ComponentInterface $component): void
+    {
+        $componentName = strtoupper($component->getName());
+        $singleOccurrence = self::SINGLE_OCCURRENCE_PROPERTIES[$componentName] ?? null;
+
+        if ($singleOccurrence === null) {
+            // An unknown or extension component: its cardinality is not ours to police.
+            return;
+        }
+
+        foreach ($singleOccurrence as $propertyName) {
+            $occurrences = count($component->getAllProperties($propertyName));
+            if ($occurrences <= 1) {
+                continue;
+            }
+
+            $this->addError(
+                ValidationException::ERR_DUPLICATE_SINGLE_PROPERTY,
+                "{$componentName} MUST NOT have more than one {$propertyName} property, found {$occurrences}",
+                $componentName,
+                $propertyName,
+                null,
+                0,
+                $this->violationSeverity()
             );
         }
     }
