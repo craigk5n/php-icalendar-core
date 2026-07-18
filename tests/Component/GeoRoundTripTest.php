@@ -31,7 +31,9 @@ class GeoRoundTripTest extends TestCase
         $event = new VEvent();
         $event->setGeo(37.386013, -122.082932);
 
-        $line = (new PropertyWriter())->write($event->getProperty('GEO'));
+        $prop = $event->getProperty('GEO');
+        self::assertNotNull($prop);
+        $line = (new PropertyWriter())->write($prop);
 
         self::assertSame('GEO:37.386013;-122.082932', $line);
         self::assertStringNotContainsString('\\;', $line);
