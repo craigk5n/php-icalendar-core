@@ -75,13 +75,19 @@ class RecurrenceExpanderTest extends TestCase
 
     public function testExpandYearlyWithUntil(): void
     {
+        // DTSTART and UNTIL must share a value type (RFC 5545 §3.3.10): a UTC
+        // UNTIL requires a UTC (or zoned) DTSTART. A bare floating DTSTART here
+        // made the boundary host-dependent -- the 2028 occurrence's local wall
+        // clock was compared against a UTC instant, so it fell inside UNTIL on
+        // UTC hosts but outside it on America/New_York. Both are UTC now, so the
+        // inclusive boundary lands identically on every host.
         $event = new VEvent();
-        $event->addProperty(GenericProperty::create('DTSTART', '20260101T090000'));
+        $event->addProperty(GenericProperty::create('DTSTART', '20260101T090000Z'));
         $event->addProperty(GenericProperty::create('RRULE', 'FREQ=YEARLY;UNTIL=20280101T090000Z'));
 
         $occurrences = $this->expander->expandToArray($event);
 
-        $this->assertCount(3, $occurrences); // 2026, 2027, 2028 (if UTC)
+        $this->assertCount(3, $occurrences); // 2026, 2027, 2028 (2028 == UNTIL, inclusive)
         $this->assertEquals('2026-01-01', $occurrences[0]->getStart()->format('Y-m-d'));
         $this->assertEquals('2027-01-01', $occurrences[1]->getStart()->format('Y-m-d'));
         $this->assertEquals('2028-01-01', $occurrences[2]->getStart()->format('Y-m-d'));

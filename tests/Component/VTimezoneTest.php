@@ -12,6 +12,33 @@ use PHPUnit\Framework\TestCase;
 
 class VTimezoneTest extends TestCase
 {
+    /** @var non-empty-string */
+    private string $originalTimezone = 'UTC';
+
+    /**
+     * Observance DTSTART values are floating local wall-clock times (RFC 5545
+     * §3.6.5 forbids UTC in observances). The tests below build them with bare
+     * `new \DateTime('...02:00:00')`, which PHP resolves against the process
+     * default timezone. On a DST zone such as America/New_York the 02:00 spring
+     * -forward instant does not exist and PHP silently advances it to 03:00, so
+     * the asserted wall clock depended on the host. Pinning the default zone to
+     * UTC (which has no DST gap) preserves the literal digits on every host;
+     * the value is floating, so the frame chosen to hold it is immaterial.
+     */
+    #[\Override]
+    protected function setUp(): void
+    {
+        // `?: 'UTC'` keeps the type non-empty-string for date_default_timezone_set().
+        $this->originalTimezone = date_default_timezone_get() ?: 'UTC';
+        date_default_timezone_set('UTC');
+    }
+
+    #[\Override]
+    protected function tearDown(): void
+    {
+        date_default_timezone_set($this->originalTimezone);
+    }
+
     public function testVTimezoneRequiresTzid(): void
     {
         $this->expectException(ValidationException::class);
