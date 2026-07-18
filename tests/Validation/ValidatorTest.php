@@ -45,7 +45,12 @@ class ValidatorTest extends TestCase
 
     public function testValidateValidCalendar(): void
     {
+        // PRODID and VERSION are REQUIRED on VCALENDAR (RFC 5545 §3.6). This
+        // fixture omitted both and still asserted a clean result: the two
+        // calendar-level errors were raised and then discarded when the VEVENT
+        // was validated, so the assertion only held because of that bug.
         $calendar = new VCalendar();
+        $calendar->setProductId('-//Test//Test//EN')->setVersion('2.0');
         $event = new VEvent();
         $event->addProperty($this->createProperty('DTSTAMP', '20240101T120000Z'));
         $event->addProperty($this->createProperty('UID', 'test-uid@example.com'));
@@ -285,6 +290,7 @@ class ValidatorTest extends TestCase
     public function testIsValidMethod(): void
     {
         $calendar = new VCalendar();
+        $calendar->setProductId('-//Test//Test//EN')->setVersion('2.0');
         $event = new VEvent();
         $event->addProperty($this->createProperty('DTSTAMP', '20240101T120000Z'));
         $event->addProperty($this->createProperty('UID', 'test-uid@example.com'));
@@ -314,6 +320,7 @@ class ValidatorTest extends TestCase
     public function testValidateMultipleComponents(): void
     {
         $calendar = new VCalendar();
+        $calendar->setProductId('-//Test//Test//EN')->setVersion('2.0');
 
         $event1 = new VEvent();
         $event1->addProperty($this->createProperty('DTSTAMP', '20240101T120000Z'));
@@ -333,6 +340,7 @@ class ValidatorTest extends TestCase
     public function testErrorCountsMethod(): void
     {
         $calendar = new VCalendar();
+        $calendar->setProductId('-//Test//Test//EN')->setVersion('2.0');
         $event = new VEvent();
         $event->addProperty($this->createProperty('DTSTAMP', '20240101T120000Z'));
         $event->addProperty($this->createProperty('UID', 'test-uid@example.com'));

@@ -117,7 +117,7 @@ class Validator implements ValidatorInterface
     private function validateCalendarComponents(VCalendar $calendar): void
     {
         foreach ($calendar->getComponents() as $component) {
-            $this->validateComponent($component);
+            $this->doValidateComponent($component);
         }
     }
 
@@ -737,7 +737,7 @@ class Validator implements ValidatorInterface
     private function validateSubComponents(ComponentInterface $component): void
     {
         foreach ($component->getComponents() as $subComponent) {
-            $this->validateComponent($subComponent);
+            $this->doValidateComponent($subComponent);
         }
     }
 
