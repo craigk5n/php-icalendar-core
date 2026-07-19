@@ -204,6 +204,39 @@ class StreamingParseFileTest extends TestCase
         (new Parser(Parser::LENIENT))->parseFile($path);
     }
 
+    /**
+     * The scan is case-insensitive, so a lower-case marker must be caught too.
+     * Every other marker case here is upper-case, which would let a
+     * case-sensitive comparison pass unnoticed.
+     */
+    public function testLowerCaseMarkerIsDetected(): void
+    {
+        $path = $this->writeTemp("BEGIN:VCALENDAR\r\n<!entity xxe SYSTEM \"file:///etc/passwd\">\r\nEND:VCALENDAR\r\n");
+
+        $this->expectException(ParseException::class);
+        (new Parser(Parser::LENIENT))->parseFile($path);
+    }
+
+    /**
+     * The carried overlap is sized to the *longest* marker. `<!DOCTYPE` is one
+     * character longer than `<!ENTITY`, so a file that splits it with 8 of its 9
+     * characters before the boundary is only caught when the overlap is 8 rather
+     * than 7 -- the case that distinguishes a correct overlap from a plausible
+     * off-by-one or a shortest-marker calculation.
+     */
+    public function testLongestMarkerSplitAcrossBoundaryIsDetected(): void
+    {
+        $marker = '<!DOCTYPE foo>';
+        $prefix = "BEGIN:VCALENDAR\r\nVERSION:2.0\r\n";
+        // Land exactly 8 of the marker's 9 significant characters in chunk one.
+        $padding = str_repeat('X', 8192 - strlen($prefix) - 8);
+
+        $path = $this->writeTemp($prefix . $padding . $marker . "\r\nEND:VCALENDAR\r\n");
+
+        $this->expectException(ParseException::class);
+        (new Parser(Parser::LENIENT))->parseFile($path);
+    }
+
     /** A clean calendar must not be mistaken for an attack. */
     public function testOrdinaryCalendarIsNotFlagged(): void
     {
