@@ -237,10 +237,15 @@ jobs:
         # rather than penalising it, so five dead classes (#19) and 401 untested
         # mutants cost nothing. Thresholds live in infection.json.dist so a local
         # run enforces exactly what CI does.
-        #   minMsi 68        -- total score; measured 70.6%, so ~2.6pts of room.
-        #                       Ratchet upward as the untested files gain tests.
-        #   minCoveredMsi 78 -- locks in today's covered-code score so already
-        #                       tested code cannot quietly degrade.
+        #   minMsi 68        -- total score; measures ~70%, so ~2pts of room.
+        #   minCoveredMsi 75 -- covered-code score; measures 77-78%.
+        #
+        # Both floors sit a few points under the measured value on purpose. MSI
+        # is not reproducible run to run: mutants that exceed the time limit are
+        # dropped from the denominator, and how many do depends on machine load
+        # (#36). minCoveredMsi was first set to 78, the exact measured figure,
+        # and promptly failed a docs-only pull request that changed no PHP.
+        # Ratchet both upward as untested files gain tests, but keep the margin.
         run: vendor/bin/infection --threads=4 --no-progress
         env:
           INFECTION_BADGE_API_KEY: ${{ secrets.INFECTION_BADGE_API_KEY }}

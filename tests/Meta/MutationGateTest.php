@@ -81,6 +81,14 @@ class MutationGateTest extends TestCase
     /**
      * Covered-code score must not be allowed to regress: it is the half of the
      * measurement that says whether the tests which *do* run assert anything.
+     *
+     * The floor is deliberately a few points below the measured score rather
+     * than equal to it. MSI is not reproducible run to run: mutants exceeding
+     * Infection's time limit are dropped from the denominator, and how many do
+     * depends on how loaded the machine is (see #36). Setting the floor at the
+     * measured value left no margin and produced a failure on a documentation
+     * pull request that changed no PHP at all -- a gate that fires on changes
+     * which cannot affect it teaches people to ignore it.
      */
     public function testCoveredMsiFloorIsEnforced(): void
     {
@@ -89,9 +97,9 @@ class MutationGateTest extends TestCase
         self::assertArrayHasKey('minCoveredMsi', $config);
         self::assertIsNumeric($config['minCoveredMsi']);
         self::assertGreaterThanOrEqual(
-            78,
+            70,
             $config['minCoveredMsi'],
-            'covered-code MSI measured 78%; lowering this lets tested code degrade'
+            'covered-code MSI measures 77-78%; keep the floor close enough to catch a real regression'
         );
     }
 }
