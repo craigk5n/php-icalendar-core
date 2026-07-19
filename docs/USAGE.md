@@ -203,17 +203,17 @@ use Icalendar\Component\VEvent;
 use Icalendar\Writer\Writer;
 
 $event = new VEvent();
-$event->setStart(new DateTime('2026-02-10T10:00:00'));
+$event->setDtStart(new DateTime('2026-02-10T10:00:00'));
 
 // Output:
 // DTSTART:20260210T100000
 
-$event->setStart(new DateTime('2026-02-10T10:00:00', new DateTimeZone('UTC')));
+$event->setDtStart(new DateTime('2026-02-10T10:00:00', new DateTimeZone('UTC')));
 
 // Output:
 // DTSTART:20260210T100000Z
 
-$event->setStart(new DateTime('2026-02-10T10:00:00', new DateTimeZone('America/New_York')));
+$event->setDtStart(new DateTime('2026-02-10T10:00:00', new DateTimeZone('America/New_York')));
 
 // Output:
 // DTSTART:20260210T100000
@@ -224,12 +224,12 @@ $event->setStart(new DateTime('2026-02-10T10:00:00', new DateTimeZone('America/N
 
 ```php
 <?php
-$event->setDuration(new DateInterval('PT1H30M'));
+$event->setDuration('PT1H30M');
 
 // Output:
 // DURATION:PT1H30M
 
-$event->setDuration(new DateInterval('P2D'));
+$event->setDuration('P2D');
 
 // Output:
 // DURATION:P2D
@@ -254,14 +254,18 @@ $event->setSummary("Hello; World, \"Test\"");
 
 ```php
 <?php
-$event->setAttendee('mailto:user@example.com', [
-    'CN' => 'John Doe',
-    'RSVP' => 'TRUE',
-    'ROLE' => 'REQ-PARTICIPANT',
-]);
+use Icalendar\Property\GenericProperty;
 
-// Output:
-// ATTENDEE:mailto:user@example.com;CN=John Doe;RSVP=TRUE;ROLE=REQ-PARTICIPANT
+// There is no setAttendee() helper: ATTENDEE may occur many times, so it is
+// added as a property with its own parameters.
+$attendee = GenericProperty::create('ATTENDEE', 'mailto:user@example.com');
+$attendee->setParameter('CN', 'John Doe');
+$attendee->setParameter('RSVP', 'TRUE');
+$attendee->setParameter('ROLE', 'REQ-PARTICIPANT');
+$event->addProperty($attendee);
+
+// Output (parameters precede the value, per RFC 5545 §3.1):
+// ATTENDEE;CN="John Doe";RSVP=TRUE;ROLE=REQ-PARTICIPANT:mailto:user@example.com
 ```
 
 ### Line Folding
@@ -700,36 +704,34 @@ class EncryptedProperty extends AbstractProperty
 }
 ```
 
-### Registering Custom Extensions
+### Registering Custom Value Types
+
+Custom **value types** are registered on the factories, which take an instance
+rather than a class name:
 
 ```php
 <?php
-use Icalendar\Parser\Parser;
-use MyApp\Icalendar\Component\VMeeting;
-use MyApp\Icalendar\Value\EncryptedValue;
+use Icalendar\Parser\ValueParser\ValueParserFactory;
+use Icalendar\Writer\ValueWriter\ValueWriterFactory;
+use MyApp\Icalendar\Value\EncryptedValueParser;
+use MyApp\Icalendar\Value\EncryptedValueWriter;
 
-// Register custom component
-Parser::registerComponent('VMEETING', VMeeting::class);
+$parserFactory = new ValueParserFactory();
+$parserFactory->registerParser('ENCRYPTED', new EncryptedValueParser());
 
-// Register custom value parser
-Parser::registerValueParser('ENCRYPTED', EncryptedValue::class);
+$writerFactory = new ValueWriterFactory();
+$writerFactory->registerWriter('ENCRYPTED', new EncryptedValueWriter());
 ```
 
-### Using Custom Extensions
+Your parser must implement `ValueParserInterface` and your writer
+`ValueWriterInterface`. `GeoParser` and `GeoWriter` in `src/` are a worked
+example of a structured type added this way.
 
-```php
-<?php
-$parser = new Parser();
-$parser->registerComponent('VMEETING', VMeeting::class);
-$parser->registerValueParser('ENCRYPTED', EncryptedValue::class);
-
-$calendar = $parser->parse($icalData);
-
-// Access custom component
-foreach ($calendar->getComponents('VMEETING') as $meeting) {
-    echo $meeting->getMeetingId();
-}
-```
+> **Note:** there is no equivalent registry for custom *components*. An unknown
+> `BEGIN:VMEETING` is parsed into a `GenericComponent` (a warning in lenient
+> mode, an error in strict), and its properties remain reachable through the
+> generic property API. Registering a custom component class is not currently
+> supported.
 
 ---
 
@@ -757,8 +759,8 @@ $calendar->setVersion('2.0');
 $event = new VEvent();
 $event->setUid('event-' . uniqid() . '@example.com');
 $event->setSummary('Event Title');
-$event->setStart(new DateTime('2026-02-10T10:00:00'));
-$event->setEnd(new DateTime('2026-02-10T11:00:00'));
+$event->setDtStart(new DateTime('2026-02-10T10:00:00'));
+$event->setDtEnd(new DateTime('2026-02-10T11:00:00'));
 
 $calendar->addComponent($event);
 ```
@@ -782,7 +784,7 @@ $calendar->setVersion('2.0');
 $event = new VEvent();
 $event->setUid('event-' . uniqid() . '@example.com');
 $event->setSummary('Event');
-$event->setStart(new DateTime('2026-02-10'));
+$event->setDtStart(new DateTime('2026-02-10'));
 $event->setDescription('Description');
 // Note: For all-day events, use VALUE=DATE instead of DATE-TIME
 
@@ -809,7 +811,7 @@ $calendar->setVersion('2.0');
 $event = new VEvent();
 $event->setUid('event-' . uniqid() . '@example.com');
 $event->setSummary('Event');
-$event->setStart(new DateTime('2026-02-10T10:00:00'));
+$event->setDtStart(new DateTime('2026-02-10T10:00:00'));
 
 $calendar->addComponent($event);
 ```
@@ -843,22 +845,25 @@ $event->setDescription('Description');
 // New:
 $event->setLocation('Location');
 
-// Old: $event->setCategories(['Category1', 'Category2']);
+// Old: $event->setCategories('Category1', 'Category2');
 // New:
-$event->setCategories(['Category1', 'Category2']);
+$event->setCategories('Category1', 'Category2');
 ```
 
 #### Adding Attendees
 
 ```php
 // Old: $event->setAttendees(['user@example.com']);
-// New:
-$event->setAttendee('mailto:user@example.com');
+// New: add one ATTENDEE property per attendee.
+use Icalendar\Property\GenericProperty;
+
+$event->addProperty(GenericProperty::create('ATTENDEE', 'mailto:user@example.com'));
+
 // Or with parameters:
-$event->setAttendee('mailto:user@example.com', [
-    'CN' => 'John Doe',
-    'ROLE' => 'REQ-PARTICIPANT',
-]);
+$attendee = GenericProperty::create('ATTENDEE', 'mailto:user@example.com');
+$attendee->setParameter('CN', 'John Doe');
+$attendee->setParameter('ROLE', 'REQ-PARTICIPANT');
+$event->addProperty($attendee);
 ```
 
 #### Setting Recurrence
@@ -877,7 +882,7 @@ $event->setRRule('FREQ=WEEKLY;BYDAY=MO,WE,FR');
 $alarm = new VAlarm();
 $alarm->setAction('DISPLAY');
 $alarm->setDescription('Reminder');
-$alarm->setTrigger(new DateInterval('PT15M'));
+$alarm->setTrigger('-PT15M');
 $event->addAlarm($alarm);
 ```
 
@@ -901,10 +906,10 @@ $event->setUid('event-123');
 ```php
 <?php
 // Good: Use timezone-aware DateTime
-$event->setStart(new DateTime('2026-02-10T10:00:00', new DateTimeZone('America/New_York')));
+$event->setDtStart(new DateTime('2026-02-10T10:00:00', new DateTimeZone('America/New_York')));
 
 // Bad: Use local time without timezone
-$event->setStart(new DateTime('2026-02-10T10:00:00'));
+$event->setDtStart(new DateTime('2026-02-10T10:00:00'));
 ```
 
 ### 3. Validate Before Output
@@ -945,15 +950,21 @@ try {
 
 ```php
 <?php
-// Good: Use streaming for large files
-$parser = new Parser();
-foreach ($parser->tokenizeFile('large-calendar.ics') as $line) {
-    // Process incrementally
-}
+use Icalendar\Parser\Lexer;
 
-// Bad: Load entire file into memory
+// Good: hand the path to parseFile(), which reads the file in chunks.
+$parser = new Parser();
+$calendar = $parser->parseFile('large-calendar.ics');
+
+// Bad: reading it yourself puts the whole file in memory first.
 $icalData = file_get_contents('large-calendar.ics');
 $calendar = $parser->parse($icalData);
+
+// For line-level processing without building a calendar at all, the Lexer
+// yields ContentLines from a generator:
+foreach ((new Lexer())->tokenizeFile('large-calendar.ics') as $line) {
+    // Process incrementally
+}
 ```
 
 ### 6. Set Appropriate Timeouts
@@ -982,10 +993,10 @@ ini_set('memory_limit', '256M');
 ```php
 <?php
 // Wrong:
-$event->setStart(new DateTime('2026-02-10T10:00:00'));
+$event->setDtStart(new DateTime('2026-02-10T10:00:00'));
 
 // Right:
-$event->setStart(new DateTime('2026-02-10T10:00:00', new DateTimeZone('America/New_York')));
+$event->setDtStart(new DateTime('2026-02-10T10:00:00', new DateTimeZone('America/New_York')));
 ```
 
 #### Issue: Recurrence Not Generating
@@ -1031,10 +1042,14 @@ $event->setDescription('Text; with, special \ characters');
 
 ```php
 <?php
-$parser = new Parser();
+use Icalendar\Parser\Lexer;
 
-// Use streaming instead of loading entire file
-foreach ($parser->tokenizeFile('large-file.ics') as $line) {
+// Pass the path rather than the contents: parseFile() reads in chunks.
+$parser = new Parser();
+$calendar = $parser->parseFile('large-file.ics');
+
+// Or process line-by-line without building a calendar:
+foreach ((new Lexer())->tokenizeFile('large-file.ics') as $line) {
     // Process line-by-line
 }
 ```

@@ -63,13 +63,18 @@ vendor/bin/phpunit tests/Parser/ParserTest.php
 
 ### Error Codes
 
-All errors use `ICAL-` prefix with categories:
+All errors use the form `ICAL-<CATEGORY>-<NNN>`, e.g.:
 - `ICAL-PARSE-*` - Parser errors
 - `ICAL-TYPE-*` - Data type errors
 - `ICAL-COMP-*` - Component errors
 - `ICAL-RRULE-*` - Recurrence errors
 
-See PRD.md §6 for complete error code reference.
+Codes are append-only: never repurpose a published code, since callers branch
+on them. The authoritative list lives with the exceptions that raise them —
+`ParseException`, `ValidationException`, `InvalidDataException`. Adding one
+means adding a constant there and taking the next free number in its category.
+
+See PRD.md §5 for the scheme.
 
 ## Implementation Status
 
@@ -87,6 +92,6 @@ Not Started: Recurrence generation, Writer system completion, Main parser orches
 
 ## Key Documentation
 
-- `PRD.md` - Complete product requirements and RFC compliance details
-- `STATUS.md` - Detailed task tracking with parallelization opportunities
-- `AGENTS.md` - AI agent operational guidelines
+- `PRD.md` - Product requirements and RFC compliance details
+- `STATUS.md` - Implementation status; day-to-day work is tracked in GitHub Issues
+- `docs/USAGE.md` - API usage examples

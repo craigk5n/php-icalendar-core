@@ -1,175 +1,210 @@
-# Product Requirements Document (PRD) - PHP iCalendar Core
+# Product Requirements Document — PHP iCalendar Core
 
 ## 1. Introduction
 
-### 1.1 Goal
+### 1.1 Purpose of this document
 
-PHP iCalendar Core aims to provide developers with a reliable, efficient, and flexible tool for parsing and writing iCalendar (RFC 5545) data. It should handle complex iCalendar features like recurrence rules and timezones accurately, while also offering adaptability for real-world data that may not be perfectly compliant, and support standardized extensions for richer data representation.
+This document states **what** PHP iCalendar Core must do and **which decisions the library has made** where the underlying specifications leave a choice.
 
-### 1.2 Scope
+It is written to be sufficient, alongside the referenced RFCs, to rebuild the library. It deliberately does **not** restate the RFCs: RFC 5545 alone runs to some 200 pages, and duplicating it here would guarantee the copy drifts from the original. Where behaviour is fully determined by an RFC, this document cites the section and moves on. Where the RFC permits latitude — error handling, API shape, resource limits — this document specifies the choice and the reasoning.
 
-This document outlines the requirements for the library, focusing on its core parsing and writing functionalities, component/property support, recurrence handling, the implementation of distinct **strict** and **lenient** parsing modes, and support for standardized extensions like RFC 9073.
+It also does not record implementation status, test counts, or coverage figures. Those belong in `STATUS.md` and the issue tracker, and putting them here is what caused earlier revisions of this file to go stale.
 
-## 2. Goals
+### 1.2 Product goal
 
--   **Robust Parsing:** Accurately parse iCalendar data into structured PHP objects.
--   **Reliable Writing:** Generate valid RFC 5545 iCalendar data from PHP objects.
--   **Comprehensive Feature Support:** Handle core iCalendar components, properties, recurrence rules (RRULE, EXDATE, RDATE), and timezone data.
--   **Flexible Parsing Modes:** Offer both strict and lenient parsing options to accommodate data quality variations.
--   **Standardized Extension Support:** Implement support for relevant RFCs that extend iCalendar capabilities, specifically RFC 9073 for rich text descriptions (`STYLED-DESCRIPTION`).
--   **Performance:** Maintain efficiency, particularly for large iCalendar files. Performance requirements are calibrated for execution **without** code coverage enabled.
--   **Extensibility:** Allow for future expansion with custom components or value types.
+A dependency-free PHP library for reading and writing iCalendar data that is correct by default, honest about malformed input, and usable on files larger than memory.
 
-## 3. User Stories
+### 1.3 Scope
 
-### 3.1 Parsing Modes
+**In scope:** parsing, validation and serialisation of iCalendar streams; the component and property model; recurrence expansion; timezone resolution; the extensions listed in §5.
 
-*   **As a developer importing potentially non-compliant `.ics` files, I want to use a lenient parsing mode so that the library attempts to import as much data as possible, collecting warnings for issues rather than failing outright.**
-*   **As a developer validating `.ics` files for strict RFC 5545 compliance, I want to use a strict parsing mode so that the library acts as a syntax checker and throws an exception for any deviation from the standard.**
+**Out of scope:** calendar storage or synchronisation (CalDAV, RFC 4791); network retrieval of remote resources; interpretation of rich-text payloads beyond storing and re-emitting them; timezone *data* — the library resolves against observances present in the input or against PHP's database, and does not ship its own.
 
-### 3.2 Rich Text Descriptions (RFC 9073)
+## 2. Normative references
 
-*   **As a developer parsing iCalendar data, I want the library to correctly parse and store `STYLED-DESCRIPTION` properties, preserving their rich text content (e.g., HTML) or URI references.** This includes handling `VALUE=TEXT` and `VALUE=URI` types.
-*   **As a developer parsing iCalendar data, I want the library to correctly handle the backward compatibility rule for `DESCRIPTION` when `STYLED-DESCRIPTION` is present:** The library should ignore plain `DESCRIPTION` properties unless they are marked `DERIVED=TRUE`.
-*   **As a developer generating iCalendar data, I want the library to correctly write `STYLED-DESCRIPTION` properties, including their rich text content or URI references.**
-*   **As a developer generating iCalendar data, I want the library to manage the `DESCRIPTION` property according to RFC 9073 rules when `STYLED-DESCRIPTION` is present** (e.g., omitting plain `DESCRIPTION` or preserving `DERIVED=TRUE`).
+| Specification | Role |
+|---|---|
+| RFC 5545 | Core iCalendar format. The primary requirements source. |
+| RFC 6868 | Parameter value encoding (`^n`, `^^`, `^'`). |
+| RFC 7986 | Additional properties: `IMAGE`, `COLOR`, `CONFERENCE`, `REFRESH-INTERVAL`, `NAME`, `SOURCE`. |
+| RFC 7953 | `VAVAILABILITY` / `AVAILABLE`. |
+| RFC 9073 | `STYLED-DESCRIPTION`, `PARTICIPANT`. |
+| RFC 7265 | jCal JSON representation. |
 
-## 4. Functional Requirements
+"MUST", "SHOULD" and "MAY" are used per RFC 2119.
 
-### 4.1 Parser
+## 3. Users and use cases
 
-#### 4.1.1 Parsing Modes
+- **Importing third-party calendars.** Feeds from real-world producers are frequently non-conformant. The importer needs maximum data recovery *plus* a record of what was wrong — never a silently invented value.
+- **Generating calendars.** Output must be accepted by strict consumers, so serialisation correctness matters more than leniency.
+- **Validating calendars.** The library must be usable as a conformance checker, reporting violations with enough detail to locate them.
+- **Processing large files.** Files may exceed available memory.
 
-The `Parser` class MUST support two distinct parsing modes: `STRICT` and `LENIENT`.
-*   **Mode Selection:** Clients will select the mode by passing a constant (`Parser::STRICT` or `Parser::LENIENT`) to the `Parser` constructor. The default mode MUST be `Parser::STRICT`.
-*   **Strict Mode Behavior:**
-    *   In strict mode, the parser MUST throw a `ParseException` immediately upon encountering any violation of RFC 5545 syntax or data format.
-    *   This mode should function as a comprehensive syntax checker for iCalendar files.
-*   **Lenient Mode Behavior:**
-    *   In lenient mode, the parser MUST attempt to parse the `.ics` data as fully as possible.
-    *   For specific violations related to **dates**, **times**, and the **`SUMMARY` property**, the parser MUST NOT throw an exception. Instead, it MUST collect a descriptive warning message.
-    *   A new method, `getWarnings()`, MUST be added to the `Parser` class to retrieve an array of all collected warnings. (`getErrors()` is an alias for backward compatibility).
-    *   Other critical parsing errors (e.g., malformed `BEGIN`/`END` markers, unknown components) may still result in exceptions if they prevent basic structure parsing.
+## 4. Functional requirements
 
-#### 4.1.2 STYLED-DESCRIPTION Support (RFC 9073)
+### 4.1 Parsing modes
 
-*   The parser MUST recognize the `STYLED-DESCRIPTION` property.
-*   It MUST correctly parse the value of `STYLED-DESCRIPTION`, handling `VALUE=TEXT` (for inline rich text/HTML) and `VALUE=URI`. The parsed value should preserve the rich text content as a string.
-*   During parsing, if `STYLED-DESCRIPTION` is present within a component, any plain `DESCRIPTION` property *without* the `DERIVED=TRUE` parameter MUST be ignored or omitted from the component's final property list, adhering to RFC 9073 backward compatibility rules.
-*   `DESCRIPTION` properties with the `DERIVED=TRUE` parameter SHOULD be preserved alongside `STYLED-DESCRIPTION`.
+The parser MUST offer two modes, selected at construction, defaulting to strict.
 
-### 4.2 Writer
+- **Strict** — any violation of RFC 5545 syntax or of a value's data type MUST raise an exception identifying the offending content line.
+- **Lenient** — parsing MUST continue, collecting a diagnostic per violation, retrievable after the parse.
 
-*   The writer MUST correctly serialize `STYLED-DESCRIPTION` properties, preserving their values (inline rich text and URIs).
-*   When writing a component that contains `STYLED-DESCRIPTION`, the writer MUST correctly handle the `DESCRIPTION` property according to RFC 9073 rules: plain `DESCRIPTION` properties (without `DERIVED=TRUE`) MUST be omitted from the output. `DESCRIPTION` properties with `DERIVED=TRUE` SHOULD be preserved.
+**The lenient contract (the library's own decision, not the RFC's):**
 
-### 4.3 Documentation
+> A value that cannot be parsed MUST be reported and MUST NOT be replaced by a substitute.
 
-*   The `README.md`, `STATUS.md`, and `PRD.md` files MUST be updated to clearly document:
-    *   The existence and purpose of strict and lenient parsing modes.
-    *   How to select a mode during parser instantiation.
-    *   The behavior differences between the two modes.
-    *   Support for RFC 9073 and the `STYLED-DESCRIPTION` property, including its value types, parameters, parsing behavior, and interaction with the `DESCRIPTION` property during both parsing and writing.
-    *   The Recurrence Expansion API, including the `getOccurrences()` method, `Occurrence` objects, and memory-efficient expansion.
-    *   How to access collected warnings using `getWarnings()`.
+An unparseable property is dropped and recorded; it is never coerced into a default, a current timestamp, or an empty value. This exists because the opposite behaviour is silent data corruption: a `DTSTART` that cannot be understood becoming "now" produces a calendar that looks valid and is wrong. Both modes must agree on *what* is invalid; they differ only in whether the parse continues.
 
-### 4.4 Testing
+Mode MUST be a property of the instance and apply consistently to every subsystem it delegates to.
 
-*   Comprehensive test coverage MUST be provided for:
-    *   Strict and lenient parsing modes.
-    *   `STYLED-DESCRIPTION` parsing (inline HTML, URIs).
-    *   `STYLED-DESCRIPTION` writing.
-    *   Backward compatibility logic for `DESCRIPTION` when `STYLED-DESCRIPTION` is present, in both parsing and writing.
-    *   Round-trip testing to ensure data integrity.
+### 4.2 Lexing
 
-### 4.5 Standardized Extensions (New)
+- Line endings (CRLF, LF, CR) MUST be accepted and normalised.
+- Folded lines MUST be unfolded per RFC 5545 §3.1: remove the CRLF and the single whitespace character following it. That whitespace is the fold marker and is not content.
+- A content line without a `:` separator is malformed and MUST be handled per the active mode.
+- File input MUST be read incrementally rather than loaded whole, and unfolding MUST work across read-buffer boundaries.
 
-#### 4.5.1 RFC 7986: New Properties
-*   The library MUST support the following properties: `IMAGE`, `COLOR`, `CONFERENCE`, and `REFRESH-INTERVAL`.
-*   `IMAGE` MUST support both `VALUE=URI` and `VALUE=BINARY`.
-*   `COLOR` MUST support CSS3 color names and hex codes as `TEXT`.
-*   `CONFERENCE` MUST be parsed as a `URI`.
-*   `REFRESH-INTERVAL` MUST be parsed as a `DURATION`.
+### 4.3 Value types
 
-#### 4.5.2 RFC 7953: Calendar Availability
-*   The library MUST support the `VAVAILABILITY` component and its sub-component `AVAILABLE`.
-*   Recurrence rules within `AVAILABLE` MUST be correctly handled to calculate free/busy time.
+The parser MUST implement the RFC 5545 §3.3 value types: `BINARY`, `BOOLEAN`, `CAL-ADDRESS`, `DATE`, `DATE-TIME`, `DURATION`, `FLOAT`, `INTEGER`, `PERIOD`, `RECUR`, `TEXT`, `TIME`, `URI`, `UTC-OFFSET`.
 
-#### 4.5.3 RFC 9073: Participant Support
-*   The library MUST support the `PARTICIPANT` component.
-*   This includes parsing and writing participant metadata (Role, URI, etc.) as a modern alternative to `ATTENDEE`.
+Structured values whose grammar is not a single scalar — `GEO` (`latitude ";" longitude`) — MUST have their own parser and writer rather than being routed through `TEXT`. **Any property whose value contains structural delimiters MUST NOT be serialised as `TEXT`**, because TEXT escaping would escape those delimiters and destroy the structure.
 
-#### 4.5.4 RFC 7265: jCal (JSON Format)
-*   The library SHOULD provide a mechanism to export parsed iCalendar objects into the standard jCal JSON format.
+**Value type resolution:**
 
-#### 4.5.5 Common De Facto Extensions
-*   The library SHOULD support widely used non-standard properties: `X-WR-CALNAME`, `X-WR-TIMEZONE`, and `X-APPLE-STRUCTURED-LOCATION`.
+1. A `VALUE` parameter, if present, selects the type — but only from the set that property permits. A property MUST NOT be re-typed to something it does not allow; in particular `VALUE=TEXT` MUST NOT be usable to bypass validation.
+2. Otherwise the property's default type applies.
+3. A property unknown to the library falls back to `TEXT`, and its `VALUE` parameter is not policed — an extension's type is not ours to constrain.
 
-## 5. Design Considerations
+Every property with a defined type SHOULD appear in the property/type map. A property absent from it silently inherits `TEXT`, which cannot fail, so absence means no validation.
 
-*   **Mode Persistence:** The selected parsing mode should be a property of the `Parser` instance and consistently applied.
-*   **Error Reporting:** Warnings collected in lenient mode should be informative (code, message, property, line number).
-*   **`STYLED-DESCRIPTION` Value Handling:** The library should preserve the raw rich text (e.g., HTML) or URI as a string value for `STYLED-DESCRIPTION`. Specific HTML parsing or rendering is outside the scope of this library.
-*   **Conflict Resolution:** Parsing and writing logic must correctly resolve conflicts between `DESCRIPTION` and `STYLED-DESCRIPTION` based on RFC 9073 rules.
+**DATE-TIME forms** (§3.3.5) MUST be distinguished and preserved: floating (no suffix), UTC (`Z` suffix), and zoned (`TZID` parameter). UTC-ness MUST be recorded from the source, never inferred from the host timezone — a floating value carries no zone, and inferring one silently promotes it.
 
-### 4.6 Recurrence Expansion (RRULE Date Expansion)
+**TEXT** escaping MUST cover backslash, semicolon, comma and newline (§3.3.11), and MUST exclude the CONTROL set (`%x00-08`, `%x0A-1F`, `%x7F`).
 
-#### 4.6.1 Overview
+Multi-valued TEXT properties (`CATEGORIES`, `RESOURCES`) are a comma-separated list. Each item MUST be escaped individually and joined with **literal** separators, so a comma inside a value stays distinguishable from a separator between values.
 
-The library MUST provide a high-level API to expand recurrence rules (RRULE, EXDATE, RDATE) on calendar components (`VEVENT`, `VTODO`, `VJOURNAL`) into a set of concrete occurrence date/times. This bridges the gap between the low-level `RecurrenceGenerator` (which operates on parsed `RRule` objects) and the component layer (which stores properties as raw iCalendar strings).
+### 4.4 Components
 
-#### 4.6.2 Occurrence Value Object
+The library MUST model: `VCALENDAR`, `VEVENT`, `VTODO`, `VJOURNAL`, `VFREEBUSY`, `VTIMEZONE` (with `STANDARD` / `DAYLIGHT`), `VALARM`, `VAVAILABILITY` / `AVAILABLE`, `PARTICIPANT`.
 
-*   The library MUST provide an immutable `Occurrence` value object representing a single occurrence in a recurrence set.
-*   Each `Occurrence` MUST expose:
-    *   `getStart(): DateTimeImmutable` — the start date/time of the occurrence.
-    *   `getEnd(): ?DateTimeImmutable` — the end date/time, computed from `DTEND`, `DURATION`, or `DUE`. Null when no end is defined (e.g., `VJOURNAL`).
-    *   `isRdate(): bool` — `true` if this occurrence originated from an `RDATE` property rather than an `RRULE`.
+- Components MUST nest arbitrarily and expose their properties and children.
+- An unrecognised component MUST NOT abort a lenient parse; it is retained generically with its properties reachable. Registering custom component *classes* is not currently supported — a deliberate limitation, and any change to it is a scope decision.
+- Nesting depth MUST be bounded (§7.3).
 
-#### 4.6.3 RecurrenceExpander Service
+### 4.5 Validation
 
-*   The library MUST provide a `RecurrenceExpander` service class that accepts a `ComponentInterface` and returns a `Generator` of `Occurrence` objects.
-*   **Public API:**
-    *   `expand(ComponentInterface $component, ?DateTimeInterface $rangeEnd = null): Generator<Occurrence>` — lazy generator for memory-efficient iteration.
-    *   `expandToArray(ComponentInterface $component, ?DateTimeInterface $rangeEnd = null): Occurrence[]` — convenience method that collects the generator into an array.
-*   **RFC 5545 Recurrence Set Algorithm** — The expander MUST implement the recurrence set algorithm per RFC 5545 §3.8.5:
-    1.  For each `RRULE` on the component, generate candidate dates (respecting `COUNT`/`UNTIL` per rule).
-    2.  Union all `RRULE` results (merge-sort, deduplicate).
-    3.  Add `RDATE` dates into the sorted stream.
-    4.  Remove `EXDATE` dates from the combined set.
-    5.  Yield `Occurrence` objects with computed end times.
-*   **EXDATE applied after RRULE COUNT** — Per RFC 5545, `EXDATE` exclusions are applied to the recurrence set *after* individual `RRULE` generation (including `COUNT` limits). A rule with `COUNT=5` generates exactly 5 candidates; if one is excluded by `EXDATE`, the result is 4 occurrences, not 5.
-*   **Multi-RRULE support** — RFC 5545 allows multiple `RRULE` properties on a single component. The expander MUST union the results from all `RRULE` properties, merge-sort them chronologically, and deduplicate.
-*   **Range bounds validation** — If a component has an `RRULE` with neither `COUNT` nor `UNTIL`, and no `$rangeEnd` is provided, the expander MUST throw `\InvalidArgumentException`. Bounded rules (`COUNT` or `UNTIL`) MUST work without `$rangeEnd`.
-*   **No-RRULE case** — If the component has no `RRULE`, the recurrence set is `{DTSTART} + RDATEs - EXDATEs`.
-*   **EXDATE date-only matching** — An `EXDATE` with `VALUE=DATE` MUST match all occurrences on that calendar date regardless of time. An `EXDATE` with `VALUE=DATE-TIME` MUST match only the exact date-time.
-*   **Duration computation** — Occurrence end times MUST be computed from: `DTEND` (preferred), `DURATION`, or `DUE` (`VTODO` only). If none are present, `end` is `null`.
+Validation MUST be available independently of parsing, and MUST report every violation found rather than stopping at the first. Errors from one component MUST NOT displace those already found in another.
 
-#### 4.6.4 Component Convenience Methods
+Required checks: mandatory properties per component; mutually exclusive properties (e.g. `DTEND` with `DURATION`); value ranges; `TZID` references resolving to a `VTIMEZONE` present in the calendar; recurrence rule well-formedness; and **single-occurrence properties** — those RFC 5545 marks as occurring at most once MUST be reported when repeated.
 
-*   `VEVENT`, `VTODO`, and `VJOURNAL` MUST provide the following convenience methods via a shared `RecurrenceTrait`:
-    *   `addExdate(string $exdate, array $params = []): self` — add an `EXDATE` property (accumulates; RFC 5545 allows multiple `EXDATE` properties).
-    *   `setExdate(string $exdate, array $params = []): self` — replace all `EXDATE` properties with a single one.
-    *   `getExdates(): string[]` — return all `EXDATE` raw values.
-    *   `addRdate(string $rdate, array $params = []): self` — add an `RDATE` property (accumulates).
-    *   `setRdate(string $rdate, array $params = []): self` — replace all `RDATE` properties with a single one.
-    *   `getRdates(): string[]` — return all `RDATE` raw values.
-    *   `getOccurrences(?DateTimeInterface $rangeEnd = null): Generator<Occurrence>` — convenience wrapper that creates a `RecurrenceExpander` internally and delegates.
-    *   `getOccurrencesArray(?DateTimeInterface $rangeEnd = null): Occurrence[]` — convenience wrapper returning an array.
-*   `VTODO` MUST also have `setRrule(string): self` and `getRrule(): ?string` methods (currently missing).
+Cardinality is per component and MUST NOT be generalised across them: `DESCRIPTION` is single-occurrence on `VEVENT` and `VTODO` but MAY repeat on `VJOURNAL` (§3.6.3).
 
-#### 4.6.5 Testing Requirements
+The validator MUST offer the same strict/lenient distinction as the parser, selecting the severity of violations that still leave usable data.
 
-*   Comprehensive test coverage MUST be provided for:
-    *   The `Occurrence` value object (construction, accessors, immutability).
-    *   `RecurrenceExpander` with single `RRULE`, `EXDATE`, `RDATE`, multi-`RRULE`, range bounds validation, no-`RRULE` edge cases, `VTODO` with `DUE`, and `VJOURNAL` with null end.
-    *   `RecurrenceTrait` methods on `VEvent`, `VTodo`, and `VJournal` (round-trip property storage, integration with `getOccurrences()`).
+### 4.6 Recurrence
 
-## 6. Future Considerations
+The library MUST expand `RRULE`, `RDATE` and `EXDATE` into concrete occurrences per RFC 5545 §3.8.5, exposing both a lazy generator and an array convenience form.
 
-*   Performance optimizations for extremely large iCalendar files.
-*   Expanding lenient mode warning collection to other properties.
-*   Configuration options for lenient mode error handling.
-*   Potential support for other iCalendar extensions.
+Requirements the RFC's algorithm implies, stated because they are easy to get wrong:
 
-The `STYLED-DESCRIPTION` property is a significant addition that extends the capabilities beyond basic RFC 5545. It's crucial to ensure its parsing and writing are handled correctly, especially concerning backward compatibility with the `DESCRIPTION` property. This also means considering how the library interacts with rich text content without attempting to interpret it, simply storing and outputting it as per the RFC.
+- `EXDATE` applies **after** each `RRULE`'s `COUNT` limit. A `COUNT=5` rule with one excluded date yields four occurrences, not five.
+- Multiple `RRULE`s on one component MUST be unioned, ordered and deduplicated.
+- An `EXDATE` with `VALUE=DATE` MUST exclude every occurrence on that date; with `VALUE=DATE-TIME`, only the exact instant.
+- With no `RRULE`, the set is `{DTSTART} ∪ RDATEs \ EXDATEs`.
+- Occurrence end times derive from `DTEND`, else `DURATION`, else `DUE` (`VTODO`), else are undefined.
+- `UNTIL` MUST share its `DTSTART`'s value type (§3.3.10). Comparing a floating start against a UTC `UNTIL` is host-dependent and MUST NOT be relied upon.
+- An unbounded rule (no `COUNT`, no `UNTIL`) MUST require an explicit range bound rather than expanding indefinitely.
+
+Expansion MUST NOT hold the whole set in memory when the generator form is used.
+
+### 4.7 Timezones
+
+`VTIMEZONE` observances define **recurring** onsets. Building a transition table MUST expand each observance's `RRULE`, not only its `DTSTART` — otherwise offsets are wrong for every date outside the first period.
+
+- `DTSTART` is itself an onset (§3.6.5) and MUST be included even when it does not match its own rule pattern.
+- Before the first transition, the offset is the earliest observance's `TZOFFSETFROM`. It MUST NOT default to UTC.
+- Because observances are unbounded, expansion is bounded by a horizon, and a query beyond it MUST extend the table rather than return a wrong answer.
+
+### 4.8 Writing
+
+Output MUST be RFC 5545 conformant:
+
+- Lines folded at 75 octets, splitting on octet — not character — boundaries, so multi-byte sequences are never divided.
+- CRLF terminators throughout, including the final line.
+- Parameter values encoded per RFC 6868, and quoted when containing `:`, `;` or `,`.
+- Structural delimiters preserved literally (§4.3).
+
+A parse → write → parse round trip MUST preserve semantics. Writing SHOULD be available in a form that validates first.
+
+### 4.9 Extensions
+
+- **RFC 7986** — `IMAGE` (`VALUE=URI` or `BINARY`), `COLOR` (TEXT), `CONFERENCE` (URI), `REFRESH-INTERVAL` (DURATION), `NAME`, `SOURCE`.
+- **RFC 7953** — `VAVAILABILITY` / `AVAILABLE`, including recurrence within `AVAILABLE`.
+- **RFC 9073** — `PARTICIPANT`; and `STYLED-DESCRIPTION`, whose payload is stored and re-emitted verbatim without interpretation. When `STYLED-DESCRIPTION` is present, a plain `DESCRIPTION` without `DERIVED=TRUE` MUST be omitted on both parse and write; with `DERIVED=TRUE` it is preserved.
+- **RFC 7265** — export to jCal.
+- **De facto** — `X-WR-CALNAME`, `X-WR-TIMEZONE`, `X-APPLE-STRUCTURED-LOCATION`.
+
+## 5. Error reporting
+
+### 5.1 Code scheme
+
+Every diagnostic carries a stable machine-readable code:
+
+```
+ICAL-<CATEGORY>-<NNN>
+```
+
+`<CATEGORY>` identifies the subsystem or component; `<NNN>` is a zero-padded sequence within it. Codes are **append-only**: once published, a code's meaning MUST NOT be repurposed, because callers branch on them. Retire a code rather than redefine it.
+
+Current categories: `PARSE`, `TYPE`, `COMP`, `SEC`, `IO`, `RRULE`, `TZ`, `VAL`, `WRITE`, and per-component families (`VEVENT`, `VTODO`, `VJOURNAL`, `VFB`, `ALARM`, `TZ-OBS`, `PART`, `AVAIL`, `VAVAIL`).
+
+The authoritative list of codes lives with the exceptions that raise them — `ParseException`, `ValidationException`, `InvalidDataException` — and is **not duplicated here**, so the two cannot disagree. Adding a code means adding a constant there and using the next free number in its category.
+
+### 5.2 Diagnostic content
+
+A diagnostic MUST carry code, message, and — where known — the component, property, offending content line and line number. Lenient-mode diagnostics MUST distinguish severity, since not every violation is equally serious.
+
+## 6. Non-functional requirements
+
+### 6.1 Platform
+
+PHP 8.1 or later. **No runtime dependencies** — this is a deliberate constraint: the library is intended to be safe to add to any project, so anything needed at runtime must be in PHP's standard library. The declared minimum MUST be exercised in CI, or it is only an assertion.
+
+### 6.2 Memory
+
+Parsing from a file MUST NOT require memory proportional to file size for the *tokenisation* stage. The resulting object graph is necessarily proportional to content; the input stream is not, and MUST NOT be.
+
+### 6.3 Correctness under differing hosts
+
+Behaviour MUST NOT depend on the host's configured timezone. Since UTC is the default on most servers and CI runners, a UTC-only test environment cannot detect such coupling, so conformance MUST be exercised under at least one non-UTC zone.
+
+## 7. Security requirements
+
+Input is untrusted. A calendar file is frequently fetched from a third party.
+
+### 7.1 Resource exhaustion
+
+Nesting depth MUST be bounded (default 100) and `data:` URI payloads limited (default 1 MB). Both MUST be configurable.
+
+### 7.2 External entities
+
+`<!ENTITY>` and `<!DOCTYPE>` markers MUST be rejected. Detection MUST NOT be defeated by the marker spanning a read-buffer boundary.
+
+### 7.3 Server-side request forgery
+
+URI schemes MUST be restricted to an allowlist (default `http`, `https`, `mailto`, `tel`, `urn`, `data`), and hosts resolving to private or loopback ranges MUST be rejected. Both MUST be configurable, since a legitimate deployment may need a private host.
+
+### 7.4 Output sanitisation
+
+Control characters MUST NOT reach output (§4.3). File paths accepted for reading MUST NOT carry a URI scheme.
+
+## 8. Extensibility
+
+Custom **value types** MUST be registrable on the parser and writer factories, keyed by type name. Custom **components** are not currently supported (§4.4).
+
+## 9. Open questions
+
+- Whether lenient mode should be configurable per-violation rather than global.
+- Whether custom component registration should be supported, and what would own the mapping.
+- Whether jCal import (not just export) is in scope.
