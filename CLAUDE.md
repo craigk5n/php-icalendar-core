@@ -65,7 +65,6 @@ components lives here rather than being copied:
 
 **Supporting Systems**
 - `src/Recurrence/` - RRULE parsing, occurrence generation and expansion
-- `src/Timezone/` - Stubs only (`TimezoneResolver`, `TimezoneDatabase` are empty, uncalled); timezone resolution actually lives in `VTimezone`
 - `src/Validation/` - Validation with `ErrorSeverity` enum (WARNING, ERROR, FATAL); `Validator::STRICT`/`LENIENT` selects severity
 - `src/Exception/` - `ParseException`, `ValidationException`, `InvalidDataException`
 
@@ -120,9 +119,9 @@ generation unstarted long after both shipped.
 
 Tracked in GitHub Issues rather than listed here, for the same reason.
 
-The one standing gap worth knowing while working in the tree: `src/Timezone/`
-contains two empty, uncalled classes. Timezone resolution is implemented in
-`VTimezone` instead.
+Timezone resolution lives in `VTimezone` (`getOffsetAt()`, `getAbbreviationAt()`,
+`toPhpDateTimeZone()`), not in a dedicated service — there is no
+`Icalendar\Timezone` namespace.
 
 ## Testing Notes
 
