@@ -72,15 +72,15 @@ class Parser implements ParserInterface
 
         $lexer = new Lexer();
         $lexer->setStrict($this->mode);
-        $contentLines = [];
 
-        foreach ($lexer->tokenize($data) as $line) {
-            $contentLines[] = $line;
-        }
+        // Consume the generator directly rather than collecting every
+        // ContentLine first: on a large calendar that intermediate array is one
+        // object per line and dominates the parse's memory.
+        $calendar = $this->buildCalendar($lexer->tokenize($data));
 
+        // Must follow the build: the lexer only records warnings as its
+        // generator is consumed.
         $this->transferLexerWarnings($lexer);
-
-        $calendar = $this->buildCalendar($contentLines);
 
         if ($this->enableValidation) {
             $this->runValidation($calendar);
@@ -120,10 +120,13 @@ class Parser implements ParserInterface
     /**
      * Build a VCalendar from content lines
      *
-     * @param ContentLine[] $contentLines
+     * Accepts any iterable so a lexer generator can be consumed line by line
+     * without materialising every ContentLine first.
+     *
+     * @param iterable<ContentLine> $contentLines
      * @return VCalendar
      */
-    private function buildCalendar(array $contentLines): VCalendar
+    private function buildCalendar(iterable $contentLines): VCalendar
     {
         $calendar = new VCalendar();
         $componentStack = [$calendar];
@@ -500,9 +503,71 @@ class Parser implements ParserInterface
     public function parseFile(string $filepath): VCalendar
     {
         $this->validateFilePath($filepath);
-        $data = $this->readFile($filepath);
-        $this->checkForXxe($data, $filepath);
-        return $this->parse($data);
+        $this->checkFileForXxe($filepath);
+
+        $this->errors = [];
+        $this->currentDepth = 0;
+        $this->validationErrors = null;
+
+        $lexer = new Lexer();
+        $lexer->setStrict($this->mode);
+
+        // Stream the file rather than reading it whole. Lexer::tokenizeFile()
+        // exists for exactly this and previously had no production caller, so
+        // every file parse cost memory proportional to the file's size.
+        $calendar = $this->buildCalendar($lexer->tokenizeFile($filepath));
+
+        $this->transferLexerWarnings($lexer);
+
+        if ($this->enableValidation) {
+            $this->runValidation($calendar);
+        }
+
+        return $calendar;
+    }
+
+    /**
+     * Scan a file for XXE markers without holding it in memory.
+     *
+     * Read in chunks, carrying the tail of each into the next so a marker split
+     * across a chunk boundary is still found -- the whole-file scan this
+     * replaces could not miss one, and neither may this.
+     *
+     * @throws ParseException if a marker is present
+     */
+    private function checkFileForXxe(string $filepath): void
+    {
+        $handle = @fopen($filepath, 'r');
+        if ($handle === false) {
+            // Leave the diagnostic to the lexer, which reports not-found and
+            // unreadable separately.
+            return;
+        }
+
+        // One less than the longest marker, so any split still overlaps.
+        $overlap = max(strlen('<!ENTITY'), strlen('<!DOCTYPE')) - 1;
+        $carry = '';
+
+        try {
+            while (!feof($handle)) {
+                $chunk = fread($handle, 8192);
+                if ($chunk === false) {
+                    break;
+                }
+
+                $window = $carry . $chunk;
+                if (stripos($window, '<!ENTITY') !== false || stripos($window, '<!DOCTYPE') !== false) {
+                    throw new ParseException(
+                        "Potential XXE attack detected in file: {$filepath}",
+                        ParseException::ERR_SECURITY_XXE_ATTEMPT
+                    );
+                }
+
+                $carry = substr($window, -$overlap);
+            }
+        } finally {
+            fclose($handle);
+        }
     }
 
     private function validateFilePath(string $filepath): void
@@ -512,27 +577,10 @@ class Parser implements ParserInterface
         }
     }
 
-    private function readFile(string $filepath): string
-    {
-        if (!file_exists($filepath) || !is_readable($filepath)) {
-            throw new ParseException("File not found or unreadable: {$filepath}", ParseException::ERR_FILE_NOT_FOUND);
-        }
-
-        $data = file_get_contents($filepath);
-        if ($data === false) {
-            throw new ParseException("Failed to read file: {$filepath}", ParseException::ERR_FILE_NOT_FOUND);
-        }
-
-        return $data;
-    }
-
-    private function checkForXxe(string $data, string $filepath): void
-    {
-        // Basic check for common XXE indicators
-        if (stripos($data, '<!ENTITY') !== false || stripos($data, '<!DOCTYPE') !== false) {
-            throw new ParseException("Potential XXE attack detected in file: {$filepath}", ParseException::ERR_SECURITY_XXE_ATTEMPT);
-        }
-    }
+    // readFile() and checkForXxe() were removed with the switch to streaming:
+    // the first slurped the whole file, and the second could only scan a string
+    // it had all of. Lexer::tokenizeFile() now reports not-found and unreadable
+    // (ICAL-IO-001 / ICAL-IO-003), and checkFileForXxe() scans in chunks.
 
     #[\Override]
     public function setStrict(bool $strict): void
