@@ -123,6 +123,20 @@ class ValueParserFactory
         // not a single FLOAT, so it needs its own parser rather than the FLOAT map.
         'GEO' => 'GEO',
 
+        // Structured, semicolon-separated (RFC 5545 §3.8.8.3). As with GEO, the
+        // separators are structural, so it must not be written as TEXT.
+        'REQUEST-STATUS' => 'REQUEST-STATUS',
+
+        // URIs. Absent from this map they inherited the TEXT default, which
+        // cannot fail, so any value at all was accepted.
+        'TZURL' => 'URI',
+        'SOURCE' => 'URI',
+
+        // Genuinely TEXT; mapped so the choice is deliberate rather than a
+        // side effect of the fallback.
+        'NAME' => 'TEXT',
+        'RELATED-TO' => 'TEXT',
+
         // RFC 9073: Event Publishing Extensions
         // STYLED-DESCRIPTION can contain rich text (HTML) or URIs.
         // TEXT parser is suitable for capturing raw HTML/rich text.
@@ -270,6 +284,7 @@ class ValueParserFactory
             'DURATION',
             'FLOAT',
             'GEO',
+            'REQUEST-STATUS',
             'INTEGER',
             'PERIOD',
             'RECUR',
@@ -324,6 +339,7 @@ class ValueParserFactory
             'UTC-OFFSET' => new UtcOffsetParser(),
             'RECUR' => new RecurParser(),
             'GEO' => new GeoParser(),
+            'REQUEST-STATUS' => new RequestStatusParser(),
             default => throw new ParseException(
                 "Unknown data type: '{$type}'",
                 ParseException::ERR_TYPE_DECLARATION_MISMATCH,

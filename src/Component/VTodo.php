@@ -6,6 +6,7 @@ namespace Icalendar\Component;
 
 use Icalendar\Component\Traits\CategoriesTrait;
 use Icalendar\Component\Traits\RecurrenceTrait;
+use Icalendar\Component\Traits\RequestStatusTrait;
 use Icalendar\Component\Traits\UrlTrait;
 use Icalendar\Exception\ValidationException;
 use Icalendar\Property\GenericProperty;
@@ -17,6 +18,7 @@ use Icalendar\Property\GenericProperty;
  */
 class VTodo extends AbstractComponent
 {
+    use RequestStatusTrait;
     use CategoriesTrait;
     use RecurrenceTrait;
     use UrlTrait;

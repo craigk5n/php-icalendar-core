@@ -6,6 +6,7 @@ namespace Icalendar\Component;
 
 use Icalendar\Component\Traits\UrlTrait;
 use Icalendar\Exception\ValidationException;
+use Icalendar\Component\Traits\RequestStatusTrait;
 use Icalendar\Property\GenericProperty;
 
 /**
@@ -15,6 +16,7 @@ use Icalendar\Property\GenericProperty;
  */
 class VFreeBusy extends AbstractComponent
 {
+    use RequestStatusTrait;
     use UrlTrait;
 
     public const ERR_MISSING_DTSTAMP = 'ICAL-VFB-001';
