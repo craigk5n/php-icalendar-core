@@ -54,6 +54,28 @@ final class TextListValue implements ValueInterface
      */
     public static function splitOnUnescapedCommas(string $wire): array
     {
+        return self::splitOnUnescaped($wire, ',');
+    }
+
+    /**
+     * As above, for the semicolon-separated structured values such as
+     * REQUEST-STATUS (RFC 5545 §3.8.8.3).
+     *
+     * @return list<string> The still-escaped components
+     */
+    public static function splitOnUnescapedSemicolons(string $wire): array
+    {
+        return self::splitOnUnescaped($wire, ';');
+    }
+
+    /**
+     * Split on a delimiter, ignoring any occurrence guarded by a backslash.
+     *
+     * @param non-empty-string $delimiter
+     * @return list<string> The still-escaped components
+     */
+    private static function splitOnUnescaped(string $wire, string $delimiter): array
+    {
         $items = [];
         $current = '';
         $length = strlen($wire);
@@ -62,14 +84,14 @@ final class TextListValue implements ValueInterface
             $char = $wire[$i];
 
             if ($char === '\\' && $i + 1 < $length) {
-                // Preserve the escape pair verbatim; the comma it may guard is
-                // literal, not a separator.
+                // Preserve the escape pair verbatim; the delimiter it may guard
+                // is literal, not a separator.
                 $current .= $char . $wire[$i + 1];
                 $i++;
                 continue;
             }
 
-            if ($char === ',') {
+            if ($char === $delimiter) {
                 $items[] = $current;
                 $current = '';
                 continue;
