@@ -42,8 +42,10 @@ class StreamingParseFileTest extends TestCase
 
     private function writeTemp(string $contents): string
     {
-        $path = tempnam(sys_get_temp_dir(), 'ical-stream-') ?: '';
-        self::assertNotSame('', $path);
+        // tempnam() returns string|false; `?: ''` would also swallow an empty
+        // string, so the failure is checked explicitly.
+        $path = tempnam(sys_get_temp_dir(), 'ical-stream-');
+        self::assertNotFalse($path, 'could not create a temporary file');
         file_put_contents($path, $contents);
         $this->tempFiles[] = $path;
 
