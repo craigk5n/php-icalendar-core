@@ -87,6 +87,6 @@ Not Started: Recurrence generation, Writer system completion, Main parser orches
 
 ## Key Documentation
 
-- `PRD.md` - Complete product requirements and RFC compliance details
-- `STATUS.md` - Detailed task tracking with parallelization opportunities
-- `AGENTS.md` - AI agent operational guidelines
+- `PRD.md` - Product requirements and RFC compliance details
+- `STATUS.md` - Implementation status; day-to-day work is tracked in GitHub Issues
+- `docs/USAGE.md` - API usage examples
