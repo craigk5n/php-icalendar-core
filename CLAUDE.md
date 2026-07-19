@@ -75,7 +75,7 @@ See PRD.md §6 for complete error code reference.
 
 Completed: Foundation, Content Line Processing, Property Parsing, all 15 Data Type Parsers, VCalendar/VEvent/VAlarm (basic), Standard/Daylight (basic) components.
 
-In Progress: Remaining components (VTodo, VJournal, VFreeBusy, VTimezone), Lexer, Security hardening.
+In Progress: Remaining components (VTodo, VJournal, VFreeBusy, VTimezone), Security hardening.
 
 Not Started: Recurrence generation, Writer system completion, Main parser orchestration, Validation rules.
 
@@ -84,7 +84,6 @@ Not Started: Recurrence generation, Writer system completion, Main parser orches
 | File | Issue |
 |------|-------|
 | `src/Parser/ValueParser/DurationParser.php:31` | Uses `ICAL-TYPE-020` but should be `ICAL-TYPE-006` per PRD |
-| `src/Parser/Lexer.php` | Stub only - needs full implementation |
 
 ## Key Documentation
 
