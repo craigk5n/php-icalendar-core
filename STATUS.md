@@ -11,6 +11,7 @@ Day-to-day work is tracked in [GitHub Issues](https://github.com/craigk5n/php-ic
     *   Components: VCALENDAR, VEVENT, VTODO, VJOURNAL, VFREEBUSY, VTIMEZONE (with STANDARD/DAYLIGHT), VALARM, VAVAILABILITY/AVAILABLE, PARTICIPANT.
     *   Recurrence rules (RRULE, EXDATE, RDATE), including expansion to occurrences.
     *   Timezone parsing, with recurring VTIMEZONE observances expanded from their RRULEs.
+    *   `Parser::parseFile()` reads in chunks rather than loading the file whole.
     *   **Strict and Lenient Parsing Modes**:
         *   **Strict (`Parser::STRICT`)**: enforces RFC 5545, throwing `ParseException` on violation. Acts as a syntax checker.
         *   **Lenient (`Parser::LENIENT`)**: maximises data import, collecting warnings instead of throwing. Retrieve them with `getWarnings()`. A malformed value is reported and dropped, never replaced with an invented one.
