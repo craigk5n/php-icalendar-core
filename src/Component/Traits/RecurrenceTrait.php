@@ -25,17 +25,14 @@ trait RecurrenceTrait
      *
      * RFC 5545 allows multiple EXDATE properties.
      *
-     * @param string $exdate The date/time string
+     * @param string $exdate The date/time string, or a comma-separated list of them
      * @param array<string, string> $params Optional parameters (e.g., ['VALUE' => 'DATE', 'TZID' => '...'])
      * @return $this
+     * @throws \Icalendar\Exception\ParseException ICAL-PARSE-012 when VALUE names a type the property does not permit
      */
     public function addExdate(string $exdate, array $params = []): self
     {
-        $property = GenericProperty::create('EXDATE', $exdate);
-        foreach ($params as $name => $value) {
-            $property->setParameter($name, $value);
-        }
-        $this->addProperty($property);
+        $this->addProperty(GenericProperty::typed('EXDATE', $exdate, $params));
         return $this;
     }
 
@@ -70,17 +67,14 @@ trait RecurrenceTrait
     /**
      * Add an RDATE (recurrence date) to the component.
      *
-     * @param string $rdate The date/time string
+     * @param string $rdate The date/time string, or a comma-separated list of them
      * @param array<string, string> $params Optional parameters
      * @return $this
+     * @throws \Icalendar\Exception\ParseException ICAL-PARSE-012 when VALUE names a type the property does not permit
      */
     public function addRdate(string $rdate, array $params = []): self
     {
-        $property = GenericProperty::create('RDATE', $rdate);
-        foreach ($params as $name => $value) {
-            $property->setParameter($name, $value);
-        }
-        $this->addProperty($property);
+        $this->addProperty(GenericProperty::typed('RDATE', $rdate, $params));
         return $this;
     }
 

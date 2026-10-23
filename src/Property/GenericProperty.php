@@ -4,6 +4,9 @@ declare(strict_types=1);
 
 namespace Icalendar\Property;
 
+use Icalendar\Exception\ParseException;
+use Icalendar\Parser\ValueParser\ValueParserFactory;
+use Icalendar\Value\GenericValue;
 use Icalendar\Value\TextValue;
 use Icalendar\Value\ValueInterface;
 
@@ -123,5 +126,28 @@ use Icalendar\Value\ValueInterface;
     public static function create(string $name, string $value): self
     {
         return new self($name, new TextValue($value));
+    }
+
+    /**
+     * Create a GenericProperty whose value has the property's own type
+     *
+     * The type is resolved the way the Parser resolves it: a VALUE parameter
+     * if the property permits it, otherwise the property's default type, and
+     * TEXT for a property the library does not know. Use this rather than
+     * create() for any property whose value is not TEXT -- create() stores
+     * TEXT, and the TEXT writer escapes the `;` and `,` that RECUR values and
+     * date lists use as separators (#49).
+     *
+     * @param string $name The property name (e.g., "RRULE", "EXDATE")
+     * @param string $value The value, already in iCalendar form
+     * @param array<string, string> $parameters Property parameters, VALUE included
+     * @return self A new GenericProperty instance
+     * @throws ParseException ICAL-PARSE-012 when VALUE names a type the property does not permit
+     */
+    public static function typed(string $name, string $value, array $parameters = []): self
+    {
+        $type = (new ValueParserFactory())->getParserForProperty($name, $parameters)->getType();
+
+        return new self($name, new GenericValue($value, $type), $parameters);
     }
 }

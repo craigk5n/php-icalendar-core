@@ -109,7 +109,7 @@ class Available extends AbstractComponent
     public function setRrule(string $rrule): self
     {
         $this->removeProperty('RRULE');
-        $this->addProperty(GenericProperty::create('RRULE', $rrule));
+        $this->addProperty(GenericProperty::typed('RRULE', $rrule));
         return $this;
     }
 

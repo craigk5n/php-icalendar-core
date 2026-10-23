@@ -80,10 +80,12 @@ components lives here rather than being copied:
 ### Structured values
 
 A value whose grammar contains structural delimiters (`GEO`, `REQUEST-STATUS`,
-`CATEGORIES`) **must not be serialised as TEXT** — the TEXT writer escapes those
-delimiters and destroys the structure. Give it a typed value plus its own
-writer, and make any setter store that type rather than
-`GenericProperty::create()`, which stores TEXT.
+`CATEGORIES`, `RRULE`, `EXDATE`/`RDATE` lists) **must not be serialised as
+TEXT** — the TEXT writer escapes those delimiters and destroys the structure.
+Give it a typed value plus its own writer, and make any setter store that type
+rather than `GenericProperty::create()`, which stores TEXT.
+`GenericProperty::typed()` resolves the type from the parser's property/type
+map (honouring `VALUE`), so a setter for a mapped property should use it.
 
 ### Error Codes
 

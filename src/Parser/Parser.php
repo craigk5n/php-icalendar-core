@@ -278,13 +278,24 @@ class Parser implements ParserInterface
                     );
                 } else {
                     $parser = $this->valueParserFactory->getParserForProperty($name, $parameters);
-                    $parsedValue = $parser->parse($value, $parameters);
                     $type = $parser->getType();
-                    // Take UTC-ness from the source rather than the parsed value's
-                    // timezone: only a trailing 'Z' means UTC. PERIOD passes null so
-                    // its halves keep using the timezone fallback (§3.3.9 makes them UTC).
-                    $sourceIsUtc = $type === 'DATE-TIME' ? str_ends_with($value, 'Z') : null;
-                    $propertyValue = $this->formatParsedValue($parsedValue, $type, $sourceIsUtc);
+                    // EXDATE and RDATE carry a comma-separated list of dates
+                    // (RFC 5545 §3.8.5.1/§3.8.5.2), but the DATE and DATE-TIME
+                    // parsers read one value. Parse each item. PeriodParser
+                    // splits its own lists.
+                    $items = $this->isDateListProperty($name) && $type !== 'PERIOD'
+                        ? explode(',', $value)
+                        : [$value];
+                    $formatted = [];
+                    foreach ($items as $item) {
+                        $parsedValue = $parser->parse($item, $parameters);
+                        // Take UTC-ness from the source rather than the parsed value's
+                        // timezone: only a trailing 'Z' means UTC. PERIOD passes null so
+                        // its halves keep using the timezone fallback (§3.3.9 makes them UTC).
+                        $sourceIsUtc = $type === 'DATE-TIME' ? str_ends_with($item, 'Z') : null;
+                        $formatted[] = $this->formatParsedValue($parsedValue, $type, $sourceIsUtc);
+                    }
+                    $propertyValue = implode(',', $formatted);
                     $property = new GenericProperty($name, new \Icalendar\Value\GenericValue($propertyValue, $type), $parameters);
                 }
 
@@ -417,6 +428,14 @@ class Parser implements ParserInterface
     private function isTextListProperty(string $name): bool
     {
         return strtoupper($name) === 'CATEGORIES';
+    }
+
+    /**
+     * Whether a property's value is a comma-separated list of dates
+     */
+    private function isDateListProperty(string $name): bool
+    {
+        return in_array(strtoupper($name), ['EXDATE', 'RDATE'], true);
     }
 
     /**
