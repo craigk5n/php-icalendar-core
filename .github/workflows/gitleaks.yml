@@ -1,14 +1,21 @@
 name: Gitleaks Scan
 on: [push, pull_request]
 
+permissions:
+  contents: read
+
 jobs:
   gitleaks:
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      # Comments on the pull request when a leak is found.
+      pull-requests: write
     steps:
-    - uses: actions/checkout@v6
+    - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6.1.0
       with:
         fetch-depth: 0  # Full history
 
-    - uses: gitleaks/gitleaks-action@v2
+    - uses: gitleaks/gitleaks-action@ff98106e4c7b2bc287b24eaf42907196329070c7 # v2.3.9
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
