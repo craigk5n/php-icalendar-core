@@ -5,6 +5,49 @@ All notable changes to this project are documented here.
 The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and
 this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.2.1] - 2026-10-23
+
+Recurring events now survive a write and a re-read. Found downstream, in
+[webcalendar-core](https://github.com/craigk5n/webcalendar-core), whose
+calendar exports stopped recurring in other apps.
+
+### Fixed
+
+**`setRrule()` wrote a rule nothing could read** ([#49]). The rule was stored
+as TEXT, so its separators were escaped. This library's own Parser rejected the
+result (`Invalid RECUR FREQ value: WEEKLY\`), and so do Google Calendar, Outlook
+and Apple Calendar. Any recurring event exported through the setter stopped
+recurring. This is the structural-delimiter defect fixed in 1.2.0 for
+`CATEGORIES`, `GEO` and `REQUEST-STATUS`, in a fourth value type:
+
+| Property | Was | Now |
+|---|---|---|
+| `RRULE` (`setRrule()` on `VEvent`, `VTodo`, `VJournal`, `Available`) | `FREQ=WEEKLY\;BYDAY=MO\,WE` | `FREQ=WEEKLY;BYDAY=MO,WE` |
+| `EXDATE` / `RDATE` list (`addExdate()`, `addRdate()`) | `20260106T090000\,20260107T090000` | `20260106T090000,20260107T090000` |
+
+**A list of dates in one `EXDATE` or `RDATE` failed to parse.** RFC 5545
+§3.8.5.1 allows `EXDATE:a,b`, but the DATE and DATE-TIME parsers read a
+single value. Strict mode threw, and lenient mode dropped the property with a
+warning, so excluded occurrences came back. Each date is now parsed on its
+own, with its own UTC marker.
+
+### Added
+
+- **`GenericProperty::typed($name, $value, $parameters = [])`**: a property whose
+  value has the property's own type, resolved from the parser's property/type
+  map (including a `VALUE` parameter). Use it instead of `create()`, which
+  always stores TEXT, for any property whose value is not TEXT.
+
+### Upgrading
+
+1. **Output changes for `RRULE` and multi-date `EXDATE`/`RDATE`**, because the
+   previous output was not conformant.
+2. **`addExdate()` / `addRdate()` reject a `VALUE` the property does not
+   permit**, throwing `ParseException` with `ICAL-PARSE-012`. For example,
+   `EXDATE;VALUE=TEXT`. The Parser already refused these on input.
+3. If you worked around [#49] by building the `RRULE` property yourself, the
+   workaround still works and can be removed.
+
 ## [1.2.0] - 2026-07-19
 
 A correctness release. Most entries below are cases where the library accepted,
@@ -130,4 +173,6 @@ Most consumers need no changes. Watch for these:
 4. **Output changes for the properties above**, because the previous output was
    not conformant.
 
+[1.2.1]: https://github.com/craigk5n/php-icalendar-core/compare/v1.2.0...v1.2.1
 [1.2.0]: https://github.com/craigk5n/php-icalendar-core/compare/v1.1.5...v1.2.0
+[#49]: https://github.com/craigk5n/php-icalendar-core/issues/49
