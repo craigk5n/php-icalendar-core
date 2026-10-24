@@ -12,7 +12,7 @@ use PHPUnit\Framework\TestCase;
 /**
  * Tests for ValueParserFactory class
  */
-class ValueParserFactoryTest extends TestCase
+final class ValueParserFactoryTest extends TestCase
 {
     private ValueParserFactory $factory;
 

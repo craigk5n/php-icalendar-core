@@ -28,7 +28,7 @@ use PHPUnit\Framework\TestCase;
  * Recursion now goes through doValidateComponent(), which appends rather than
  * resets; validateSingleComponent() keeps its reset for standalone callers.
  */
-class ErrorAccumulationTest extends TestCase
+final class ErrorAccumulationTest extends TestCase
 {
     private function invalidEvent(string $summary): VEvent
     {

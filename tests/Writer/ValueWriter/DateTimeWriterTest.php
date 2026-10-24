@@ -11,7 +11,7 @@ use DateTimeZone;
 use Icalendar\Writer\ValueWriter\DateTimeWriter;
 use PHPUnit\Framework\TestCase;
 
-class DateTimeWriterTest extends TestCase
+final class DateTimeWriterTest extends TestCase
 {
     private DateTimeWriter $writer;
 

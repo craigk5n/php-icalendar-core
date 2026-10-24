@@ -10,7 +10,7 @@ use Icalendar\Exception\ParseException;
 use Icalendar\Parser\ValueParser\DateParser;
 use PHPUnit\Framework\TestCase;
 
-class DateParserTest extends TestCase
+final class DateParserTest extends TestCase
 {
     private DateParser $parser;
 

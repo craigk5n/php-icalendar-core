@@ -11,7 +11,7 @@ use PHPUnit\Framework\TestCase;
 /**
  * Tests for VJournal component
  */
-class VJournalTest extends TestCase
+final class VJournalTest extends TestCase
 {
     public function testCreateVJournal(): void
     {

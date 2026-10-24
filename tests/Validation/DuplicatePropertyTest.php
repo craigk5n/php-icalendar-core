@@ -33,7 +33,7 @@ use PHPUnit\Framework\TestCase;
  * Severity is ERROR, the RFC-correct reading, downgraded to WARNING in lenient
  * mode so importing a messy feed still yields data plus a diagnostic.
  */
-class DuplicatePropertyTest extends TestCase
+final class DuplicatePropertyTest extends TestCase
 {
     private const CODE = 'ICAL-COMP-006';
 

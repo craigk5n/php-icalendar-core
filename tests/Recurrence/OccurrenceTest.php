@@ -8,7 +8,7 @@ use DateTimeImmutable;
 use Icalendar\Recurrence\Occurrence;
 use PHPUnit\Framework\TestCase;
 
-class OccurrenceTest extends TestCase
+final class OccurrenceTest extends TestCase
 {
     public function testConstructorWithRequiredParameters(): void
     {

@@ -13,7 +13,7 @@ use PHPUnit\Framework\TestCase;
  * Tests for "Exotic" and complex recurrence rules to verify robustness
  * against competitor capabilities.
  */
-class EdgeCaseRecurrenceTest extends TestCase
+final class EdgeCaseRecurrenceTest extends TestCase
 {
     private RecurrenceExpander $expander;
 

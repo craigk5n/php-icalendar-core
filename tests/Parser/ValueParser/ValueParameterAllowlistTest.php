@@ -29,7 +29,7 @@ use PHPUnit\Framework\TestCase;
  * know what an extension's value means, and real producers do emit
  * X-APPLE-STRUCTURED-LOCATION;VALUE=URI.
  */
-class ValueParameterAllowlistTest extends TestCase
+final class ValueParameterAllowlistTest extends TestCase
 {
     private ValueParserFactory $factory;
 

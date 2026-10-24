@@ -11,7 +11,7 @@ use PHPUnit\Framework\TestCase;
 /**
  * Tests for RecurrenceGenerator
  */
-class RecurrenceGeneratorTest extends TestCase
+final class RecurrenceGeneratorTest extends TestCase
 {
     private RecurrenceGenerator $generator;
     private RRuleParser $parser;

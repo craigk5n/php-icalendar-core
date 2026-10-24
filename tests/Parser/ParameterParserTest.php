@@ -11,7 +11,7 @@ use PHPUnit\Framework\TestCase;
 /**
  * Tests for ParameterParser class
  */
-class ParameterParserTest extends TestCase
+final class ParameterParserTest extends TestCase
 {
     private ParameterParser $parser;
 

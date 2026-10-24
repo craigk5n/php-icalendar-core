@@ -8,7 +8,7 @@ use Icalendar\Exception\ParseException;
 use Icalendar\Parser\ValueParser\CalAddressParser;
 use PHPUnit\Framework\TestCase;
 
-class CalAddressParserTest extends TestCase
+final class CalAddressParserTest extends TestCase
 {
     private CalAddressParser $parser;
 

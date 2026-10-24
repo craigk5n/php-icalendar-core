@@ -7,7 +7,7 @@ namespace Icalendar\Tests\Value;
 use Icalendar\Value\DateTimeValue;
 use PHPUnit\Framework\TestCase;
 
-class DateTimeValueTest extends TestCase
+final class DateTimeValueTest extends TestCase
 {
     public function testConstructorWithDateTime(): void
     {

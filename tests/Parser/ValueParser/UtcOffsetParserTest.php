@@ -8,7 +8,7 @@ use Icalendar\Exception\ParseException;
 use Icalendar\Parser\ValueParser\UtcOffsetParser;
 use PHPUnit\Framework\TestCase;
 
-class UtcOffsetParserTest extends TestCase
+final class UtcOffsetParserTest extends TestCase
 {
     private UtcOffsetParser $parser;
 
@@ -120,17 +120,5 @@ class UtcOffsetParserTest extends TestCase
         $this->expectException(ParseException::class);
         $this->expectExceptionMessage("Invalid UTC-OFFSET: seconds must be 00-59, got: 60");
         $this->parser->parse('+053060');
-    }
-
-    public function getType(): string
-    {
-        return 'UTC-OFFSET';
-    }
-
-    public function canParse(string $value): bool
-    {
-        $value = trim($value);
-        if ($value === '') return false;
-        return (bool) preg_match('/^[+-]\d{4}(?:\d{2})?$/', $value);
     }
 }

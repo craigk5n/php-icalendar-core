@@ -8,7 +8,7 @@ use Icalendar\Component\Standard;
 use Icalendar\Exception\ValidationException;
 use PHPUnit\Framework\TestCase;
 
-class StandardTest extends TestCase
+final class StandardTest extends TestCase
 {
     public function testStandardRequiresDtstart(): void
     {

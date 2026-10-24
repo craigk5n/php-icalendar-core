@@ -41,7 +41,7 @@ use PHPUnit\Framework\TestCase;
  * recursing it would report one problem per run, and the Validator class already
  * walks the tree and collects every error. See ISSUES.md #2.
  */
-class ValidateContractTest extends TestCase
+final class ValidateContractTest extends TestCase
 {
     public function testValidateIsDeclaredOnTheInterface(): void
     {

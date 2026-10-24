@@ -11,7 +11,7 @@ use PHPUnit\Framework\TestCase;
 /**
  * Tests for ContentLine class
  */
-class ContentLineTest extends TestCase
+final class ContentLineTest extends TestCase
 {
     public function testContentLineParsesSimpleProperty(): void
     {

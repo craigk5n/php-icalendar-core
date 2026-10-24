@@ -15,7 +15,7 @@ use PHPUnit\Framework\TestCase;
 /**
  * Tests for PropertyWriter
  */
-class PropertyWriterTest extends TestCase
+final class PropertyWriterTest extends TestCase
 {
     private PropertyWriter $writer;
 

@@ -15,7 +15,7 @@ use PHPUnit\Framework\TestCase;
  * derives the minimum from composer.json (the manifest that Composer enforces)
  * and holds the others to it, so the three can no longer drift apart.
  */
-class PhpVersionConsistencyTest extends TestCase
+final class PhpVersionConsistencyTest extends TestCase
 {
     /** @return string e.g. "8.1" */
     private function composerMinPhp(): string

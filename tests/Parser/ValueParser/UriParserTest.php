@@ -8,7 +8,7 @@ use Icalendar\Exception\ParseException;
 use Icalendar\Parser\ValueParser\UriParser;
 use PHPUnit\Framework\TestCase;
 
-class UriParserTest extends TestCase
+final class UriParserTest extends TestCase
 {
     private UriParser $parser;
 

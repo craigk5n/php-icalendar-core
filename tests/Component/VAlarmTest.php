@@ -11,7 +11,7 @@ use PHPUnit\Framework\TestCase;
 /**
  * Tests for VAlarm component
  */
-class VAlarmTest extends TestCase
+final class VAlarmTest extends TestCase
 {
     public function testCreateVAlarm(): void
     {

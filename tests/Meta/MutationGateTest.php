@@ -21,7 +21,7 @@ use PHPUnit\Framework\TestCase;
  * choice fail out loud instead, mirroring how PhpVersionConsistencyTest and
  * CiTimezoneCoverageTest pin their own CI guarantees.
  */
-class MutationGateTest extends TestCase
+final class MutationGateTest extends TestCase
 {
     private function ciWorkflow(): string
     {

@@ -6,9 +6,10 @@ namespace Icalendar\Tests\Fidelity;
 
 use Icalendar\Parser\Parser;
 use Icalendar\Writer\Writer;
+use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
 
-class RealWorldRoundTripTest extends TestCase
+final class RealWorldRoundTripTest extends TestCase
 {
     private Parser $parser;
     private Writer $writer;
@@ -34,7 +35,7 @@ class RealWorldRoundTripTest extends TestCase
         return $data;
     }
 
-    #[\PHPUnit\Framework\Attributes\DataProvider('realWorldFilesProvider')]
+    #[DataProvider('realWorldFilesProvider')]
     public function testRealWorldFileRoundTrip(string $icsPath): void
     {
         $originalIcs = file_get_contents($icsPath);

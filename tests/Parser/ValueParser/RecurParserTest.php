@@ -9,7 +9,7 @@ use Icalendar\Parser\ValueParser\RecurParser;
 use Icalendar\Recurrence\RRule;
 use PHPUnit\Framework\TestCase;
 
-class RecurParserTest extends TestCase
+final class RecurParserTest extends TestCase
 {
     private RecurParser $parser;
 

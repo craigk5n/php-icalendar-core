@@ -17,7 +17,7 @@ use PHPUnit\Framework\TestCase;
  * - NFR-012: SSRF Prevention via URI validation
  * - NFR-013: Text sanitization
  */
-class SecurityValidatorTest extends TestCase
+final class SecurityValidatorTest extends TestCase
 {
     private SecurityValidator $validator;
 

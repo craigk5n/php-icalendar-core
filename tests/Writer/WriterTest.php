@@ -16,7 +16,7 @@ use Icalendar\Writer\ComponentWriter;
 use Icalendar\Writer\ContentLineWriter;
 use PHPUnit\Framework\TestCase;
 
-class WriterTest extends TestCase
+final class WriterTest extends TestCase
 {
     private Writer $writer;
 

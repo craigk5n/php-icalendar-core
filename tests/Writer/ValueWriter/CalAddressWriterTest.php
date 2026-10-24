@@ -7,7 +7,7 @@ namespace Icalendar\Tests\Writer\ValueWriter;
 use Icalendar\Writer\ValueWriter\CalAddressWriter;
 use PHPUnit\Framework\TestCase;
 
-class CalAddressWriterTest extends TestCase
+final class CalAddressWriterTest extends TestCase
 {
     private CalAddressWriter $writer;
 

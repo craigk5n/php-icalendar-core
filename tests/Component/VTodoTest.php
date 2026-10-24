@@ -12,7 +12,7 @@ use PHPUnit\Framework\TestCase;
 /**
  * Tests for VTodo component
  */
-class VTodoTest extends TestCase
+final class VTodoTest extends TestCase
 {
     public function testCreateVTodo(): void
     {

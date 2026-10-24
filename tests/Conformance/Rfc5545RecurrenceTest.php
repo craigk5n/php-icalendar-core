@@ -12,7 +12,7 @@ use PHPUnit\Framework\TestCase;
 /**
  * RFC 5545 Recurrence Rule Examples (Section 3.8.5.3)
  */
-class Rfc5545RecurrenceTest extends TestCase
+final class Rfc5545RecurrenceTest extends TestCase
 {
     private RecurrenceExpander $expander;
 

@@ -26,7 +26,7 @@ use PHPUnit\Framework\TestCase;
  * split that back into a code and a description -- the same defect GEO had in
  * #18, and the reason a structured value must never be written as TEXT.
  */
-class RequestStatusTest extends TestCase
+final class RequestStatusTest extends TestCase
 {
     private RequestStatusParser $parser;
 

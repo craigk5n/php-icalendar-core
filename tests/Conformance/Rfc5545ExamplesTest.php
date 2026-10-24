@@ -16,7 +16,7 @@ use PHPUnit\Framework\TestCase;
  * Tests all RFC 5545 examples to verify they parse correctly
  * and round-trip successfully (parse → write → parse).
  */
-class Rfc5545ExamplesTest extends TestCase
+final class Rfc5545ExamplesTest extends TestCase
 {
     private Parser $parser;
     private Writer $writer;

@@ -8,7 +8,7 @@ use Icalendar\Validation\ErrorSeverity;
 use Icalendar\Validation\ValidationError;
 use PHPUnit\Framework\TestCase;
 
-class ValidationErrorTest extends TestCase
+final class ValidationErrorTest extends TestCase
 {
     public function testConstructorWithAllParameters(): void
     {

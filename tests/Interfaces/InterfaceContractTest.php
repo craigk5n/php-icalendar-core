@@ -19,7 +19,7 @@ use PHPUnit\Framework\TestCase;
 /**
  * Tests for core interface contracts
  */
-class InterfaceContractTest extends TestCase
+final class InterfaceContractTest extends TestCase
 {
     public function testParserInterfaceContract(): void
     {

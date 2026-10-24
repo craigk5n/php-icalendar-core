@@ -11,7 +11,7 @@ use PHPUnit\Framework\TestCase;
 /**
  * Tests for TextParser class
  */
-class TextParserTest extends TestCase
+final class TextParserTest extends TestCase
 {
     private TextParser $parser;
 

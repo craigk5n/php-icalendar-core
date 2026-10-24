@@ -8,7 +8,7 @@ use Icalendar\Exception\ParseException;
 use Icalendar\Parser\ValueParser\BooleanParser;
 use PHPUnit\Framework\TestCase;
 
-class BooleanParserTest extends TestCase
+final class BooleanParserTest extends TestCase
 {
     private BooleanParser $parser;
 

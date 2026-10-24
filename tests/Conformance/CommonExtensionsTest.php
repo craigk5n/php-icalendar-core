@@ -12,7 +12,7 @@ use PHPUnit\Framework\TestCase;
 /**
  * Tests for common de-facto extensions
  */
-class CommonExtensionsTest extends TestCase
+final class CommonExtensionsTest extends TestCase
 {
     public function testCommonExtensions(): void
     {

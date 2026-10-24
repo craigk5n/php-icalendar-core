@@ -24,7 +24,7 @@ use PHPUnit\Framework\TestCase;
  * exercised only by LexerTest -- the chunked reader, and an XXE scan that can no
  * longer see the whole file at once -- so both are pinned here.
  */
-class StreamingParseFileTest extends TestCase
+final class StreamingParseFileTest extends TestCase
 {
     /** @var list<string> */
     private array $tempFiles = [];

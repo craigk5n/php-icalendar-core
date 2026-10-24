@@ -6,9 +6,10 @@ namespace Icalendar\Tests\Fidelity;
 
 use Icalendar\Parser\Parser;
 use Icalendar\Writer\Writer;
+use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
 
-class RfcExamplesRoundTripTest extends TestCase
+final class RfcExamplesRoundTripTest extends TestCase
 {
     private Parser $parser;
     private Writer $writer;
@@ -34,7 +35,7 @@ class RfcExamplesRoundTripTest extends TestCase
         return $data;
     }
 
-    #[\PHPUnit\Framework\Attributes\DataProvider('rfcExamplesProvider')]
+    #[DataProvider('rfcExamplesProvider')]
     public function testRoundTripParsesSuccessfully(string $icsPath): void
     {
         $originalIcs = file_get_contents($icsPath);

@@ -16,7 +16,7 @@ use PHPUnit\Framework\TestCase;
  * Verifies that the library can parse complex, real-world data and
  * maintain semantic integrity through a round-trip (parse → write → parse).
  */
-class RealWorldFilesTest extends TestCase
+final class RealWorldFilesTest extends TestCase
 {
     private Parser $parser;
     private Writer $writer;

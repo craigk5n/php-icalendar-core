@@ -7,7 +7,7 @@ namespace Icalendar\Tests\Parser\ValueParser;
 use Icalendar\Parser\ValueParser\DateValidator;
 use PHPUnit\Framework\TestCase;
 
-class DateValidatorTest extends TestCase
+final class DateValidatorTest extends TestCase
 {
     // ========== isValidDate Tests ==========
 

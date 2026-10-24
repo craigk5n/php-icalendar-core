@@ -12,7 +12,7 @@ use PHPUnit\Framework\TestCase;
 /**
  * Tests for RFC 7986 properties: IMAGE, COLOR, CONFERENCE, REFRESH-INTERVAL
  */
-class Rfc7986Test extends TestCase
+final class Rfc7986Test extends TestCase
 {
     private Parser $parser;
 

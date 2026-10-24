@@ -7,7 +7,7 @@ namespace Icalendar\Tests\Recurrence;
 use Icalendar\Recurrence\RRule;
 use PHPUnit\Framework\TestCase;
 
-class RRuleTest extends TestCase
+final class RRuleTest extends TestCase
 {
     public function testCreateMinimalRRule(): void
     {

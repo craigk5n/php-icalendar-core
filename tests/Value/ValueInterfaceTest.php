@@ -8,7 +8,7 @@ use Icalendar\Value\ValueInterface;
 use PHPUnit\Framework\TestCase;
 use PHPUnit\Framework\MockObject\MockObject;
 
-class ValueInterfaceTest extends TestCase
+final class ValueInterfaceTest extends TestCase
 {
     private ValueInterface|MockObject $value;
 

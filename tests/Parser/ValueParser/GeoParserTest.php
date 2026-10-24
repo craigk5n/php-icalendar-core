@@ -16,7 +16,7 @@ use PHPUnit\Framework\TestCase;
  * TEXT and `GEO:total garbage` parsed clean. Mapping it to FLOAT is wrong -- the
  * real form has a semicolon FloatParser rejects -- so it needs its own parser.
  */
-class GeoParserTest extends TestCase
+final class GeoParserTest extends TestCase
 {
     private GeoParser $parser;
 

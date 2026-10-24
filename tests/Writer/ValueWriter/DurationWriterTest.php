@@ -8,7 +8,7 @@ use DateInterval;
 use Icalendar\Writer\ValueWriter\DurationWriter;
 use PHPUnit\Framework\TestCase;
 
-class DurationWriterTest extends TestCase
+final class DurationWriterTest extends TestCase
 {
     private DurationWriter $writer;
 

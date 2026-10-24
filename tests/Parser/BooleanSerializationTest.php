@@ -19,7 +19,7 @@ use PHPUnit\Framework\TestCase;
  * This covers what the parser stores. Writing those values back is the writers'
  * side of the same defect; see ParsedValueRoundTripTest.
  */
-class BooleanSerializationTest extends TestCase
+final class BooleanSerializationTest extends TestCase
 {
     private function calendarWith(string $line): string
     {

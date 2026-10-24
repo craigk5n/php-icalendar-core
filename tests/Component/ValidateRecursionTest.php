@@ -31,7 +31,7 @@ use PHPUnit\Framework\TestCase;
  * For collecting *all* errors rather than stopping at the first, Validator is
  * still the tool; this only makes the intuitive call do the intuitive thing.
  */
-class ValidateRecursionTest extends TestCase
+final class ValidateRecursionTest extends TestCase
 {
     private function validCalendar(): VCalendar
     {

@@ -11,7 +11,7 @@ use Icalendar\Value\ValueInterface;
 use PHPUnit\Framework\TestCase;
 use PHPUnit\Framework\MockObject\MockObject;
 
-class AbstractComponentTest extends TestCase
+final class AbstractComponentTest extends TestCase
 {
     private TestComponent $component;
 
@@ -145,7 +145,7 @@ class AbstractComponentTest extends TestCase
 /**
  * Concrete implementation for testing AbstractComponent
  */
-class TestComponent extends AbstractComponent
+final class TestComponent extends AbstractComponent
 {
     #[\Override]
     public function getName(): string

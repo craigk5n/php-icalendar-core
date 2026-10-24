@@ -18,7 +18,7 @@ use Icalendar\Validation\Validator;
 use Icalendar\Validation\ValidationResult;
 use PHPUnit\Framework\TestCase;
 
-class ValidatorTest extends TestCase
+final class ValidatorTest extends TestCase
 {
     private Validator $validator;
 

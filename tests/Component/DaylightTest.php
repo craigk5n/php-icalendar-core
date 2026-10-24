@@ -8,7 +8,7 @@ use Icalendar\Component\Daylight;
 use Icalendar\Exception\ValidationException;
 use PHPUnit\Framework\TestCase;
 
-class DaylightTest extends TestCase
+final class DaylightTest extends TestCase
 {
     public function testDaylightRequiresDtstart(): void
     {

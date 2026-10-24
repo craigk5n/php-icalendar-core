@@ -26,7 +26,7 @@ use PHPUnit\Framework\TestCase;
  * commas stay literal, in-value specials get escaped, and the two cases stay
  * distinguishable through a full write/parse round trip.
  */
-class CategoriesListTest extends TestCase
+final class CategoriesListTest extends TestCase
 {
     /**
      * @return array<string, array{callable(): (VEvent|VTodo|VJournal)}>

@@ -27,7 +27,7 @@ use PHPUnit\Framework\TestCase;
  * These tests pin the timezone explicitly so they fail on any host, rather than
  * depending on the runner's date.timezone.
  */
-class FloatingDateTimeTest extends TestCase
+final class FloatingDateTimeTest extends TestCase
 {
     /** @var non-empty-string */
     private string $originalTimezone;

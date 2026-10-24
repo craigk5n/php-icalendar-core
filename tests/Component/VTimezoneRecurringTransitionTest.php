@@ -25,7 +25,7 @@ use PHPUnit\Framework\TestCase;
  * DST begins the first Sunday in April and ends the first Sunday in October,
  * both recurring yearly from 2005.
  */
-class VTimezoneRecurringTransitionTest extends TestCase
+final class VTimezoneRecurringTransitionTest extends TestCase
 {
     private const EDT = -14400; // -04:00
     private const EST = -18000; // -05:00

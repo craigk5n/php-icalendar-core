@@ -7,7 +7,7 @@ namespace Icalendar\Tests\Writer\ValueWriter;
 use Icalendar\Writer\ValueWriter\UriWriter;
 use PHPUnit\Framework\TestCase;
 
-class UriWriterTest extends TestCase
+final class UriWriterTest extends TestCase
 {
     private UriWriter $writer;
 

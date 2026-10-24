@@ -19,7 +19,7 @@ use PHPUnit\Framework\TestCase;
  * parsing non-deterministic, and it accepted the empty string as "now". Lenient
  * mode collects a warning; it does not invent data.
  */
-class LenientDateFallbackTest extends TestCase
+final class LenientDateFallbackTest extends TestCase
 {
     /** @return array<string, array{string}> */
     public static function nonRfcValueProvider(): array

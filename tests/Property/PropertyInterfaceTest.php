@@ -9,7 +9,7 @@ use Icalendar\Value\ValueInterface;
 use PHPUnit\Framework\TestCase;
 use PHPUnit\Framework\MockObject\MockObject;
 
-class PropertyInterfaceTest extends TestCase
+final class PropertyInterfaceTest extends TestCase
 {
     private PropertyInterface|MockObject $property;
 

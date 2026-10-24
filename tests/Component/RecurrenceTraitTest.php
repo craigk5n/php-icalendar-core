@@ -11,7 +11,7 @@ use Icalendar\Component\VTodo;
 use Icalendar\Recurrence\Occurrence;
 use PHPUnit\Framework\TestCase;
 
-class RecurrenceTraitTest extends TestCase
+final class RecurrenceTraitTest extends TestCase
 {
     public function testAddExdateAccumulates(): void
     {
