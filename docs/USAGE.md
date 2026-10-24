@@ -268,6 +268,20 @@ $event->addProperty($attendee);
 // ATTENDEE;CN="John Doe";RSVP=TRUE;ROLE=REQ-PARTICIPANT:mailto:user@example.com
 ```
 
+`GenericProperty::create()` stores a TEXT value, and the TEXT writer escapes
+`;`, `,` and `\`. For a property whose value is not TEXT, use
+`GenericProperty::typed()`, which takes the type from the property name (or
+its `VALUE` parameter) the same way the parser does:
+
+```php
+<?php
+// RECUR, written as-is: RRULE:FREQ=MONTHLY;BYDAY=1MO,1WE
+$event->addProperty(GenericProperty::typed('RRULE', 'FREQ=MONTHLY;BYDAY=1MO,1WE'));
+
+// A VALUE the property does not permit throws ParseException (ICAL-PARSE-012).
+$rdate = GenericProperty::typed('RDATE', '20260110T090000Z/PT1H', ['VALUE' => 'PERIOD']);
+```
+
 ### Line Folding
 
 The library automatically folds long lines:
@@ -369,6 +383,9 @@ Multiple EXDATEs and RDATEs accumulate:
 <?php
 $event->addExdate('20260102T090000');
 $event->addExdate('20260104T090000');
+
+// One property may also carry a comma-separated list (RFC 5545 §3.8.5.1):
+$event->addExdate('20260102T090000,20260104T090000');
 
 // setExdate() replaces all existing EXDATEs:
 $event->setExdate('20260103T090000');

@@ -175,4 +175,33 @@ class GenericPropertyTest extends TestCase
         $this->assertEquals('BASE64', $property->getParameter('ENCODING'));
         $this->assertEquals('BINARY', $property->getParameter('VALUE'));
     }
+
+    public function testTypedTakesThePropertysDefaultType(): void
+    {
+        $property = GenericProperty::typed('RRULE', 'FREQ=DAILY;COUNT=2');
+
+        $this->assertSame('RECUR', $property->getValue()->getType());
+        $this->assertSame('FREQ=DAILY;COUNT=2', $property->getValue()->getRawValue());
+        $this->assertSame([], $property->getParameters());
+    }
+
+    public function testTypedHonoursAPermittedValueParameter(): void
+    {
+        $property = GenericProperty::typed('RDATE', '20260110T090000Z/PT1H', ['VALUE' => 'PERIOD']);
+
+        $this->assertSame('PERIOD', $property->getValue()->getType());
+        $this->assertSame('PERIOD', $property->getParameter('VALUE'));
+    }
+
+    public function testTypedFallsBackToTextForAnUnknownProperty(): void
+    {
+        $this->assertSame('TEXT', GenericProperty::typed('X-NOTE', 'a;b')->getValue()->getType());
+    }
+
+    public function testTypedRejectsAValueTypeThePropertyDoesNotPermit(): void
+    {
+        $this->expectException(\Icalendar\Exception\ParseException::class);
+
+        GenericProperty::typed('RRULE', 'FREQ=DAILY', ['VALUE' => 'TEXT']);
+    }
 }
