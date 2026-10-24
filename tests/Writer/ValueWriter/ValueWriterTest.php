@@ -27,7 +27,7 @@ use PHPUnit\Framework\TestCase;
 /**
  * Tests for Value Writers
  */
-class ValueWriterTest extends TestCase
+final class ValueWriterTest extends TestCase
 {
     /** @test */
     public function testWriteDate(): void

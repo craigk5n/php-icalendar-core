@@ -12,7 +12,7 @@ use PHPUnit\Framework\TestCase;
 /**
  * Tests for RFC 7265: jCal (JSON Format for iCalendar)
  */
-class Rfc7265Test extends TestCase
+final class Rfc7265Test extends TestCase
 {
     public function testTojCalArray(): void
     {

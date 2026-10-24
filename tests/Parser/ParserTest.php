@@ -25,7 +25,7 @@ use PHPUnit\Framework\TestCase; // Correctly imported TestCase
  *
  * Parses iCalendar data into component structures.
  */
-class ParserTest extends TestCase
+final class ParserTest extends TestCase
 {
     private Parser $parser;
 

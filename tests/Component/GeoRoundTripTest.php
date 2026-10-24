@@ -24,7 +24,7 @@ use PHPUnit\Framework\TestCase;
  * These tests pin both: invalid GEO is now reported, and a valid GEO round-trips
  * with a literal semicolon.
  */
-class GeoRoundTripTest extends TestCase
+final class GeoRoundTripTest extends TestCase
 {
     public function testSetGeoWritesALiteralSemicolon(): void
     {

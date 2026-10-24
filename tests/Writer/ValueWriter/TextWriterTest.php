@@ -7,7 +7,7 @@ namespace Icalendar\Tests\Writer\ValueWriter;
 use Icalendar\Writer\ValueWriter\TextWriter;
 use PHPUnit\Framework\TestCase;
 
-class TextWriterTest extends TestCase
+final class TextWriterTest extends TestCase
 {
     private TextWriter $writer;
 

@@ -24,7 +24,7 @@ use PHPUnit\Framework\TestCase;
  * change), which is fail-fast: the first violation throws. For collecting every
  * error instead, callers run Validator::validate() themselves before writing.
  */
-class WriteValidatedTest extends TestCase
+final class WriteValidatedTest extends TestCase
 {
     private function validCalendar(): VCalendar
     {

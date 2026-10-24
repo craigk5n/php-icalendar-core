@@ -10,7 +10,7 @@ use DateTimeInterface;
 use Icalendar\Writer\ValueWriter\DateWriter;
 use PHPUnit\Framework\TestCase;
 
-class DateWriterTest extends TestCase
+final class DateWriterTest extends TestCase
 {
     private DateWriter $writer;
 

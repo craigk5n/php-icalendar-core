@@ -14,7 +14,7 @@ use PHPUnit\Framework\TestCase;
 /**
  * Tests for VEvent component
  */
-class VEventTest extends TestCase
+final class VEventTest extends TestCase
 {
     public function testCreateVEvent(): void
     {

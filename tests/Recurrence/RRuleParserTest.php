@@ -12,7 +12,7 @@ use PHPUnit\Framework\TestCase;
 /**
  * Tests for RRuleParser and RRule value object
  */
-class RRuleParserTest extends TestCase
+final class RRuleParserTest extends TestCase
 {
     private RRuleParser $parser;
 

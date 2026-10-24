@@ -15,7 +15,7 @@ use PHPUnit\Framework\TestCase;
  * - Folding: Insert CRLF followed by a single space or tab
  * - Unfolding: Remove CRLF followed by a single space or tab
  */
-class LineFolderTest extends TestCase
+final class LineFolderTest extends TestCase
 {
     private LineFolder $folder;
 

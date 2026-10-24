@@ -73,4 +73,8 @@
             </errorLevel>
         </InvalidArgument>
     </issueHandlers>
+
+    <plugins>
+        <pluginClass class="Psalm\PhpUnitPlugin\Plugin" />
+    </plugins>
 </psalm>

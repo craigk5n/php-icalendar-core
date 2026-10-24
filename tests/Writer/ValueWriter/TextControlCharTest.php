@@ -33,7 +33,7 @@ use PHPUnit\Framework\TestCase;
  * The ABNF's CONTROL set includes DEL (%x7F), not just the C0 range, so
  * sanitizeText() escapes it too; testDelIsEscaped covers that.
  */
-class TextControlCharTest extends TestCase
+final class TextControlCharTest extends TestCase
 {
     private TextWriter $writer;
 

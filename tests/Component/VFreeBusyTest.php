@@ -11,7 +11,7 @@ use PHPUnit\Framework\TestCase;
 /**
  * Tests for VFreeBusy component
  */
-class VFreeBusyTest extends TestCase
+final class VFreeBusyTest extends TestCase
 {
     public function testCreateVFreeBusy(): void
     {

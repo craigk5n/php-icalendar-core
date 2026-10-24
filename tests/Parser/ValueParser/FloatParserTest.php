@@ -8,7 +8,7 @@ use Icalendar\Exception\ParseException;
 use Icalendar\Parser\ValueParser\FloatParser;
 use PHPUnit\Framework\TestCase;
 
-class FloatParserTest extends TestCase
+final class FloatParserTest extends TestCase
 {
     private FloatParser $parser;
 

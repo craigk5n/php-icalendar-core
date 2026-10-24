@@ -8,7 +8,7 @@ use Icalendar\Exception\ParseException;
 use Icalendar\Parser\ValueParser\BinaryParser;
 use PHPUnit\Framework\TestCase;
 
-class BinaryParserTest extends TestCase
+final class BinaryParserTest extends TestCase
 {
     private BinaryParser $parser;
 

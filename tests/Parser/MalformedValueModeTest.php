@@ -16,7 +16,7 @@ use PHPUnit\Framework\TestCase;
  * The suite previously exercised STRICT and LENIENT only on valid data, so
  * lenient mode silently accepting non-RFC dates went unnoticed.
  */
-class MalformedValueModeTest extends TestCase
+final class MalformedValueModeTest extends TestCase
 {
     private function calendarWith(string $line): string
     {

@@ -31,7 +31,7 @@ use PHPUnit\Framework\TestCase;
  * DateTimeInterface simply cannot be malformed, which is the safer path the
  * widening opens up.
  */
-class DateSetterTest extends TestCase
+final class DateSetterTest extends TestCase
 {
     private function dtStartValue(ComponentInterface $c): ?string
     {

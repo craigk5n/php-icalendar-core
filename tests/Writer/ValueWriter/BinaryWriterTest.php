@@ -7,7 +7,7 @@ namespace Icalendar\Tests\Writer\ValueWriter;
 use Icalendar\Writer\ValueWriter\BinaryWriter;
 use PHPUnit\Framework\TestCase;
 
-class BinaryWriterTest extends TestCase
+final class BinaryWriterTest extends TestCase
 {
     private BinaryWriter $writer;
 

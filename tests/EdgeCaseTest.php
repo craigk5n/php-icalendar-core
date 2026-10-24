@@ -11,7 +11,6 @@ use Icalendar\Component\VCalendar;
 use Icalendar\Component\VEvent;
 use Icalendar\Exception\ParseException;
 use Icalendar\Exception\ValidationException;
-use Icalendar\Validation\SecurityValidator;
 
 /**
  * Edge Case Tests
@@ -20,18 +19,16 @@ use Icalendar\Validation\SecurityValidator;
  * Covers empty values, maximum lengths, nesting depth, Unicode, malformed data,
  * and stress conditions.
  */
-class EdgeCaseTest extends TestCase
+final class EdgeCaseTest extends TestCase
 {
     private Parser $parser;
     private Writer $writer;
-    private SecurityValidator $security;
 
     #[\Override]
     protected function setUp(): void
     {
         $this->parser = new Parser();
         $this->writer = new Writer();
-        $this->security = new SecurityValidator();
     }
 
     // === Empty Values Tests ===

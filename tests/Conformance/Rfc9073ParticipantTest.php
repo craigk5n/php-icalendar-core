@@ -12,7 +12,7 @@ use PHPUnit\Framework\TestCase;
 /**
  * Tests for RFC 9073: PARTICIPANT support
  */
-class Rfc9073ParticipantTest extends TestCase
+final class Rfc9073ParticipantTest extends TestCase
 {
     private Parser $parser;
 

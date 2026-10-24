@@ -7,7 +7,7 @@ namespace Icalendar\Tests\Value;
 use Icalendar\Value\AbstractValue;
 use PHPUnit\Framework\TestCase;
 
-class AbstractValueTest extends TestCase
+final class AbstractValueTest extends TestCase
 {
     private TestValue $value;
 
@@ -41,7 +41,7 @@ class AbstractValueTest extends TestCase
 /**
  * Concrete implementation for testing AbstractValue
  */
-class TestValue extends AbstractValue
+final class TestValue extends AbstractValue
 {
     #[\Override]
     public function getType(): string

@@ -10,7 +10,7 @@ use PHPUnit\Framework\TestCase;
 /**
  * Tests for ContentLineWriter
  */
-class ContentLineWriterTest extends TestCase
+final class ContentLineWriterTest extends TestCase
 {
     private ContentLineWriter $writer;
 

@@ -9,7 +9,7 @@ use Icalendar\Value\ValueInterface;
 use PHPUnit\Framework\TestCase;
 use PHPUnit\Framework\MockObject\MockObject;
 
-class AbstractPropertyTest extends TestCase
+final class AbstractPropertyTest extends TestCase
 {
     private TestProperty $property;
 
@@ -130,7 +130,7 @@ class AbstractPropertyTest extends TestCase
 /**
  * Concrete implementation for testing AbstractProperty
  */
-class TestProperty extends AbstractProperty
+final class TestProperty extends AbstractProperty
 {
     #[\Override]
     public function getName(): string

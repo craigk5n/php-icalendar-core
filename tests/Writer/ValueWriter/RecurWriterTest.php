@@ -8,7 +8,7 @@ use Icalendar\Recurrence\RRule;
 use Icalendar\Writer\ValueWriter\RecurWriter;
 use PHPUnit\Framework\TestCase;
 
-class RecurWriterTest extends TestCase
+final class RecurWriterTest extends TestCase
 {
     private RecurWriter $writer;
 

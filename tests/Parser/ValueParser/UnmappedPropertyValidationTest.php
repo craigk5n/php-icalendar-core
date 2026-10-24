@@ -19,7 +19,7 @@ use PHPUnit\Framework\TestCase;
  * rather than coincidental, and stops a future reader assuming they were
  * considered and excluded.
  */
-class UnmappedPropertyValidationTest extends TestCase
+final class UnmappedPropertyValidationTest extends TestCase
 {
     private ValueParserFactory $factory;
 

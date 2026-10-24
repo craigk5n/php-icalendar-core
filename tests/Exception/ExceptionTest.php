@@ -14,7 +14,7 @@ use PHPUnit\Framework\TestCase;
 /**
  * Tests for exception classes
  */
-class ExceptionTest extends TestCase
+final class ExceptionTest extends TestCase
 {
     public function testParseExceptionStoresContext(): void
     {

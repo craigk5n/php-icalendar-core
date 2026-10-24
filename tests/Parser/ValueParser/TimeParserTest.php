@@ -8,7 +8,7 @@ use Icalendar\Exception\ParseException;
 use Icalendar\Parser\ValueParser\TimeParser;
 use PHPUnit\Framework\TestCase;
 
-class TimeParserTest extends TestCase
+final class TimeParserTest extends TestCase
 {
     private TimeParser $parser;
 

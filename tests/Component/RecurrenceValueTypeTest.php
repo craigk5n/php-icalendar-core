@@ -27,7 +27,7 @@ use PHPUnit\Framework\TestCase;
  *
  * These tests pin the written form and the round trip back through the Parser.
  */
-class RecurrenceValueTypeTest extends TestCase
+final class RecurrenceValueTypeTest extends TestCase
 {
     private const RULE = 'FREQ=WEEKLY;BYDAY=MO,WE;COUNT=3';
 

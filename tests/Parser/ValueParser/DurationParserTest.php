@@ -11,7 +11,7 @@ use PHPUnit\Framework\TestCase;
 /**
  * Tests for DurationParser class
  */
-class DurationParserTest extends TestCase
+final class DurationParserTest extends TestCase
 {
     private DurationParser $parser;
 

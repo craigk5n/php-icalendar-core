@@ -23,7 +23,7 @@ use PHPUnit\Framework\TestCase;
  * These fixtures are the reference for what the library considers correct, so
  * they are worth holding to the standard they are named after.
  */
-class FixtureConformanceTest extends TestCase
+final class FixtureConformanceTest extends TestCase
 {
     /** @return array<string, array{string}> */
     public static function rfc5545FixtureProvider(): array

@@ -9,7 +9,7 @@ use Icalendar\Parser\ContentLine;
 use Icalendar\Exception\ParseException;
 use PHPUnit\Framework\TestCase;
 
-class LexerTest extends TestCase
+final class LexerTest extends TestCase
 {
     private Lexer $lexer;
 

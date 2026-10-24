@@ -7,7 +7,7 @@ namespace Icalendar\Tests\Exception;
 use Icalendar\Exception\ParseException;
 use PHPUnit\Framework\TestCase;
 
-class ParseExceptionTest extends TestCase
+final class ParseExceptionTest extends TestCase
 {
     public function testConstructorWithAllParameters(): void
     {

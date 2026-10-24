@@ -18,7 +18,7 @@ use PHPUnit\Framework\Attributes\Group;
  * Verifies that performance requirements from PRD NFR-001 through NFR-004 are met.
  */
 #[Group('performance')]
-class PerformanceTest extends TestCase
+final class PerformanceTest extends TestCase
 {
     private Parser $parser;
     private Writer $writer;

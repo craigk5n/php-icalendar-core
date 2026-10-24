@@ -24,7 +24,7 @@ use PHPUnit\Framework\TestCase;
  * for a folding utility working on a fragment, so the terminator is restored
  * here, at the document level.
  */
-class TrailingCrlfTest extends TestCase
+final class TrailingCrlfTest extends TestCase
 {
     private function minimalCalendar(): VCalendar
     {

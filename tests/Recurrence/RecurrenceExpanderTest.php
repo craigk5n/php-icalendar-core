@@ -14,7 +14,7 @@ use Icalendar\Recurrence\RecurrenceExpander;
 use Icalendar\Value\TextValue;
 use PHPUnit\Framework\TestCase;
 
-class RecurrenceExpanderTest extends TestCase
+final class RecurrenceExpanderTest extends TestCase
 {
     private RecurrenceExpander $expander;
 

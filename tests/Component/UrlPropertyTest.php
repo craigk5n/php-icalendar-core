@@ -27,7 +27,7 @@ use PHPUnit\Framework\TestCase;
  *
  * The duplicated pair is now a shared trait rather than a third and fourth copy.
  */
-class UrlPropertyTest extends TestCase
+final class UrlPropertyTest extends TestCase
 {
     /**
      * Factories rather than class strings: `new $class()` cannot be verified by

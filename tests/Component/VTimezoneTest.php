@@ -10,7 +10,7 @@ use Icalendar\Component\Daylight;
 use Icalendar\Exception\ValidationException;
 use PHPUnit\Framework\TestCase;
 
-class VTimezoneTest extends TestCase
+final class VTimezoneTest extends TestCase
 {
     /** @var non-empty-string */
     private string $originalTimezone = 'UTC';

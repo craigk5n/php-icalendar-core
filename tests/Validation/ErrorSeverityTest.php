@@ -7,7 +7,7 @@ namespace Icalendar\Tests\Validation;
 use Icalendar\Validation\ErrorSeverity;
 use PHPUnit\Framework\TestCase;
 
-class ErrorSeverityTest extends TestCase
+final class ErrorSeverityTest extends TestCase
 {
     public function testWarningConstant(): void
     {

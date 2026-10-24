@@ -19,7 +19,7 @@ use PHPUnit\Framework\TestCase;
  * the non-UTC job trips a red test rather than silently narrowing coverage,
  * mirroring PhpVersionConsistencyTest's guard over the PHP matrix.
  */
-class CiTimezoneCoverageTest extends TestCase
+final class CiTimezoneCoverageTest extends TestCase
 {
     public function testCiRunsUnderANonUtcTimezone(): void
     {

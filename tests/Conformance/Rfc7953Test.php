@@ -13,7 +13,7 @@ use PHPUnit\Framework\TestCase;
 /**
  * Tests for RFC 7953: Calendar Availability (VAVAILABILITY)
  */
-class Rfc7953Test extends TestCase
+final class Rfc7953Test extends TestCase
 {
     private Parser $parser;
 

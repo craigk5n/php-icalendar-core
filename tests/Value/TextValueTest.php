@@ -7,7 +7,7 @@ namespace Icalendar\Tests\Value;
 use Icalendar\Value\TextValue;
 use PHPUnit\Framework\TestCase;
 
-class TextValueTest extends TestCase
+final class TextValueTest extends TestCase
 {
     public function testConstructor(): void
     {

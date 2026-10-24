@@ -9,7 +9,7 @@ use PHPUnit\Framework\TestCase;
 /**
  * Smoke test to verify test infrastructure works
  */
-class SmokeTest extends TestCase
+final class SmokeTest extends TestCase
 {
     public function testPhpUnitRuns(): void
     {

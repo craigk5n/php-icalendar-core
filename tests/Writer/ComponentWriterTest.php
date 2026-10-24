@@ -21,7 +21,7 @@ use PHPUnit\Framework\TestCase;
 /**
  * Tests for ComponentWriter
  */
-class ComponentWriterTest extends TestCase
+final class ComponentWriterTest extends TestCase
 {
     private ComponentWriter $writer;
 

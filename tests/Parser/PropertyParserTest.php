@@ -12,7 +12,7 @@ use PHPUnit\Framework\TestCase;
 /**
  * Tests for PropertyParser class
  */
-class PropertyParserTest extends TestCase
+final class PropertyParserTest extends TestCase
 {
     private PropertyParser $parser;
 

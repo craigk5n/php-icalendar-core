@@ -17,7 +17,7 @@ use PHPUnit\Framework\TestCase;
  * and INTERVAL=abc became INTERVAL=0 via a bare (int) cast. Mode governs how a
  * failure is reported, not what counts as a valid rule.
  */
-class RRuleParserModeParityTest extends TestCase
+final class RRuleParserModeParityTest extends TestCase
 {
     /** @return array<string, array{string}> */
     public static function invalidRuleProvider(): array

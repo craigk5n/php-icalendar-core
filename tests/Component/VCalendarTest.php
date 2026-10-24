@@ -11,7 +11,7 @@ use PHPUnit\Framework\TestCase;
 /**
  * Tests for VCalendar component
  */
-class VCalendarTest extends TestCase
+final class VCalendarTest extends TestCase
 {
     public function testCreateVCalendar(): void
     {

@@ -7,7 +7,7 @@ namespace Icalendar\Tests\Writer\ValueWriter;
 use Icalendar\Writer\ValueWriter\UtcOffsetWriter;
 use PHPUnit\Framework\TestCase;
 
-class UtcOffsetWriterTest extends TestCase
+final class UtcOffsetWriterTest extends TestCase
 {
     private UtcOffsetWriter $writer;
 

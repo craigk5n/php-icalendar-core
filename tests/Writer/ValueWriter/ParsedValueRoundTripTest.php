@@ -38,7 +38,7 @@ use PHPUnit\Framework\TestCase;
  * values BooleanWriterTest guards against (1, 0, '1', 'yes', 'true', [], null)
  * are still rejected, with the same message.
  */
-class ParsedValueRoundTripTest extends TestCase
+final class ParsedValueRoundTripTest extends TestCase
 {
     private function calendarWith(string $line): string
     {

@@ -18,7 +18,7 @@ use PHPUnit\Framework\TestCase;
  * TEXT default, which cannot fail — so RecurParser (and the RRuleParser behind
  * it) was unreachable from any property name and no RRULE was ever validated.
  */
-class PropertyTypeMappingTest extends TestCase
+final class PropertyTypeMappingTest extends TestCase
 {
     private ValueParserFactory $factory;
 

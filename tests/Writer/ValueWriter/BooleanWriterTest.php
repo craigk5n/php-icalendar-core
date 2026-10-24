@@ -7,7 +7,7 @@ namespace Icalendar\Tests\Writer\ValueWriter;
 use Icalendar\Writer\ValueWriter\BooleanWriter;
 use PHPUnit\Framework\TestCase;
 
-class BooleanWriterTest extends TestCase
+final class BooleanWriterTest extends TestCase
 {
     private BooleanWriter $writer;
 

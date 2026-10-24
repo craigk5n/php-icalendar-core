@@ -10,7 +10,7 @@ use DateTimeImmutable;
 use Icalendar\Writer\ValueWriter\PeriodWriter;
 use PHPUnit\Framework\TestCase;
 
-class PeriodWriterTest extends TestCase
+final class PeriodWriterTest extends TestCase
 {
     private PeriodWriter $writer;
 
